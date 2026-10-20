@@ -228,6 +228,7 @@ html{scroll-padding-top:var(--hh,12px)}details.card{scroll-margin-top:var(--hh,1
 #viewP.stockmode #prodTot{display:none}
 .sarl{margin:12px 0}.sarl .row{gap:10px}.sgap{font-size:20px;color:var(--warn);white-space:nowrap}.sgap.ok{color:var(--levain)}.sarl small.d{display:block;margin-top:6px;color:var(--muted);font-size:13px}
 .bi{font-weight:700;color:var(--ink);font-style:normal;display:inline!important}
+.lvhd{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.lvhd span{font-size:22px;font-weight:700;color:var(--levain);font-variant-numeric:tabular-nums;white-space:nowrap}.lvr.lvsum{background:var(--levain-soft)}.lvl .lvh span{font-size:20px;font-weight:700;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -290,7 +291,7 @@ html{scroll-padding-top:var(--hh,12px)}details.card{scroll-margin-top:var(--hh,1
       <select id="extra" aria-label="Ajouter une production hors ventes"></select>
       <button class="iconbtn" id="addBtn" aria-label="Ajouter"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>
-    <h2>Levains à préparer</h2>
+    <h2 class="lvhd">Levains à préparer<span id="lvTot"></span></h2>
     <div id="levains"></div>
     <div id="weeklyWrap" hidden>
       <h2>À préparer pour la semaine</h2>
@@ -1370,9 +1371,13 @@ function renderResults(){
   const lv={},fl={};
   active.forEach(id=>flat(itemsOf(id)).forEach(i=>{const t=i.q*pr[id].q;
     if(i.k==="levain")lv[i.l]=(lv[i.l]||0)+t;if(i.k==="farine")fl[i.f]=(fl[i.f]||0)+t;}));
+  // Total des levains du jour, à côté du titre « Levains à préparer » ; le détail par levain (froment, seigle, petit épeautre…) suit, avec une ligne Total
+  const lvE=Object.entries(lv).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]),lvSum=lvE.reduce((s,e)=>s+e[1],0);
+  {const T=document.getElementById("lvTot");if(T)T.textContent=lvE.length?fmt(lvSum):"";}
   const L=document.getElementById("levains"),Pz=document.getElementById("pesees"),F=document.getElementById("flours");
   if(!active.length){L.innerHTML=`<div class="empty">Aucune production ce jour.</div>`;Pz.innerHTML="";F.innerHTML="";return;}
-  L.innerHTML=`<div class="list lvl">`+Object.entries(lv).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const c=LV[k]?{f:lvF(k)}:null;const pf=c?Math.round(c.f*100):0;return `<div class="lvr"><div class="lvh"><b>${k}${c?`<button class="gear" data-lvedit="${k}" aria-label="Modifier le taux">${editLv===k?"✓":"⚙︎"}</button>`:""}</b><span>${fmt(v)}</span></div>`+(c?`<div class="lvs"><div><em>Farine ${pf} %</em><b>${fmt(v*c.f)}</b></div><div><em>Eau ${100-pf} %</em><b>${fmt(v*(1-c.f))}</b></div></div>`+(editLv===k?`<div class="lve"><span>Farine dans le levain</span>${pin("lv",k,"",lvF(k),100,"%")}</div>`:""):"")+`</div>`;}).join("")+`</div>`;
+  L.innerHTML=`<div class="list lvl">`+Object.entries(lv).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const c=LV[k]?{f:lvF(k)}:null;const pf=c?Math.round(c.f*100):0;return `<div class="lvr"><div class="lvh"><b>${k}${c?`<button class="gear" data-lvedit="${k}" aria-label="Modifier le taux">${editLv===k?"✓":"⚙︎"}</button>`:""}</b><span>${fmt(v)}</span></div>`+(c?`<div class="lvs"><div><em>Farine ${pf} %</em><b>${fmt(v*c.f)}</b></div><div><em>Eau ${100-pf} %</em><b>${fmt(v*(1-c.f))}</b></div></div>`+(editLv===k?`<div class="lve"><span>Farine dans le levain</span>${pin("lv",k,"",lvF(k),100,"%")}</div>`:""):"")+`</div>`;}).join("")
+    +(lvE.length>1?`<div class="lvr lvsum"><div class="lvh"><b>Total</b><span>${fmt(lvSum)}</span></div><div class="lvs"><div><em>Farine</em><b>${fmt(lvE.reduce((s,[k,v])=>s+(LV[k]?v*lvF(k):0),0))}</b></div><div><em>Eau</em><b>${fmt(lvE.reduce((s,[k,v])=>s+(LV[k]?v*(1-lvF(k)):0),0))}</b></div></div></div>`:"")+`</div>`;
   const order=pIds().concat(Object.keys(pr).filter(id=>!RULE[id]||R[id].base)).filter(id=>pr[id]&&pr[id].q>0).sort(byDay);
   const groups=GROUPS.filter(g=>g.every(id=>order.includes(id))).sort((a,b)=>Math.min(...a.map(x=>drank(x)))-Math.min(...b.map(x=>drank(x))));
   const grouped=groups.flat();
