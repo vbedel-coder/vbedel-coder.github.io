@@ -1,1 +1,1 @@
-window.VIVANT_CONFIG={};
+window.VIVANT_CONFIG={SB_URL:"https://zpkmhuovmfxsrtoytkur.supabase.co",SB_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwa21odW92bWZ4c3J0b3l0a3VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0OTA2MzYsImV4cCI6MjEwODA2NjYzNn0.u6n7SKwrEgsXuJXS-snkrBUJCc8f0oxt0WoN4D6JSx8"};
