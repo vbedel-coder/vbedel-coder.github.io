@@ -6,15 +6,17 @@ const C=window.VIVANT_CONFIG||{};
 if(!C.SB_URL||!window.supabase)return;
 const sb=window.supabase.createClient(C.SB_URL,C.SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"vivant-auth"}});
 window.vivantSB=sb;
-// Connexion une seule fois par appareil : adresse e-mail, puis code reçu par e-mail (pas de lien, qui ouvrirait Safari au lieu de l'appli)
+// Connexion une seule fois par appareil : adresse e-mail et mot de passe (le premier essai crée le compte)
 let userP=null;
 const askReady=()=>new Promise(r=>{const t=()=>typeof window.ask==="function"?r():setTimeout(t,50);t();});
+const askIn=(title,value,type,ac)=>{const p=window.ask(title,value);const i=document.querySelector(".ask input");if(i){i.type=type;i.autocomplete=ac;if(type==="email")i.inputMode="email";}return p;};
 async function login(){await askReady();
-  for(;;){const email=((await window.ask("Adresse e-mail",localStorage.getItem("vivant-email")||""))||"").trim();if(!email)continue;
+  for(;;){const email=((await askIn("Adresse e-mail",localStorage.getItem("vivant-email")||"","email","username"))||"").trim();if(!email)continue;
     localStorage.setItem("vivant-email",email);
-    const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true}});if(error){await window.ask("Envoi impossible : "+error.message);continue;}
-    for(let i=0;i<3;i++){const code=((await window.ask("Code reçu par e-mail",""))||"").replace(/\D/g,"");if(!code)break;
-      const {data,error:e2}=await sb.auth.verifyOtp({email,token:code,type:"email"});if(!e2&&data.user)return data.user;}}}
+    const password=(await askIn("Mot de passe","","password","current-password"))||"";if(password.length<6)continue;
+    let r=await sb.auth.signInWithPassword({email,password});if(!r.error&&r.data.user)return r.data.user;
+    r=await sb.auth.signUp({email,password});if(!r.error&&r.data.session)return r.data.user;
+    await window.ask("Mot de passe incorrect");}}
 const user=()=>userP||(userP=sb.auth.getSession().then(({data})=>data.session?data.session.user:login()));
 // Document unique de données (table state, une ligne par compte), avec mises à jour en direct entre téléphone et iPad
 const snap=row=>({exists:!!row,data:()=>row&&row.data,metadata:{hasPendingWrites:false,fromCache:false}});

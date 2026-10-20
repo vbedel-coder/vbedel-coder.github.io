@@ -29,17 +29,13 @@ jobs:
         run: |
           sed "s/__REF__/$REF/g" supabase/setup.sql | jq -Rs '{query:.}' > q.json
           curl -fsS -X POST -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @q.json $API/projects/$REF/database/query
-      - name: Connexion par code reçu par e-mail
+      - name: Connexion par e-mail et mot de passe (inscription fermée dès que le compte existe)
         run: |
-          jq -n --arg ref "$REF" '{
-            site_url:"https://vbedel-coder.github.io",
-            uri_allow_list:"https://vbedel-coder.github.io/**",
-            mailer_subjects_magic_link:"Code Vivant : {{ .Token }}",
-            mailer_templates_magic_link_content:"<p>Votre code Vivant :</p><h2>{{ .Token }}</h2>",
-            mailer_subjects_confirmation:"Code Vivant : {{ .Token }}",
-            mailer_templates_confirmation_content:"<p>Votre code Vivant :</p><h2>{{ .Token }}</h2>"}' > a.json
+          N=$(jq -n '{query:"select count(*)::int as n from auth.users"}' | curl -fsS -X POST -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @- $API/projects/$REF/database/query | jq '.[0].n')
+          jq -n --argjson closed "$([ "$N" -gt 0 ] && echo true || echo false)" '{site_url:"https://vbedel-coder.github.io",mailer_autoconfirm:true,disable_signup:$closed}' > a.json
           C=$(curl -sS -o r.json -w '%{http_code}' -X PATCH -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @a.json $API/projects/$REF/config/auth)
           [ "${C:0:1}" = "2" ] || { echo "HTTP $C"; cat r.json; exit 1; }
+          echo "Comptes : $N"
       - uses: supabase/setup-cli@v1
         with:
           version: latest
