@@ -329,7 +329,8 @@ let tmSess=0;const tmBeep=()=>{if(!actx)return;try{if(navigator.audioSession){na
 let tmLock=null;const tmWake=()=>{try{if(timers.length&&!tmLock&&navigator.wakeLock&&document.visibilityState==="visible")navigator.wakeLock.request("screen").then(l=>{tmLock=l;l.addEventListener("release",()=>{tmLock=null;});}).catch(()=>{});
   else if(!timers.length&&tmLock){tmLock.release().catch(()=>{});tmLock=null;}}catch(e){}};
 // Alarme de l'Horloge en plus (réglage) : lance le raccourci « Minuteur Vivant », qui démarre un minuteur de l'Horloge. Il sonne jusqu'à ce qu'on l'arrête, même en silencieux.
-const tmClock=m=>{try{if(typeof params!=="undefined"&&params.clock)location.href="shortcuts://run-shortcut?name="+encodeURIComponent("Minuteur Vivant")+"&input=text&text="+m;}catch(e){}};
+// Alarme de l'Horloge via le raccourci « Minuteur Vivant » : mise de côté le 20/10/2026 (ouvrait Raccourcis à chaque minuteur)
+const tmClock=m=>{};
 function tmBtn(k,n){const t=timers.find(x=>x.k===k);const ms=t?t.end-Date.now():0;
   return `<button class="tmb${t?(ms<=0?" end":" on"):""}" data-tk="${k}" data-tn="${n.replace(/"/g,"&quot;")}" aria-label="Minuteur">${t?tmFmt(ms):TM_IC}</button>`;}
 function tmPick(k,n){tmAudio();const t=timers.find(x=>x.k===k);
@@ -1227,7 +1228,6 @@ function renderSettings(){
     +pIds().filter(id=>id!=="focaccia").map(id=>`<tr><td>${R[id].name}</td><td class="q">${pin("w",id,"",Wv(id),1000,"g")}</td></tr>`).join("")
     +`<tr><td colspan="2" style="text-align:right"><button class="iconbtn" data-reset="misc" aria-label="Valeurs d'origine">${IC.undo}</button></td></tr></table></details>`;
 
-  h+=`<h2>Minuteurs</h2><div class="list"><div class="row"><div class="name"><b>Alarme de l'Horloge</b></div><label class="sw"><input type="checkbox" data-clk="1" ${params.clock?"checked":""} aria-label="Alarme de l'Horloge"><i></i></label></div></div>`;
   // Sauvegarde complète : exporter un fichier, ou reprendre un fichier (passage vers l'appli installée)
   h+=`<h2>Sauvegarde</h2><div class="ltools" style="justify-content:flex-start">${dl?`<button class="iconbtn big" data-bk="out" aria-label="Exporter les données"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 11l5 5l5-5"/><path d="M12 4v12"/></svg></button>`:""}<button class="iconbtn big" data-bk="in" aria-label="Reprendre une sauvegarde"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 9l5-5l5 5"/><path d="M12 4v12"/></svg></button></div>`;
   const el=document.getElementById("settings");const open=[...el.querySelectorAll("details")].map(d=>d.open);
