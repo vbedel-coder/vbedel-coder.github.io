@@ -1,4 +1,4 @@
-// Appelé toutes les 15 s : envoie une notification (avec sonnerie) à chaque minuteur terminé, puis la répète 2 fois à 1 min d'écart tant qu'il n'est pas arrêté.
+// Appelé toutes les 15 s : envoie une notification (avec sonnerie) à chaque minuteur terminé, puis la répète chaque minute pendant 5 min tant qu'il n'est pas arrêté.
 import webpush from "npm:web-push@3.6.7";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -16,7 +16,7 @@ Deno.serve(async () => {
     const timers: Timer[] = Array.isArray(row.timers) ? row.timers : [];
     for (const t of timers) {
       const late = now - t.end;
-      if (!(late >= 0 && late < 3 * 60000)) continue;
+      if (!(late >= 0 && late < 6 * 60000)) continue;
       const n = Math.floor(late / 60000);
       const { data: ins } = await sb.from("push_sent").upsert({ user_id: row.id, k: t.k, end_ms: t.end, n }, { onConflict: "user_id,k,end_ms,n", ignoreDuplicates: true }).select();
       if (!ins?.length) continue;
