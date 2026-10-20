@@ -1,0 +1,21 @@
+# Vérification à la demande : comptes, appareils abonnés, minuteurs, envois et passages du serveur toutes les 15 s
+name: Vérification
+on: workflow_dispatch
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      API: https://api.supabase.com/v1
+    steps:
+      - name: État
+        run: |
+          REF=$(curl -fsS -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" $API/projects | jq -r '[.[]|select(.name|ascii_downcase|startswith("vivant"))][0].id')
+          q() { echo "== $1"; jq -n --arg s "$1" '{query:$s}' | curl -sS -X POST -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @- $API/projects/$REF/database/query | jq -c .; }
+          q "select count(*) as comptes from auth.users"
+          q "select count(*) as appareils, max(created_at) as dernier from public.push_subs"
+          q "select id, jsonb_array_length(coalesce(data->'timers','[]'::jsonb)) as minuteurs, updated_at from public.state"
+          q "select k, n, at from public.push_sent order by at desc limit 10"
+          q "select status, return_message, start_time from cron.job_run_details order by start_time desc limit 3"
+          q "select status_code, left(content,200) as content, created from net._http_response order by created desc limit 3"
+          echo "== appel direct"; curl -sS -X POST "https://$REF.supabase.co/functions/v1/timers" -H "Content-Type: application/json" -d '{}'; echo
