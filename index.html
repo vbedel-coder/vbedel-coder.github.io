@@ -328,6 +328,8 @@ let tmSess=0;const tmBeep=()=>{if(!actx)return;try{if(navigator.audioSession){na
 // Écran gardé allumé tant qu'un minuteur tourne (le bip ne peut pas sonner écran éteint)
 let tmLock=null;const tmWake=()=>{try{if(timers.length&&!tmLock&&navigator.wakeLock&&document.visibilityState==="visible")navigator.wakeLock.request("screen").then(l=>{tmLock=l;l.addEventListener("release",()=>{tmLock=null;});}).catch(()=>{});
   else if(!timers.length&&tmLock){tmLock.release().catch(()=>{});tmLock=null;}}catch(e){}};
+// Alarme de l'Horloge en plus (réglage) : lance le raccourci « Minuteur Vivant », qui démarre un minuteur de l'Horloge. Il sonne jusqu'à ce qu'on l'arrête, même en silencieux.
+const tmClock=m=>{try{if(typeof params!=="undefined"&&params.clock)location.href="shortcuts://run-shortcut?name="+encodeURIComponent("Minuteur Vivant")+"&input=text&text="+m;}catch(e){}};
 function tmBtn(k,n){const t=timers.find(x=>x.k===k);const ms=t?t.end-Date.now():0;
   return `<button class="tmb${t?(ms<=0?" end":" on"):""}" data-tk="${k}" data-tn="${n.replace(/"/g,"&quot;")}" aria-label="Minuteur">${t?tmFmt(ms):TM_IC}</button>`;}
 function tmPick(k,n){tmAudio();const t=timers.find(x=>x.k===k);
@@ -339,7 +341,7 @@ function tmPick(k,n){tmAudio();const t=timers.find(x=>x.k===k);
   draw();document.body.appendChild(o);
   o.onclick=e=>{const b=e.target.closest("button");if(!b){if(e.target===o)o.remove();return;}
     if(b.dataset.d){m=Math.max(1,m+ +b.dataset.d);draw();return;}if(b.dataset.m){m=+b.dataset.m;draw();return;}
-    o.remove();if(b.dataset.a==="ok"){tmDur[k]=m;tmSave("v22-tdur",tmDur);timers=timers.filter(x=>x.k!==k).concat([{k,n,end:Date.now()+m*60000,dur:m,cnt:1}]);tmSave("v22-timers",timers);tmTick();tmWake();if(window.vivantPush)window.vivantPush();}};}
+    o.remove();if(b.dataset.a==="ok"){tmDur[k]=m;tmSave("v22-tdur",tmDur);timers=timers.filter(x=>x.k!==k).concat([{k,n,end:Date.now()+m*60000,dur:m,cnt:1}]);tmSave("v22-timers",timers);tmTick();tmWake();tmClock(m);if(window.vivantPush)window.vivantPush();}};}
 function tmStop(k){timers=timers.filter(x=>x.k!==k);tmSave("v22-timers",timers);const e=document.getElementById("tmEnd");if(e)e.remove();tmTick();}
 let tmLast=0;
 function tmTick(){const now=Date.now(),box=document.getElementById("tmrs");if(!box)return;if(!timers.length&&tmLock)tmWake();
@@ -356,7 +358,7 @@ function tmEndSheet(t){const o=document.createElement("div");o.className="askbg"
     <button class="tmre" data-a="re">↻ Relancer · ${lab(m)}</button><button class="tmst" data-a="st">Arrêter</button></div>`;
   document.body.appendChild(o);
   o.onclick=e=>{const b=e.target.closest("button");if(!b)return;tmAudio();o.remove();
-    if(b.dataset.a==="re"){timers=timers.map(x=>x.k===t.k?{...x,end:Date.now()+m*60000,dur:m,cnt:(x.cnt||1)+1}:x);tmSave("v22-timers",timers);}
+    if(b.dataset.a==="re"){timers=timers.map(x=>x.k===t.k?{...x,end:Date.now()+m*60000,dur:m,cnt:(x.cnt||1)+1}:x);tmSave("v22-timers",timers);tmClock(m);}
     else timers=timers.filter(x=>x.k!==t.k),tmSave("v22-timers",timers);tmTick();};}
 document.getElementById("tmrs").onclick=e=>{const b=e.target.closest("button");if(b)tmPick(b.dataset.tk,b.dataset.tn);};
 setInterval(tmTick,500);document.addEventListener("visibilitychange",()=>{tmTick();tmWake();});tmTick();
@@ -1225,12 +1227,13 @@ function renderSettings(){
     +pIds().filter(id=>id!=="focaccia").map(id=>`<tr><td>${R[id].name}</td><td class="q">${pin("w",id,"",Wv(id),1000,"g")}</td></tr>`).join("")
     +`<tr><td colspan="2" style="text-align:right"><button class="iconbtn" data-reset="misc" aria-label="Valeurs d'origine">${IC.undo}</button></td></tr></table></details>`;
 
+  h+=`<h2>Minuteurs</h2><div class="list"><div class="row"><div class="name"><b>Alarme de l'Horloge</b></div><label class="sw"><input type="checkbox" data-clk="1" ${params.clock?"checked":""} aria-label="Alarme de l'Horloge"><i></i></label></div></div>`;
   // Sauvegarde complète : exporter un fichier, ou reprendre un fichier (passage vers l'appli installée)
   h+=`<h2>Sauvegarde</h2><div class="ltools" style="justify-content:flex-start">${dl?`<button class="iconbtn big" data-bk="out" aria-label="Exporter les données"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 11l5 5l5-5"/><path d="M12 4v12"/></svg></button>`:""}<button class="iconbtn big" data-bk="in" aria-label="Reprendre une sauvegarde"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 9l5-5l5 5"/><path d="M12 4v12"/></svg></button></div>`;
   const el=document.getElementById("settings");const open=[...el.querySelectorAll("details")].map(d=>d.open);
   el.innerHTML=h;el.querySelectorAll("details").forEach((d,i)=>{if(open[i]!==undefined)d.open=open[i];});
 }
-function onSettingsChange(e){const t=e.target;if(t.dataset&&t.dataset.tog){params.rules=params.rules||{};if(t.checked)delete params.rules[t.dataset.tog];else params.rules[t.dataset.tog]=false;if(!Object.keys(params.rules).length)delete params.rules;save();renderSettings();return;}if(!t.dataset||!t.dataset.kind)return;
+function onSettingsChange(e){const t=e.target;if(t.dataset&&t.dataset.clk){if(t.checked)params.clock=1;else delete params.clock;save();return;}if(t.dataset&&t.dataset.tog){params.rules=params.rules||{};if(t.checked)delete params.rules[t.dataset.tog];else params.rules[t.dataset.tog]=false;if(!Object.keys(params.rules).length)delete params.rules;save();renderSettings();return;}if(!t.dataset||!t.dataset.kind)return;
   const v=+String(t.value).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<0){renderSettings();return;}
   let val=v/(+t.dataset.scale);if(t.dataset.kind==="rq"&&R[t.dataset.a]&&R[t.dataset.a].target&&!(R[t.dataset.a].items.find(i=>ikey(i)===t.dataset.b)||{}).keep)val=val/scaleOf(t.dataset.a);
   setP(t.dataset.kind,t.dataset.a,t.dataset.b,val);save();tab==="R"?renderProfit():tab==="P"?renderResults():renderSettings();}
