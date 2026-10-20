@@ -1,0 +1,1 @@
+window.VIVANT_CONFIG={};

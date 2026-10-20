@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vivant</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vivant">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<style>
+:root{--bg:#F2F2F7;--surface:#FFFFFF;--ink:#000000;--muted:#6C6C70;--line:rgba(60,60,67,.18);--levain:#248A3D;--levain-soft:rgba(52,199,89,.14);--flour:#A05A00;--flour-soft:rgba(255,149,0,.13);--warn:#D70015;--tint:#B5651D;--tint-soft:rgba(181,101,29,.12);--fill:rgba(118,118,128,.12);--fill2:rgba(118,118,128,.08);--shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.04);--seg:#FFFFFF;--tint-fill:#B5651D;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){ --bg:#000000; --surface:#1C1C1E; --ink:#FFFFFF; --muted:#98989F; --line:rgba(84,84,88,.6); --levain:#30D158; --levain-soft:rgba(48,209,88,.16); --flour:#FFB340; --flour-soft:rgba(255,159,10,.16); --warn:#FF6961; --tint:#E0A060; --tint-soft:rgba(224,160,96,.16); --fill:rgba(118,118,128,.24); --fill2:rgba(118,118,128,.16); --shadow:none; --seg:#636366; --tint-fill:#A85F1E; }}
+:root[data-theme="dark"]{--bg:#000000;--surface:#1C1C1E;--ink:#FFFFFF;--muted:#98989F;--line:rgba(84,84,88,.6);--levain:#30D158;--levain-soft:rgba(48,209,88,.16);--flour:#FFB340;--flour-soft:rgba(255,159,10,.16);--warn:#FF6961;--tint:#E0A060;--tint-soft:rgba(224,160,96,.16);--fill:rgba(118,118,128,.24);--fill2:rgba(118,118,128,.16);--shadow:none;--seg:#636366;--tint-fill:#A85F1E}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.01em;font-size:17px;line-height:1.45;-webkit-text-size-adjust:100%}
+.wrap{max-width:560px;margin:0 auto;padding:16px 16px 48px}
+.list{background:var(--surface);border-radius:16px;border:1px solid var(--line);overflow:hidden}
+.row:first-child{border-top:0}
+.row .name{flex:1;min-width:0}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.row.off .name b{color:var(--muted)}
+.add{display:flex;gap:8px;margin-top:10px}
+.levains{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.lv em{font-style:normal;color:var(--muted);font-size:14px}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary span{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+table{width:100%;border-collapse:collapse}
+tr:first-child td{border-top:0}
+tr.sub td{padding-left:32px;font-size:15px;color:var(--muted)}
+tr.sub td.q{font-size:16px;color:var(--ink)}
+tr.grp td:first-child{font-weight:400}
+.flours{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.flours td small{color:var(--muted);display:block;font-size:14px}
+.note{color:var(--muted);font-size:14px;margin-top:28px}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:12px}
+.prod .qty{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;min-width:56px;text-align:right}
+.row .name small.for{color:var(--levain)}
+.hint{color:var(--muted);font-size:15px;margin:10px 2px 0}
+[hidden]{display:none!important}
+.sync::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--muted);vertical-align:1px}
+.sync.ok::before{background:var(--levain)}
+.sync.err::before,.sync.local::before{background:var(--warn)}
+.sync.pending::before{background:var(--flour)}
+.handle{display:inline-flex;align-items:center;justify-content:center;width:44px;height:40px;margin-right:4px;font-size:24px;color:var(--muted);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;flex:0 0 auto}
+body.nodrag{-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+tbody.dg.dragging td{background:var(--levain-soft)}
+.mv button:disabled{opacity:.3}
+td.restore{font-size:14px;color:var(--muted)}
+td.restore .linkbtn{margin-right:10px}
+.pin{display:inline-flex;align-items:center;gap:4px}
+.pin em{font-style:normal;color:var(--muted);font-size:14px;min-width:20px;text-align:left}
+td small.d,td.d{display:block;color:var(--muted);font-size:13px;font-weight:400}
+.warn{color:var(--warn);font-size:13px}
+.prow2 .name small{display:block}
+.gear.eur.on{color:var(--levain)}
+.golink{cursor:pointer}
+.go{color:var(--levain);font-weight:700;margin-left:2px}
+details.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:10px;scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px)}
+details.card.flash{animation:flash 1.2s ease}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--levain)}100%{box-shadow:0 0 0 0 transparent}}
+.coef{text-align:right;min-width:64px}
+.coef b{display:block;font-size:24px;font-variant-numeric:tabular-nums}
+.coef small{color:var(--muted);font-size:12px}
+.gauge i{position:absolute;left:0;top:0;bottom:0}
+.gauge s{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);opacity:.6}
+.mrow .bar{position:relative;height:10px;background:var(--bg);border-radius:6px;margin:6px 0 4px;overflow:hidden}
+.mrow .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px}
+.mrow .bar s{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.5}
+.mrow .pin input{width:96px}
+tr.hyd td.q{font-size:15px;color:var(--muted);font-weight:700}
+.hpct{margin-left:8px;font-size:14px;color:var(--muted);font-weight:400;white-space:nowrap}
+.hy .gear{width:auto;height:auto;background:none;color:var(--levain);font-size:20px}
+.clients{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.newc{display:flex;gap:8px;margin-bottom:12px}
+.newc input{flex:1;min-width:0;font:inherit;padding:12px;border-radius:12px;border:1.5px solid var(--ink);background:var(--surface);color:var(--ink)}
+.newc button.ghost,.reset.ghost{background:transparent;color:var(--muted);border:1.5px solid var(--line)}
+.wrapbtn{flex-wrap:wrap;justify-content:flex-start}
+.week{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px}
+.lvd div{flex:1}
+.lvd em{display:block;color:var(--muted);font-style:normal;font-size:14px}
+.lvd b{font-size:20px;font-variant-numeric:tabular-nums}
+.lv em.hyd{display:block;margin-top:6px;font-size:13px}
+.add select{flex:1;font:inherit;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);min-width:0}
+tbody.dg td{padding:8px 8px}
+tbody.dg td.q{font-size:15px}
+tbody.dg .hpct,tbody.dg .gear{display:none}
+.mv{display:inline-flex;vertical-align:middle;gap:4px;margin-left:6px}
+tbody.dg td:first-child{padding-left:4px}
+.lh .handle{width:40px;margin-right:2px;vertical-align:middle}
+.hyrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px}
+.hyrow .hy{margin-left:auto;font-weight:700;font-size:15px}
+tr.hyd td{font-size:15px;color:var(--muted);font-weight:400;padding:8px 8px}
+tr.hyd td:first-child{padding-left:14px}
+.hy{display:inline-flex;align-items:center;gap:4px}
+.hy b{text-align:center;min-width:46px}
+h1{font-size:34px;font-weight:700;letter-spacing:.01em;margin:6px 0 4px;line-height:1.1}
+.sub:empty,.hint:empty{display:none}.sub{color:var(--muted);margin:0 0 16px;font-size:15px;line-height:1.35;margin-bottom:12px}
+h2{font-size:22px;font-weight:700;letter-spacing:.01em;margin:30px 4px 10px}
+.sync{color:var(--muted);font-size:13px;margin:0 2px 14px}
+.tabs{display:flex;background:var(--fill);border:0;border-radius:10px;padding:2px;gap:0;margin:4px 0 14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 6px);z-index:20;-webkit-backdrop-filter:blur(20px) saturate(1.8);backdrop-filter:blur(20px) saturate(1.8);background:color-mix(in srgb,var(--bg) 70%,rgba(118,118,128,.25));box-shadow:0 -10px 0 0 var(--bg)}
+.tabs button{flex:1;border:0;background:transparent;font:inherit;cursor:pointer;min-width:0;border-radius:8px;padding:8px 4px;font-size:15px;font-weight:600;color:var(--ink);transition:background .2s,box-shadow .2s}
+.tabs button[aria-selected="true"]{background:var(--seg);color:var(--ink);box-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04)}
+.tabs button{display:flex;align-items:center;justify-content:center;padding:8px 4px;color:var(--muted)}.tabs button[aria-selected="true"]{color:var(--tint)}
+.week button{width:44px;height:44px;font:inherit;cursor:pointer;border:0;background:var(--surface);color:var(--tint);border-radius:22px;font-size:26px;font-weight:500;box-shadow:var(--shadow)}
+.week span{text-align:center;flex:1;font-size:17px;font-weight:600}
+.days{display:flex;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;gap:8px}
+.days button{flex:1 0 auto;min-width:56px;font:inherit;cursor:pointer;border:0;background:var(--surface);border-radius:14px;font-weight:600;font-size:15px;color:var(--ink);box-shadow:var(--shadow);padding:10px 8px}
+.days button small{display:block;font-size:20px;font-weight:600;opacity:1;margin-top:2px}
+.days button[aria-pressed="true"]{border-color:var(--ink);background:var(--tint-fill);color:#fff;box-shadow:0 4px 12px var(--tint-soft)}
+.list,.flours,details.card{border:0;border-radius:14px;box-shadow:var(--shadow);background:var(--surface)}
+.row{display:flex;align-items:center;gap:12px;border-top:.5px solid var(--line);padding:11px 12px 11px 16px}
+.row .name b{display:block;font-size:17px;font-weight:600}
+.row .name small{color:var(--muted);font-size:13px}
+details.card summary{list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:12px;cursor:pointer;padding:14px 16px}
+details.card summary b{font-size:17px;font-weight:600}
+details.card[open] summary{border-bottom:.5px solid var(--line)}
+td{vertical-align:baseline;border-top:.5px solid var(--line);padding:10px 16px}
+td.q{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-size:17px;font-weight:600}
+tr.tot td{border-top:.5px solid var(--line);font-weight:600}
+tr.tot td.q{font-size:20px}
+.empty{color:var(--muted);background:var(--surface);padding:20px;text-align:center;border:0;box-shadow:var(--shadow);border-radius:14px}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{border:0;font:inherit;cursor:pointer;line-height:1;width:44px;height:44px;border-radius:12px;background:var(--fill);color:var(--tint);font-size:26px;font-weight:500}
+.stepper button:active{background:var(--fill2);transform:scale(.96)}
+.stepper input{text-align:center;font:inherit;color:var(--ink);font-variant-numeric:tabular-nums;-moz-appearance:textfield;width:58px;height:44px;border:0;background:var(--fill2);border-radius:12px;font-size:22px;font-weight:600}
+.hy button{height:40px;border:0;font:inherit;font-size:22px;cursor:pointer;width:40px;background:var(--fill);color:var(--tint);border-radius:10px;font-weight:500}
+.add button,.reset{font:inherit;cursor:pointer;border:0;background:var(--tint-soft);color:var(--tint);border-radius:12px;font-weight:600;padding:12px 16px}
+.reset.ghost,.newc button.ghost{background:var(--fill2);color:var(--ink);border:0}
+.reset.danger{border-color:var(--warn);background:rgba(255,59,48,.12);color:var(--warn);border:0}
+.add select,.newc input{border:0;background:var(--surface);border-radius:12px;box-shadow:var(--shadow)}
+.newc button{font:inherit;font-weight:700;padding:12px 14px;border:0;cursor:pointer;background:var(--tint-fill);color:#fff;border-radius:12px}
+.linkbtn{background:none;border:0;font:inherit;font-size:15px;padding:6px 0;cursor:pointer;color:var(--tint);font-weight:600}
+.clients button{padding:10px 14px;border-radius:999px;color:var(--ink);font:inherit;cursor:pointer;border:0;background:var(--surface);box-shadow:var(--shadow);font-weight:600}
+.clients button[aria-pressed="true"]{border-color:var(--levain);background:var(--tint-fill);color:#fff}
+.clients button.plus{border-style:dashed;background:transparent;box-shadow:none;border:1px dashed var(--line);color:var(--tint)}
+.pin input{width:84px;height:40px;text-align:right;font:inherit;font-size:18px;color:var(--ink);padding:0 8px;font-variant-numeric:tabular-nums;border:0;background:var(--fill2);border-radius:10px;font-weight:600}
+.pin input.mod{border-color:var(--levain);background:var(--tint-soft);color:var(--tint)}
+.mv button{height:36px;border-radius:10px;color:var(--ink);font:inherit;font-size:18px;font-weight:700;cursor:pointer;width:32px;border:0;background:var(--fill2)}
+.mv button.del{border-color:var(--warn);background:rgba(255,59,48,.12);color:var(--warn)}
+.gear{background:none;border:0;font-size:18px;padding:4px 2px 4px 10px;cursor:pointer;vertical-align:middle;color:var(--muted)}
+.gear.eur{font-size:14px;font-weight:700;padding-left:8px;color:var(--tint)}
+.lv{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:14px 16px}
+.lv span{display:block;font-size:13px;font-weight:600;color:var(--levain);text-transform:none}
+.lv strong{display:block;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--ink);font-size:32px;font-weight:700;letter-spacing:-.02em}
+.lvd{display:flex;gap:16px;margin-top:8px;padding-top:8px;border-top:.5px solid var(--line)}
+.ctag{margin-left:8px;font-size:13px;font-weight:700;color:var(--levain);padding:2px 6px;white-space:nowrap;background:var(--levain-soft);border-radius:6px}
+.gauge{position:relative;overflow:hidden;border:0;background:var(--fill);border-radius:6px;height:8px}
+.dragging{position:relative;z-index:2;background:var(--surface)!important;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+tr.hyd.on td{color:var(--ink);background:var(--tint-soft)}
+.ltools{display:flex;justify-content:flex-end;margin:0 0 8px}.iconbtn{width:36px;height:36px;border-radius:18px;border:0;background:var(--surface);box-shadow:var(--shadow);color:var(--tint);font:inherit;font-size:19px;font-weight:600;line-height:1;cursor:pointer}.iconbtn.on{background:var(--tint-fill);color:#fff}
+.ctop{display:flex;align-items:flex-start;gap:8px;margin-bottom:12px}.ctop .clients{flex:1;min-width:0;margin-bottom:0}.cact{display:flex;gap:6px;flex:0 0 auto;padding-top:2px}.iconbtn{display:inline-flex;align-items:center;justify-content:center;padding:0}.iconbtn.del{color:var(--warn)}.iconbtn.big{width:44px;height:44px;border-radius:22px;flex:0 0 auto}.newc .iconbtn{padding:0;background:var(--surface);color:var(--muted);box-shadow:var(--shadow)}.newc .iconbtn.ok{background:var(--tint-fill);color:#fff}
+.totop{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;margin-left:10px;border:0;border-radius:15px;background:var(--fill);color:var(--tint);cursor:pointer;vertical-align:middle;padding:0}
+.add .iconbtn{padding:0;width:44px;height:44px;border-radius:22px;flex:0 0 auto;background:var(--tint-soft);color:var(--tint);box-shadow:none}td .iconbtn{margin-left:6px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}.chip{font-size:14px;font-weight:600;background:var(--fill2);color:var(--ink);border-radius:7px;padding:2px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}.chip i{font-style:normal;color:var(--muted);font-weight:500;margin-right:4px}.chip.pro{background:var(--tint-soft);color:var(--tint)}.chip.m{background:none;color:var(--muted);font-weight:500;padding:2px 2px}
+.lvr{padding:10px 16px;border-top:.5px solid var(--line)}.lvr:first-child{border-top:0}.lvh{display:flex;justify-content:space-between;align-items:center;gap:10px}.lvh b{font-size:17px;font-weight:600}.lvh span{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}.lvs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}.lvs em{display:block;font-style:normal;font-size:13px;color:var(--muted)}.lvs b{display:block;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}.lve{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--tint-soft);font-size:15px}
+tr.ptn td{padding:8px 16px;border-top:.5px solid var(--line)}.pts{display:flex;flex-direction:column;gap:2px}.pt{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;font-size:14px;color:var(--muted)}.pt em{font-style:normal}.pt em::before{content:"Pâton "}.pt b{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}.pt small,.pt span{font-size:13px}
+.pbar{display:flex;align-items:center;justify-content:space-between;gap:10px}.pbar .pts{flex:1;min-width:0}
+.askbg{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:16px}.ask{background:var(--surface);border-radius:16px;padding:18px;width:100%;max-width:340px;box-shadow:0 10px 40px rgba(0,0,0,.25)}.ask p{margin:0 0 12px;font-weight:600;font-size:17px}.ask input{width:100%;font:inherit;font-size:17px;padding:12px;border:0;border-radius:12px;background:var(--fill2);color:var(--ink)}.askb{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}.askb .iconbtn{padding:0;background:var(--fill);color:var(--muted);box-shadow:none}.askb .iconbtn.del{color:var(--warn)}.askb .iconbtn.ok{background:var(--tint-fill);color:#fff}
+.caform{padding:0}.carow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-top:.5px solid var(--line)}.carow:first-child{border-top:0}.carow label{font-size:17px}.cain{display:flex;align-items:center;gap:6px}.cain input{width:130px;height:44px;text-align:right;font:inherit;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;border:0;border-radius:12px;background:var(--fill2);color:var(--ink);padding:0 10px}.cain span{color:var(--muted)}.carow b{font-size:20px;font-variant-numeric:tabular-nums}.catot b{font-weight:700}.cawarn{color:var(--warn)}.caz{display:block;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}.caz.cawarn{color:var(--warn)}.cav{font-size:18px;font-variant-numeric:tabular-nums;white-space:nowrap}.cawk{cursor:pointer}.cawk.on{background:var(--tint-soft)}
+body[data-tab="O"]{--bg:#EAF1FB}body[data-tab="V"]{--bg:#FBF1E6}body[data-tab="P"]{--bg:#EAF5EC}body[data-tab="C"]{--bg:#F2EEFB}body[data-tab="R"]{--bg:#E8F5F4}body[data-tab="S"]{--bg:#F2F2F7}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body[data-tab="O"]{--bg:#0B1526}:root:not([data-theme="light"]) body[data-tab="V"]{--bg:#1F1408}:root:not([data-theme="light"]) body[data-tab="P"]{--bg:#0A1A0E}:root:not([data-theme="light"]) body[data-tab="C"]{--bg:#17102A}:root:not([data-theme="light"]) body[data-tab="R"]{--bg:#06191A}:root:not([data-theme="light"]) body[data-tab="S"]{--bg:#000}}
+:root[data-theme="dark"] body[data-tab="O"]{--bg:#0B1526}:root[data-theme="dark"] body[data-tab="V"]{--bg:#1F1408}:root[data-theme="dark"] body[data-tab="P"]{--bg:#0A1A0E}:root[data-theme="dark"] body[data-tab="C"]{--bg:#17102A}:root[data-theme="dark"] body[data-tab="R"]{--bg:#06191A}:root[data-theme="dark"] body[data-tab="S"]{--bg:#000}
+body{transition:background-color .25s}
+.tdtag{font-style:normal;margin-left:8px;font-size:12px;font-weight:700;color:#fff;background:var(--today);border-radius:6px;padding:2px 7px;vertical-align:2px}.blh.tday{color:var(--today)}.list.tlist{box-shadow:0 0 0 3px var(--today),var(--shadow)}
+.days button.today{box-shadow:0 0 0 3px var(--today),var(--shadow)}.days button.today[aria-pressed="true"]{box-shadow:0 0 0 2px var(--bg),0 0 0 5px var(--today)}.days button i.tdl{display:block;font-style:normal;font-size:10px;font-weight:700;margin-top:1px;color:var(--today)}.days button[aria-pressed="true"] i.tdl{color:#fff}.cawk.tday{box-shadow:inset 0 0 0 3px var(--today)}.cawk.tday .name b{color:var(--today)}
+body{--today:#FF3B30;--acc:var(--tint-fill)}
+body[data-tab="O"]{--acc:#3A78C9}body[data-tab="V"]{--acc:#C2752E}body[data-tab="P"]{--acc:#3F8F55}body[data-tab="C"]{--acc:#7A5BC4}body[data-tab="R"]{--acc:#2C8E88}body[data-tab="S"]{--acc:#8E8E93}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{--today:#FF453A}}:root[data-theme="dark"] body{--today:#FF453A}
+.days button[aria-pressed="true"]{background:var(--acc);box-shadow:0 4px 12px color-mix(in srgb,var(--acc) 30%,transparent)}
+.tabs button[aria-selected="true"]{color:var(--acc)}
+body[data-tab]{--tint:var(--acc);--tint-fill:var(--acc);--tint-soft:color-mix(in srgb,var(--acc) 14%,transparent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body[data-tab]{--tint:color-mix(in srgb,var(--acc) 65%,white)}}:root[data-theme="dark"] body[data-tab]{--tint:color-mix(in srgb,var(--acc) 65%,white)}
+.days button.today[aria-pressed="true"] i.tdl{color:#fff}
+.days button{position:relative}.dbadge{position:absolute;top:-7px;right:-7px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--today);color:#fff;font-size:13px;font-weight:700;line-height:22px;box-shadow:0 0 0 2px var(--bg);cursor:pointer}.days{padding-top:8px;padding-right:8px}a.tel{display:inline-flex;align-items:center;gap:6px;margin:4px 0 2px;padding:6px 12px;border-radius:999px;background:var(--tint-soft);color:var(--tint);font-weight:700;font-size:16px;text-decoration:none;font-variant-numeric:tabular-nums}.chips.big .chip{font-size:16px;padding:4px 10px}.chips.big .chip i{color:var(--ink);font-weight:500}.onote{display:block;margin-top:4px;font-size:15px!important;color:var(--ink)!important}
+.osheet .onote{font-size:16px!important}.bigtel{-webkit-touch-callout:default;font-size:30px;font-weight:700;letter-spacing:.02em;font-variant-numeric:tabular-nums;-webkit-user-select:all;user-select:all;padding:10px 0;color:var(--ink)}
+#viewP:not(.stockmode) #orderWrap{display:none}#viewP.stockmode>*:not(.ltools):not(#orderWrap){display:none!important}
+:focus-visible{outline-offset:2px;outline:3px solid var(--tint)}
+.ltools{gap:8px}#cmdBtn{position:relative}.badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--warn);color:#fff;font-size:11px;font-weight:700;line-height:18px;padding:0 4px}.cin{flex:1;min-width:0;font:inherit;font-size:17px;border:0;background:var(--fill2);border-radius:10px;padding:10px 12px;color:var(--ink)}.ost{flex-direction:column;align-items:center;gap:0}.ost input{width:60px}.ost em{font-size:12px;text-align:center}.oq{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;min-width:40px;text-align:right}.oq.z{color:var(--muted);font-weight:500}.sw{position:relative;display:inline-block;width:51px;height:31px;vertical-align:middle}.sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}.sw i{position:absolute;inset:0;border-radius:16px;background:var(--fill);transition:background .2s}.sw i::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .2s}.sw input:checked+i{background:var(--levain)}.sw input:checked+i::after{transform:translateX(20px)}tr.offr td{color:var(--muted)}td.q.d{font-size:15px;font-weight:500;color:var(--muted)}.days button.hol small::after{content:"";display:block;width:6px;height:6px;border-radius:50%;background:var(--warn);margin:3px auto 0}.days button.hol[aria-pressed="true"] small::after{background:#fff}.bil{display:flex;align-items:center;gap:6px}.bil .iconbtn.on{background:var(--warn);color:#fff}.row .name small.rup{color:var(--warn);font-weight:600}.adj{margin-left:6px;font-size:12px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--levain-soft);color:var(--levain);white-space:nowrap}.adj.dn{background:var(--flour-soft);color:var(--flour)}.nextw{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);padding:12px 16px;margin-top:12px}.nextw b{display:block;font-size:15px;margin-bottom:6px}
+.head{position:sticky;top:0;z-index:20;background:var(--bg);margin:0 -16px 14px;padding:calc(env(safe-area-inset-top,0px) + 6px) 16px 6px}
+.head .tabs{position:static;box-shadow:none;margin:0 0 8px}
+.head #week{margin:0 0 8px}.head #week button{width:34px;height:34px;font-size:22px}.head #week span{font-size:16px}
+.head .days{margin-bottom:0}
+html{scroll-padding-top:var(--hh,12px)}details.card{scroll-margin-top:var(--hh,12px)}
+:root{padding-top:0!important}.wrap{padding-top:0}
+.head #sync{position:absolute;left:3px;top:calc(env(safe-area-inset-top,0px) + 19px);margin:0;font-size:0;line-height:0;width:8px;height:8px}.head #sync::before{margin:0;vertical-align:top}
+.psub td{padding-top:0!important}.psub .lvs{margin:0}
+.tmb{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;margin-left:10px;border:0;border-radius:15px;background:var(--fill);color:var(--tint);cursor:pointer;vertical-align:middle;padding:0 6px;font:inherit;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;gap:4px}
+.tmb.on{background:var(--acc);color:#fff}.tmb.end{background:var(--today);color:#fff;animation:tmp 1s infinite}
+@keyframes tmp{50%{opacity:.45}}
+.tmrs{display:flex;gap:8px;overflow-x:auto;padding:8px 0 0}
+.tmrs button{flex:0 0 auto;border:0;border-radius:16px;padding:6px 12px;font:inherit;font-size:15px;font-weight:600;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);font-variant-numeric:tabular-nums;cursor:pointer}
+.tmrs button b{color:var(--acc);margin-left:6px}.tmrs button.end{background:var(--today);color:#fff;animation:tmp 1s infinite}.tmrs button.end b{color:#fff}
+.tpk{text-align:center}.tpk .tv{display:flex;align-items:center;justify-content:center;gap:18px;margin:6px 0 14px}.tpk .tv b{font-size:44px;font-weight:700;min-width:120px;font-variant-numeric:tabular-nums}
+.tpk .tv button{width:44px;height:44px;border-radius:22px;border:0;background:var(--fill);color:var(--tint);font-size:26px;font-weight:500;cursor:pointer}
+.tpk .pre{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px}.tpk .pre button{border:0;border-radius:14px;padding:8px 12px;font:inherit;font-size:15px;font-weight:600;background:var(--fill);color:var(--ink);cursor:pointer}.tpk .pre button.on{background:var(--acc);color:#fff}
+.reco{display:inline-flex;align-items:baseline;gap:6px;margin:3px 0 2px;border:0;border-radius:10px;padding:3px 9px;font:inherit;font-size:14px;font-weight:700;background:color-mix(in srgb,var(--levain) 14%,transparent);color:var(--levain);cursor:pointer;max-width:100%}
+.reco.dn{background:color-mix(in srgb,var(--warn) 12%,transparent);color:var(--warn)}.reco i{font-style:normal;font-weight:500;font-size:12px;opacity:.85}
+.name .reco{display:flex;width:max-content}
+.head #week button{background:none;box-shadow:none;color:var(--muted);opacity:.45;font-size:22px;width:28px;height:28px}.head #week{touch-action:pan-y;user-select:none;-webkit-user-select:none;min-height:40px;cursor:grab}.head #week span{display:block}
+.head #week span{cursor:pointer}
+.cal{max-width:360px;padding:14px}.calh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.calh p{margin:0!important;font-size:17px}
+.calh button{width:36px;height:36px;border:0;border-radius:18px;background:none;color:var(--muted);font-size:24px;cursor:pointer}
+.calg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}.calg>span{font-size:12px;font-weight:600;color:var(--muted);padding:4px 0}
+.calg .cd{position:relative;aspect-ratio:1;border:0;border-radius:50%;background:none;font:inherit;font-size:16px;font-weight:600;color:var(--ink);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+.calg .cd.x{color:var(--muted);opacity:.35;font-weight:400;cursor:default}.calg .cd.om{opacity:.4}
+.calg .cd.wk{background:color-mix(in srgb,var(--acc) 14%,transparent);border-radius:10px}
+.calg .cd.sel{background:var(--acc);color:#fff;border-radius:10px}
+.calg .cd.td{box-shadow:inset 0 0 0 2px var(--today)}
+.calg .cd.cl{text-decoration:line-through;color:var(--muted)}
+.calg .hd{position:absolute;bottom:4px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--today)}.calg .sel .hd{background:#fff}
+.calg .cb{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:8px;background:var(--today);color:#fff;font-size:10px;line-height:16px;padding:0 3px}
+.rcca{display:inline-flex!important;margin-top:6px;cursor:default}
+.row.canl{flex-wrap:wrap;gap:8px}.seg{display:flex;background:var(--fill);border-radius:10px;padding:2px;flex:1 1 100%;justify-content:space-between}
+.seg button{border:0;background:none;font:inherit;font-size:16px;font-weight:600;color:var(--ink);min-width:0;flex:1;height:36px;border-radius:8px;cursor:pointer;padding:0}
+.seg button.on{background:var(--acc);color:#fff;box-shadow:0 2px 6px color-mix(in srgb,var(--acc) 30%,transparent)}
+#viewP.stockmode #canWrap{display:none}
+.tmend{text-align:center}.tmend p{font-size:22px!important;margin-bottom:2px!important}.tmend small{display:block;color:var(--muted);margin-bottom:18px;font-size:15px}
+.tmre{display:block;width:100%;border:0;border-radius:14px;padding:18px;font:inherit;font-size:20px;font-weight:700;background:var(--acc);color:#fff;cursor:pointer;margin-bottom:10px}
+.tmst{display:block;width:100%;border:0;border-radius:14px;padding:14px;font:inherit;font-size:17px;font-weight:600;background:var(--fill);color:var(--ink);cursor:pointer}
+#prodTot{margin-right:auto;display:flex;align-items:baseline;gap:8px;align-self:center}#prodTot span{font-size:15px;font-weight:600;color:var(--acc)}#prodTot b{font-size:24px;font-weight:700;letter-spacing:-.02em}
+.ltools{align-items:center;gap:10px;margin-bottom:12px}.ltools .iconbtn{width:44px;height:44px;border-radius:22px}.ltools .iconbtn svg{width:24px;height:24px}
+#viewP.stockmode #prodTot{display:none}
+.sarl{margin:12px 0}.sarl .row{gap:10px}.sgap{font-size:20px;color:var(--warn);white-space:nowrap}.sgap.ok{color:var(--levain)}.sarl small.d{display:block;margin-top:6px;color:var(--muted);font-size:13px}
+.bi{font-weight:700;color:var(--ink);font-style:normal;display:inline!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="title" hidden>Production</h1>
+  <p class="sub" id="subtitle"></p>
+  <div class="head" id="head">
+  <p class="sync local" id="sync"></p>
+  <div class="week" id="week" hidden>
+    <button id="wPrev" aria-label="Semaine précédente">‹</button><span id="wLabel"></span><button id="wNext" aria-label="Semaine suivante">›</button>
+  </div>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabO" aria-label="Pro"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9l-8 4.5l-8-4.5v-9z"/><path d="M12 12l8-4.5"/><path d="M12 12v9"/><path d="M12 12l-8-4.5"/><path d="M16 5.25l-8 4.5"/></svg></button>
+    <button role="tab" id="tabV" aria-label="Boutique"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1h-18l2-4h14l2 4"/><path d="M5 21v-10.15"/><path d="M19 21v-10.15"/><path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/></svg></button>
+    <button role="tab" id="tabP" aria-label="Production"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h-2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-12a2 2 0 0 0-2-2h-2"/><path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"/><path d="M9 12h.01"/><path d="M13 12h2"/><path d="M9 16h.01"/><path d="M13 16h2"/></svg></button>
+    <button role="tab" id="tabC" aria-label="Chiffre d'affaires"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 9h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2z"/><path d="M12 14a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M17 9v-2a2 2 0 0 0-2-2h-10a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/></svg></button>
+    <button role="tab" id="tabR" aria-label="Rentabilité"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1z"/><path d="M15 9a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1z"/><path d="M9 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1z"/><path d="M4 20h14"/></svg></button>
+    <button role="tab" id="tabS" aria-label="Réglages"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></svg></button>
+  </div>
+  <div class="days" id="days" role="group" aria-label="Jour"></div>
+  <div class="tmrs" id="tmrs" hidden></div>
+  </div>
+
+  <section id="viewV">
+    <div id="salesCA"></div>
+    <div class="ltools"><button class="iconbtn" id="cmdBtn" aria-label="Commandes clients"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2z"/><path d="M16 3v4M8 3v4M4 11h16"/></svg></button><button class="iconbtn" id="bilanBtn" aria-label="Invendus et ruptures"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a2 2 0 1 0 4 0a2 2 0 0 0-4 0"/><path d="M5 8h14a2 2 0 0 1 1.98 2.3l-1.26 7.16a3 3 0 0 1-2.96 2.54h-9.52a3 3 0 0 1-2.96-2.54l-1.26-7.16a2 2 0 0 1 1.98-2.3z"/><path d="M17 10l-2-6"/><path d="M7 10l2-6"/></svg></button><button class="iconbtn" id="orderBtn" aria-label="Changer l'ordre des pains">⇅</button></div>
+    <div class="list" id="sales"></div>
+    <p class="hint" id="salesHint"></p>
+  </section>
+
+  <section id="viewO">
+    <div class="ctop">
+      <div class="clients" id="clients"></div>
+      <div class="cact">
+        <button class="iconbtn" id="blBtn" aria-label="Relevé des livraisons"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h-2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-12a2 2 0 0 0-2-2h-2"/><path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"/><path d="M9 14l2 2l4-4"/></svg></button>
+        <button class="iconbtn" id="newC" aria-label="Nouveau client"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="iconbtn" id="renameC" aria-label="Renommer le client"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4L4 16v4"/><path d="M13.5 6.5l4 4"/></svg></button>
+        <button class="iconbtn del" id="deleteC" aria-label="Supprimer le client"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg></button>
+      </div>
+    </div>
+    <div class="newc" id="newc" hidden>
+      <input id="newName" type="text" placeholder="Nom du client" aria-label="Nom du client" autocomplete="off">
+      <button class="iconbtn big ok" id="newOk" aria-label="Valider"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></button><button class="iconbtn big" id="newCancel" aria-label="Annuler"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div id="blView" hidden></div>
+    <div id="clientBody">
+      <div class="list" id="proList"></div>
+      <div class="add">
+        <select id="proAdd" aria-label="Ajouter un produit à la commande"></select>
+        <button class="iconbtn" id="proAddBtn" aria-label="Ajouter"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+      <p class="hint" id="proHint"></p>
+    </div>
+  </section>
+
+  <section id="viewP">
+    <div class="ltools"><div id="prodTot"></div><button class="iconbtn" id="stockBtn" aria-label="Stock de farine et commande au moulin"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21v-13l9-4l9 4v13"/><path d="M13 13h4v8h-10v-6h6"/><path d="M13 21v-9a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v3"/></svg></button><button class="iconbtn" id="prodOrderBtn" aria-label="Changer l'ordre de production">⇅</button></div>
+    <div class="list" id="prod"></div>
+    <div class="add">
+      <select id="extra" aria-label="Ajouter une production hors ventes"></select>
+      <button class="iconbtn" id="addBtn" aria-label="Ajouter"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    </div>
+    <h2>Levains à préparer</h2>
+    <div id="levains"></div>
+    <div id="weeklyWrap" hidden>
+      <h2>À préparer pour la semaine</h2>
+      <div id="weekly"></div>
+    </div>
+    <h2>Pesées par pétrissage</h2>
+    <div id="pesees"></div>
+    <h2>Farines utilisées</h2>
+    <div id="flours"></div>
+    <div id="orderWrap"><h2 style="margin-top:4px">Stock et commande au moulin</h2>
+    <div id="order"></div></div>
+    <div class="foot" style="justify-content:flex-end"><button class="iconbtn del" id="resetP" aria-label="Effacer les ajouts"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 20h-10.5l-4.21-4.3a1 1 0 0 1 0-1.41l10-10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3"/><path d="M18 13.3l-6.3-6.3"/></svg></button></div>
+  </section>
+  <section id="viewS" hidden><div id="settings"></div></section>
+  <section id="viewC" hidden><div id="caView"></div></section>
+  <section id="viewR" hidden><div id="profit"></div></section>
+</div>
+<script src="config.js"></script>
+<script src="vendor/supabase.js"></script>
+<script src="cloud.js"></script>
+<script>
+const TM_IC='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 13m-8 0a8 8 0 1 0 16 0a8 8 0 1 0-16 0"/><path d="M12 9v4l2 2"/><path d="M5 3l-3 3"/><path d="M22 6l-3-3"/></svg>';
+const tmLoad=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+const tmSave=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}try{if(typeof save==="function")save();}catch(e){}};
+let timers=tmLoad("v22-timers")||[],tmDur=tmLoad("v22-tdur")||{};
+const tmFmt=ms=>{const t=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60),x=t%60;return (h?h+":"+String(m).padStart(2,"0"):m)+":"+String(x).padStart(2,"0");};
+// Son des minuteurs : le navigateur ne laisse jouer un son qu'après un toucher dans la page. On débloque donc le son à chaque toucher
+// (sinon, après un rechargement de la page par l'appli Claude, le bip restait muet), et le bip passe en mode « lecture » pour sonner même iPhone en silencieux.
+let actx=null;const tmAudio=()=>{try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state!=="running")actx.resume();
+  const s=actx.createBufferSource();s.buffer=actx.createBuffer(1,1,22050);s.connect(actx.destination);s.start(0);}catch(e){}tmWake();};
+["pointerdown","touchend","click","keydown"].forEach(t=>document.addEventListener(t,tmAudio,{capture:true,passive:true}));
+let tmSess=0;const tmBeep=()=>{if(!actx)return;try{if(navigator.audioSession){navigator.audioSession.type="playback";clearTimeout(tmSess);tmSess=setTimeout(()=>{try{navigator.audioSession.type="auto";}catch(e){}},1500);}}catch(e){}
+  try{if(actx.state!=="running")actx.resume();const t0=actx.currentTime+.05;[0,.25,.5].forEach(d=>{const o=actx.createOscillator(),g=actx.createGain();o.type="square";o.frequency.value=1046;g.gain.setValueAtTime(.0001,t0+d);g.gain.exponentialRampToValueAtTime(.6,t0+d+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+d+.18);o.connect(g);g.connect(actx.destination);o.start(t0+d);o.stop(t0+d+.2);});}catch(e){}
+  try{navigator.vibrate&&navigator.vibrate([300,150,300]);}catch(e){}};
+// Écran gardé allumé tant qu'un minuteur tourne (le bip ne peut pas sonner écran éteint)
+let tmLock=null;const tmWake=()=>{try{if(timers.length&&!tmLock&&navigator.wakeLock&&document.visibilityState==="visible")navigator.wakeLock.request("screen").then(l=>{tmLock=l;l.addEventListener("release",()=>{tmLock=null;});}).catch(()=>{});
+  else if(!timers.length&&tmLock){tmLock.release().catch(()=>{});tmLock=null;}}catch(e){}};
+function tmBtn(k,n){const t=timers.find(x=>x.k===k);const ms=t?t.end-Date.now():0;
+  return `<button class="tmb${t?(ms<=0?" end":" on"):""}" data-tk="${k}" data-tn="${n.replace(/"/g,"&quot;")}" aria-label="Minuteur">${t?tmFmt(ms):TM_IC}</button>`;}
+function tmPick(k,n){tmAudio();const t=timers.find(x=>x.k===k);
+  if(t){if(t.end<=Date.now()){tmStop(k);return;}ask(`Arrêter le minuteur ${n} ?`).then(ok=>{if(ok)tmStop(k);});return;}
+  let m=tmDur[k]||45;const P=[45,60,90,120,150,180];
+  const o=document.createElement("div");o.className="askbg";
+  const lab=v=>v>=60?Math.floor(v/60)+" h"+(v%60?" "+String(v%60).padStart(2,"0"):""):v+" min";
+  const draw=()=>{o.innerHTML=`<div class="ask tpk" role="dialog" aria-modal="true"><p>${n}</p><div class="tv"><button data-d="-5" aria-label="Moins 5 minutes">−</button><b>${lab(m)}</b><button data-d="5" aria-label="Plus 5 minutes">+</button></div><div class="pre">${P.map(v=>`<button data-m="${v}" class="${v===m?"on":""}">${lab(v)}</button>`).join("")}</div><div class="askb"><button class="iconbtn big" data-a="no" aria-label="Annuler">${IC.x}</button><button class="iconbtn big ok" data-a="ok" aria-label="Lancer">${IC.check}</button></div></div>`;};
+  draw();document.body.appendChild(o);
+  o.onclick=e=>{const b=e.target.closest("button");if(!b){if(e.target===o)o.remove();return;}
+    if(b.dataset.d){m=Math.max(1,m+ +b.dataset.d);draw();return;}if(b.dataset.m){m=+b.dataset.m;draw();return;}
+    o.remove();if(b.dataset.a==="ok"){tmDur[k]=m;tmSave("v22-tdur",tmDur);timers=timers.filter(x=>x.k!==k).concat([{k,n,end:Date.now()+m*60000,dur:m,cnt:1}]);tmSave("v22-timers",timers);tmTick();tmWake();if(window.vivantPush)window.vivantPush();}};}
+function tmStop(k){timers=timers.filter(x=>x.k!==k);tmSave("v22-timers",timers);const e=document.getElementById("tmEnd");if(e)e.remove();tmTick();}
+let tmLast=0;
+function tmTick(){const now=Date.now(),box=document.getElementById("tmrs");if(!box)return;if(!timers.length&&tmLock)tmWake();
+  box.hidden=!timers.length;
+  box.innerHTML=timers.slice().sort((a,b)=>a.end-b.end).map(t=>{const ms=t.end-now;return `<button class="${ms<=0?"end":""}" data-tk="${t.k}" data-tn="${t.n.replace(/"/g,"&quot;")}">${t.n}<b>${ms<=0?"0:00":tmFmt(ms)}</b></button>`;}).join("");
+  document.querySelectorAll(".tmb").forEach(b=>{const t=timers.find(x=>x.k===b.dataset.tk);const ms=t?t.end-now:0;b.className="tmb"+(t?(ms<=0?" end":" on"):"");b.innerHTML=t?tmFmt(ms):TM_IC;});
+  if(timers.some(t=>t.end<=now)&&now-tmLast>2000){tmLast=now;tmBeep();}
+  const eo=document.getElementById("tmEnd");if(eo&&!timers.some(t=>t.k===eo.dataset.k&&t.end<=now))eo.remove();
+  const done=timers.filter(t=>t.end<=now).sort((a,b)=>a.end-b.end)[0];if(done&&!document.getElementById("tmEnd"))tmEndSheet(done);}
+// Fin de minuteur : grande fenêtre avec « Relancer » (même durée) ou « Arrêter »
+function tmEndSheet(t){const o=document.createElement("div");o.className="askbg";o.id="tmEnd";o.dataset.k=t.k;
+  const lab=v=>v>=60?Math.floor(v/60)+" h"+(v%60?" "+String(v%60).padStart(2,"0"):""):v+" min";const m=t.dur||tmDur[t.k]||30;
+  o.innerHTML=`<div class="ask tmend" role="alertdialog" aria-modal="true"><p>${t.n}</p><small>${t.cnt>1?`${t.cnt}ᵉ minuteur terminé`:"Minuteur terminé"}</small>
+    <button class="tmre" data-a="re">↻ Relancer · ${lab(m)}</button><button class="tmst" data-a="st">Arrêter</button></div>`;
+  document.body.appendChild(o);
+  o.onclick=e=>{const b=e.target.closest("button");if(!b)return;tmAudio();o.remove();
+    if(b.dataset.a==="re"){timers=timers.map(x=>x.k===t.k?{...x,end:Date.now()+m*60000,dur:m,cnt:(x.cnt||1)+1}:x);tmSave("v22-timers",timers);}
+    else timers=timers.filter(x=>x.k!==t.k),tmSave("v22-timers",timers);tmTick();};}
+document.getElementById("tmrs").onclick=e=>{const b=e.target.closest("button");if(b)tmPick(b.dataset.tk,b.dataset.tn);};
+setInterval(tmTick,500);document.addEventListener("visibilitychange",()=>{tmTick();tmWake();});tmTick();
+</script>
+<script>
+const IC={x:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>`,pen:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4L4 16v4"/><path d="M13.5 6.5l4 4"/></svg>`,check:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>`,undo:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14l-4-4l4-4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg>`,plus:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`,erase:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 20h-10.5l-4.21-4.3a1 1 0 0 1 0-1.41l10-10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3"/><path d="M18 13.3l-6.3-6.3"/></svg>`,bank:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg>`};
+// Fenêtre de confirmation / saisie dans la page (les fenêtres natives ne marchent pas dans l'appli Claude)
+function ask(title,value){return new Promise(res=>{const o=document.createElement("div");o.className="askbg";
+  o.innerHTML=`<div class="ask" role="dialog" aria-modal="true"><p>${title}</p>${value!=null?`<input type="text" autocomplete="off">`:""}<div class="askb"><button class="iconbtn big" data-a="no" aria-label="Annuler">${IC.x}</button><button class="iconbtn big ok" data-a="ok" aria-label="Valider">${IC.check}</button></div></div>`;
+  document.body.appendChild(o);const i=o.querySelector("input");if(i){i.value=value;setTimeout(()=>{i.focus();i.select();},50);i.onkeydown=e=>{if(e.key==="Enter")done(true);};}
+  const done=ok=>{o.remove();res(ok?(i?i.value:true):null);};
+  o.onclick=e=>{const b=e.target.closest("button");if(b)done(b.dataset.a==="ok");else if(e.target===o)done(false);};});}
+const R = {
+  froment:{name:"Froment",unit:"pain",days:["Mar","Mer","Jeu","Ven","Sam"],items:[
+    {n:"Froment",q:.59,k:"farine",f:"Froment T80"},
+    {n:"Eau",q:.4602},{n:"Sel",q:.0118},
+    {n:"Levain de froment",q:.118,k:"levain",l:"Froment"}]},
+  epeautre:{name:"Petit épeautre",unit:"pain",days:["Mar","Mer","Jeu","Ven","Sam"],items:[
+    {n:"Petit épeautre T130",q:.5,k:"farine",f:"Petit épeautre T130"},
+    {n:"Eau",q:.325},{n:"Sel",q:.01},
+    {n:"Levain de petit épeautre",q:.125,k:"levain",l:"Petit épeautre"}]},
+  khorasan:{name:"Khorasan",unit:"pain",days:["Mar","Mer","Jeu","Ven","Sam"],items:[
+    {n:"Khorasan T80",q:.456,k:"farine",f:"Khorasan T80"},
+    {n:"Froment T80",q:.114,k:"farine",f:"Froment T80"},
+    {n:"Eau",q:.5073},{n:"Sel",q:.0114},
+    {n:"Levain de froment",q:.1026,k:"levain",l:"Froment"}]},
+  fss:{name:"Froment, seigle & sarrasin",unit:"pain",days:["Mar","Mer","Jeu","Ven","Sam"],items:[
+    {n:"Froment T80",q:0.4358,k:"farine",f:"Froment T80"},
+    {n:"Seigle",q:0.0484,k:"farine",f:"Seigle T130"},
+    {n:"Eau",q:0.3486},{n:"Sel",q:0.0113},
+    {n:"Levain de seigle",q:0.113,k:"levain",l:"Seigle"},
+    {g:"Bouillie de sarrasin",prep:"bouillieSarrasin",q:0.2179}]},
+  focaccia:{name:"Focaccia",unit:"plaque",target:3,days:["Mar","Mer","Jeu","Ven","Sam"],items:[
+    {n:"Froment T80",q:.755,k:"farine",f:"Froment T80"},
+    {n:"Froment T65",q:.755,k:"farine",f:"Froment T65"},
+    {n:"Eau",q:1.0815},{n:"Sel",q:.0302},
+    {n:"Levain de froment",q:.302,k:"levain",l:"Froment"},
+    {n:"Huile d'olive",q:.0604},{n:"Huile colza (plaque)",q:.0151},{n:"Levure",q:.00151},{n:"Olives",q:.1,keep:true}]},
+  graine:{name:"Graine",unit:"pain",days:["Mer","Jeu","Ven","Sam"],items:[
+    {n:"Farine de froment",q:.49,k:"farine",f:"Froment T80"},
+    {n:"Eau",q:.3675},{n:"Sel",q:.0123},
+    {n:"Levain de froment",q:.1225,k:"levain",l:"Froment"},
+    {n:"Graines topping",q:.0367},
+    {g:"Trempage des graines",prep:"trempage",q:0.1715}]},
+  meteil:{name:"Méteil aux noix",unit:"pain",target:1.175,days:["Mer"],items:[
+    {n:"Froment T80",q:.385,k:"farine",f:"Froment T80"},
+    {n:"Seigle T130",q:.165,k:"farine",f:"Seigle T130"},
+    {n:"Eau à 40°",q:.4139},{n:"Sel",q:.011},
+    {n:"Levain de seigle",q:.1375,k:"levain",l:"Seigle"},
+    {n:"Noix",q:.11}]},
+  chataigne:{name:"Châtaigne",unit:"pain",target:1.175,days:["Jeu"],items:[
+    {n:"Froment T80",q:.24,k:"farine",f:"Froment T80"},
+    {n:"Seigle",q:.2,k:"farine",f:"Seigle T130"},
+    {n:"Eau",q:.2376},{n:"Sel",q:.0116},
+    {n:"Levain de seigle",q:.132,k:"levain",l:"Seigle"},
+    {g:"Bouillie de châtaigne",prep:"bouillieChataigne",q:0.352}]},
+  seigle:{name:"Tourte de seigle",unit:"pain",days:["Ven"],items:[
+    {n:"Farine de seigle",q:.47,k:"farine",f:"Seigle T130"},
+    {n:"Farine de froment",q:.06,k:"farine",f:"Froment T80"},
+    {n:"Eau",q:.371},{n:"Sel",q:.0106},
+    {n:"Levain de seigle",q:.265,k:"levain",l:"Seigle"}]},
+  riz:{name:"Riz & sarrasin (sans gluten)",unit:"pain",days:["Sam"],items:[
+    {n:"Riz",q:.1575,k:"farine",f:"Riz"},
+    {n:"Sarrasin T130",q:.1575,k:"farine",f:"Sarrasin T130"},
+    {n:"Eau",q:.315},{n:"Sel",q:.0063},{n:"Psyllium",q:.0063},
+    {n:"Levain de riz",q:.315,k:"levain",l:"Riz"}]},
+  mie:{name:"Pain de mie",unit:"pain",split:2,target:0.5,days:["Mar","Mer","Jeu","Ven","Sam"],items:[
+    {n:"Froment T65",q:0.2347,k:"farine",f:"Froment T65"},
+    {n:"Eau",q:0.1103},{n:"Sel",q:0.0047},{n:"Sucre de canne blond",q:0.0329},
+    {n:"Levain de blé",q:0.0469,k:"levain",l:"Froment"},
+    {n:"Levure",q:0.0023},{n:"Beurre",q:0.0305},
+    {g:"Tangzhong",prep:"tangzhong",q:0.0376}]},
+  brioche:{name:"Brioche",unit:"brioche",split:2,days:["Ven","Sam"],items:[
+    {n:"Farine froment T65",q:0.2613,k:"farine",f:"Froment T65"},
+    {n:"Œuf",q:0.1306},{n:"Sucre",q:0.0784},{n:"Sel",q:0.0052},
+    {n:"Levain",q:0.0522,k:"levain",l:"Froment"},
+    {n:"Levure",q:0.0078},{n:"Beurre",q:0.1045}]},
+  campagne:{name:"Campagne",unit:"pain",items:[
+    {n:"Froment",q:.6,k:"farine",f:"Froment T80"},
+    {n:"Eau",q:.408},{n:"Sel",q:.012},
+    {n:"Levain de seigle",q:.15,k:"levain",l:"Seigle"}]},
+  campagneGraines:{name:"Campagne aux graines",unit:"pain",items:[
+    {n:"Farine de froment",q:.5,k:"farine",f:"Froment T80"},
+    {n:"Eau",q:.34},{n:"Sel",q:.0125},
+    {n:"Levain de seigle",q:.15,k:"levain",l:"Seigle"},
+    {n:"Graines topping",q:.0375},
+    {g:"Trempage des graines",prep:"trempage",q:0.175}]},
+  blesAnciens:{name:"Blés anciens",unit:"pain",items:[
+    {n:"Froment T80 ancien",q:.6,k:"farine",f:"Froment T80 ancien"},
+    {n:"Eau",q:.42},{n:"Sel",q:.012},
+    {n:"Levain de froment",q:.12,k:"levain",l:"Froment"}]},
+  rugbrod:{name:"Rugbrød",unit:"pain",items:[
+    {n:"Seigle T130",q:.215,k:"farine",f:"Seigle T130"},
+    {n:"Eau",q:.172},{n:"Sel",q:.0086},
+    {n:"Levain de seigle",q:.129,k:"levain",l:"Seigle"},
+    {g:"Trempage des graines",prep:"trempage",q:0.215},
+    {g:"Porridge de seigle",prep:"porridgeSeigle",q:0.215}]},
+  canele:{name:"Canelé",unit:"fournée",items:[
+    {n:"Lait",q:1},
+    {n:"Farine T80",q:.3,k:"farine",f:"Froment T80"},
+    {n:"Sucre",q:.36},{n:"Œufs",q:.2},{n:"Beurre",q:.065},{n:"Rhum",q:.05},{n:"Vanille en poudre",q:.003}]},
+  nordique:{name:"Nordique",unit:"pain",days:[],items:[
+    {n:"Sarrasin",q:.13,k:"farine",f:"Sarrasin T130"},
+    {n:"Seigle",q:.065,k:"farine",f:"Seigle T130"},
+    {n:"Khorasan",q:.13,k:"farine",f:"Khorasan T80"},
+    {n:"Eau",q:.39},{n:"Sel",q:.0072},
+    {n:"Levain de seigle",q:.1625,k:"levain",l:"Seigle"},
+    {n:"Fruits & graines",q:.26}]}
+};
+
+// Préparations partagées : composition en fraction du poids total (modifiable dans Réglages)
+const PREPS={
+  trempage:{name:"Trempage des graines",items:[["Flocons d'avoine",.15],["Courge",.05],["Lin brun",.125],["Sarrasin décortiqué",.05],["Tournesol",.125],["Eau",.5]]},
+  tangzhong:{name:"Tangzhong",items:[["Froment T65",.22,{k:"farine",f:"Froment T65"}],["Lait demi-écrémé",.78]]},
+  bouillieSarrasin:{name:"Bouillie de sarrasin",items:[["Farine de sarrasin",.37,{k:"farine",f:"Sarrasin T130"}],["Eau",.63]]},
+  bouillieChataigne:{name:"Bouillie de châtaigne",items:[["Farine de châtaigne",.4,{k:"farine",f:"Châtaigne"}],["Eau",.6]]},
+  porridgeSeigle:{name:"Porridge de seigle",items:[["Grains de seigle",.28],["Eau",.72]]}
+};
+// Prix des ingrédients (€/kg HT ; farines, sel et tournesol = facture Moulin Decollogne du 09/06/2026 (Antan 1,75 €/kg confirmé par Vincent) ; levure, lait, beurre, cassonade, œufs (≈60 g pièce), huile d'olive = facture Gusto du 30/06/2026 ; le reste = onglet Ingrédients ; null = à renseigner)
+const PRICE0={"Froment T80":1.08,"Froment T80 ancien":1.75,"Froment T65":1.08,"Petit épeautre T130":3.33,"Seigle T130":0.98,"Sarrasin T130":2.98,"Khorasan T80":2.68,"Riz":2.99,"Châtaigne":11.17,
+  "Sel":1.28,"Sucre de canne blond":2.98,"Sucre semoule":1.65,"Lin brun":3.06,"Tournesol":2.83,"Flocons d'avoine":2.06,"Sarrasin décortiqué":5.68,"Courge":11.37,"Noix":13.09,
+  "Beurre":8.59,"Huile d'olive":7.73,"Huile de colza":null,"Lait demi-écrémé":0.95,"Œuf":6.2,"Levure":9.88,"Vanille en poudre":185,"Rhum":10,"Psyllium":null,"Grains de seigle":null,"Fruits & graines":null,"Olives":null};
+const PRICE_ALIAS={"Œufs":"Œuf","Sucre":"Sucre semoule","Lait":"Lait demi-écrémé","Huile colza (plaque)":"Huile de colza"};
+const LVFLOUR={"Froment":"Froment T80","Seigle":"Seigle T130","Petit épeautre":"Petit épeautre T130","Riz":"Riz"};
+// Prix de vente TTC (cadencier) : €/kg pour les pains et la focaccia, €/pièce pour le canelé
+const SALEP0={campagne:8,campagneGraines:11,epeautre:14,riz:14,seigle:10,meteil:14,chataigne:14,rugbrod:11,khorasan:12,blesAnciens:10,fss:10,froment:8,graine:11,focaccia:12,mie:12,brioche:20,canele:1.5};
+// Suivi réel : encaissements carte HT par mois (Qonto) et charges mensuelles (factures et relevés)
+const ACT0={"2026-03":9033,"2026-04":7974,"2026-05":6461,"2026-06":8827,"2026-07":7048,"2026-08":2147,"2026-09":9350};
+const FIX0={"Loyer (SCI LDBV)":2200,"Leasing matériel (HT)":865,"Prêt CIC":718,"Expert-comptable (HT)":275,"Énergie (HT)":200,"Maintenance (HT)":300,"Emballages (HT)":200,"Télécom":77,"Assurance":94,"Banques":75};
+const PAY0=2008; // rémunération de Vincent + Urssaf + retraite
+// Ordre et ventes boutique par défaut = onglet Cadencier (colonnes Par.)
+// rule : J0 = produit le jour de la vente ; J1 = produit la veille ; hebdo = tout le mardi
+// Pas de production le lundi ni le samedi : les ventes du samedi sont produites le vendredi,
+// et en J1 les ventes du mardi sont produites le mardi.
+const P=[
+  ["campagne","J0"],["campagneGraines","J0"],["epeautre","J0"],["riz","J0"],["seigle","J0"],
+  ["meteil","J0"],["chataigne","J0"],["rugbrod","J1"],["khorasan","J1"],["blesAnciens","J1"],
+  ["fss","J1"],["froment","J1"],["graine","J1"],["focaccia","J1"],["mie","J0"],["brioche","hebdo"],["canele","J1"]
+];
+const RULE=Object.fromEntries(P);
+// Recette en direct (faite et vendue le jour même, levain ×1,25 : 20 % → 25 % de la farine, pâton inchangé) pour les ventes du mardi
+const DIRECT={froment:1,graine:1,blesAnciens:1,fss:1}, LV_DIRECT=1.25;
+// Campagne et Campagne aux graines retirés : remplacés le mardi par Froment direct et Graine direct
+const HIDDEN={campagne:1,campagneGraines:1};
+Object.keys(DIRECT).forEach(b=>{const d=b+"D";R[d]={unit:R[b].unit,items:R[b].items,base:b};Object.defineProperty(R[d],"name",{get(){return R[b].name+" (direct)";},set(){},enumerable:true});RULE[d]="J0";});
+const bid=id=>(R[id]&&R[id].base)||id;
+// Focaccia vendue au kg, par demi-plaque : 1,3 kg = ½ plaque, 2,6 kg = 1 plaque
+const FOC=1.3, snapF=v=>Math.round(Math.round(v/FOC)*FOC*10)/10;
+const SALE_UNIT={focaccia:"kg"}, SALE_STEP={focaccia:FOC,canele:6};
+// Produits faits par fournées entières (canelé : 1 fournée = 1 litre de lait). La pâte restante sert le surlendemain.
+const BATCH={canele:48};
+const TO_PROD={focaccia:v=>v/focKg()};   // focaccia : kg vendus ÷ kg par plaque = plaques
+const SALES0={
+  Mar:{froment:10,graine:8,epeautre:8,riz:2,blesAnciens:8,fss:8,focaccia:2.6,mie:8,canele:30},
+  Mer:{epeautre:6,riz:2,blesAnciens:8,fss:8,froment:10,graine:8,focaccia:2.6,mie:6,brioche:4,canele:30},
+  Jeu:{epeautre:4,chataigne:4,blesAnciens:6,fss:6,froment:10,graine:8,focaccia:2.6,mie:4,brioche:2,canele:24},
+  Ven:{epeautre:6,riz:2,seigle:2,blesAnciens:6,fss:6,froment:12,graine:8,focaccia:2.6,mie:8,brioche:4,canele:30},
+  Sam:{epeautre:6,riz:2,seigle:2,blesAnciens:6,fss:6,froment:12,graine:8,focaccia:2.6,brioche:4,canele:30}
+};
+// Pétrissages communs : recettes additionnées dans une seule fiche de pesée, dès qu'elles sont produites le même jour
+const GROUPS=[["fromentD","froment"],["graineD","graine"],["blesAnciensD","blesAnciens"],["fssD","fss"]];
+// Préparations faites le mardi pour toute la semaine
+const WEEKLY_DAY="Mar", WEEKLY=["Trempage des graines","Tangzhong","Bouillie de sarrasin"];
+// Préparations affichées sans détail dans les pesées du jour (déjà détaillées le mardi)
+const COLLAPSE=["Trempage des graines"];
+// Composition des levains = onglet Cadencier (part de farine, le reste en eau)
+const LV={"Froment":{f:.55,flour:"Froment (levain)"},"Seigle":{f:.48,flour:"Seigle (levain)"},
+  "Petit épeautre":{f:.52,flour:"Petit épeautre (levain)"},"Riz":{f:.52,flour:"Riz (levain)"}};
+// Commande type pro = colonnes Pro du cadencier, en pains (focaccia en kg).
+const PANZA_TYPE={Mar:{graine:1},Mer:{focaccia:1.25},Jeu:{graine:1}};
+// Poids d'un pain (onglet Cadencier, colonne poids) : poids livré proposé par défaut
+const W={canele:.044,campagne:1,campagneGraines:1,epeautre:12/14,riz:.9,seigle:1,meteil:1,chataigne:1,rugbrod:.9,khorasan:1,blesAnciens:1,fss:1,froment:1,graine:1,focaccia:1,mie:.4167,brioche:.6};
+// Dates : semaine = mardi → samedi
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const parse=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);};
+const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return iso(d);};
+function tuesdayOf(d){d=new Date(d.getFullYear(),d.getMonth(),d.getDate());if(d.getDay()===0)d.setDate(d.getDate()+1);d.setDate(d.getDate()-((d.getDay()+6)%7)+1);return iso(d);}
+const OFF={Mar:0,Mer:1,Jeu:2,Ven:3,Sam:4};
+const WD={2:"Mar",3:"Mer",4:"Jeu",5:"Ven",6:"Sam"};
+const MONTHS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+const SDAYS=["Mar","Mer","Jeu","Ven","Sam"], PDAYS=["Mar","Mer","Jeu","Ven"];
+const DAYNAMES={Mar:"mardi",Mer:"mercredi",Jeu:"jeudi",Ven:"vendredi",Sam:"samedi"};
+// Pains en pousse retardée (levain de froment) : faits la veille, donc impossibles le mardi (lundi fermé)
+const NO_MAR={};const blocked=(d,id)=>!!HIDDEN[id]||(d==="Mar"&&!!NO_MAR[id]);
+function prodDay(rule,sd){
+  if(rule==="hebdo")return "Mar";
+  if(rule==="J0")return sd==="Sam"?"Ven":sd;
+  return {Mar:"Mar",Mer:"Mar",Jeu:"Mer",Ven:"Jeu",Sam:"Ven"}[sd];
+}
+
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const canSave=(()=>{try{localStorage.setItem("_t","1");localStorage.removeItem("_t");return true;}catch(e){return false;}})();
+let tab=store.get("v3-tab")||"P";
+let sday=store.get("v3-sday")||"Mar", pday=store.get("v3-pday")||"Mar";
+let sales=store.get("v5-sales")||{};   // ventes boutique datées {AAAA-MM-JJ:{pain:n}}
+let stype=store.get("v15-stype")||{};  // vente type par jour de semaine {Mar:{pain:n}} (sinon cadencier)
+// clients pro : {id,name,start, type:{jourSemaine:{pain:n}}, mod:{date:{pain:n}} (quantité du jour)}
+let wk=tuesdayOf(new Date());
+let clients=store.get("v8-clients")||(()=>{
+  return [{id:"panza",name:"La Panza",start:wk,type:PANZA_TYPE,mod:{}}];})();
+// Nettoyage : l'ancien poids livré (facturation supprimée) n'est plus gardé
+const migrate=()=>{clients.forEach(c=>{delete c.w;});};migrate();
+let cid=store.get("v6-cid")||(clients[0]&&clients[0].id);
+let oday=store.get("v5-oday")||"Mar";   // modifications {jour:{id:n}}
+let extras=store.get("v3-extras")||{}; // production ajoutée {jour:{id:n}}
+let porder=store.get("v10-porder")||[];  // ordre des pains choisi à la main
+let iorder=store.get("v10-iorder")||{};  // ordre des lignes de pesée par fiche {cléFiche:[clés]}
+let removed=store.get("v11-removed")||{}; // ingrédients retirés par recette {recette:[clés]}
+// Ordre de production {all:[pains], d:{jour:[pains]}} : chaque jour a son propre ordre ; « all » sert aux jours jamais réordonnés
+// (ancien format par jour sans « all » : on garde la liste la plus complète)
+const normD=d=>{if(!d||typeof d!=="object")return {};const o={};const best=Array.isArray(d.all)?d.all:Object.values(d).filter(Array.isArray).sort((a,b)=>b.length-a.length)[0];if(best)o.all=best;
+  if(d.d&&typeof d.d==="object"){const x=Object.fromEntries(Object.entries(d.d).filter(e=>Array.isArray(e[1])));if(Object.keys(x).length)o.d=x;}return o;};
+let dorder=normD(store.get("v12-dorder"));
+let params=store.get("v13-params")||{};const NAME0=Object.fromEntries(Object.entries(R).map(([k,v])=>[k,v.name]));const migBrioche=()=>{if(params.sale&&params.sale.brioche!=null&&params.sale.brioche<15)delete params.sale.brioche;};migBrioche();const applyNames=()=>{Object.keys(R).filter(k=>!R[k].base).forEach(k=>{R[k].name=((params.names||{})[k])||NAME0[k];});};applyNames(); // hypothèses modifiées {lv:{type:frac}, prep:{id:{ingr:frac}}, rq:{recette:{clé:kg}}, w:{pain:kg}, focKg}
+// Chiffre d'affaires saisi par jour {AAAA-MM-JJ:{cb,esp,x (autre caisse),z (ticket Z)}} ; CA0 = reprise de l'onglet « CA 2026 »
+const CA0={"2026-01-02":{"cb":314.67,"z":317.63,"x":45.0},"2026-01-03":{"cb":199.18,"esp":20.0,"z":219.37,"x":35.0},"2026-01-06":{"cb":333.19,"esp":50.0,"z":383.49,"x":55.0},"2026-01-07":{"cb":462.0,"z":460.0,"x":45.0},"2026-01-08":{"cb":338.72,"z":317.86,"x":5.0},"2026-01-09":{"cb":449.59,"z":444.05,"x":40.0},"2026-01-10":{"cb":384.43,"esp":10.0,"z":393.6,"x":25.0},"2026-01-13":{"cb":418.74,"esp":35.0,"z":454.11,"x":10.0},"2026-01-14":{"cb":429.62,"z":421.76,"x":20.0},"2026-01-15":{"cb":348.0,"z":348.33,"x":55.0},"2026-01-16":{"cb":390.31,"esp":20.0,"z":410.65,"x":40.0},"2026-01-17":{"cb":247.02,"esp":20.0,"z":265.48,"x":30.0},"2026-01-20":{"cb":413.72,"z":413.43,"x":50.0},"2026-01-21":{"cb":373.65,"z":371.59,"x":60.0},"2026-01-22":{"cb":340.37,"esp":10.0,"z":348.14,"x":50.0},"2026-01-23":{"cb":391.84,"esp":25.0,"z":418.26,"x":40.0},"2026-01-24":{"cb":393.74,"z":386.56,"x":60.0},"2026-01-27":{"cb":423.19,"z":422.33,"x":45.0},"2026-01-28":{"cb":406.64,"esp":10.0,"z":415.81,"x":40.0},"2026-01-29":{"cb":359.64,"z":361.64,"x":20.0},"2026-01-30":{"cb":422.88,"esp":10.0,"z":432.79,"x":60.0},"2026-01-31":{"cb":396.74,"z":396.77,"x":15.0},"2026-02-03":{"cb":362.81,"z":362.94,"x":60.0},"2026-02-04":{"cb":378.71,"z":352.15,"x":20.0},"2026-02-05":{"cb":385.52,"z":385.42,"x":20.0},"2026-02-06":{"cb":351.26,"z":357.09,"x":50.0},"2026-02-07":{"cb":431.03,"z":413.97,"x":40.0},"2026-02-10":{"cb":379.75,"z":379.74,"x":90.0},"2026-02-11":{"cb":352.18,"esp":30.0,"z":379.36,"x":20.0},"2026-02-12":{"cb":381.09,"esp":5.0,"z":387.09,"x":15.0},"2026-02-13":{"cb":502.49,"z":490.8,"x":75.0},"2026-02-14":{"cb":367.83,"esp":20.0,"z":387.37,"x":20.0},"2026-02-17":{"cb":292.05,"x":30.0},"2026-02-18":{"cb":429.26,"esp":10.0,"z":438.99,"x":35.0},"2026-02-19":{"cb":328.16,"esp":5.0,"z":332.04,"x":10.0},"2026-02-20":{"cb":508.7,"z":510.93,"x":40.0},"2026-02-21":{"cb":394.38,"esp":30.0,"z":422.81,"x":40.0},"2026-02-24":{"cb":293.1,"esp":40.0,"z":335.57,"x":40.0},"2026-02-25":{"cb":257.21,"z":252.01,"x":45.0},"2026-02-26":{"cb":420.73,"esp":30.0,"z":451.67,"x":40.0},"2026-02-27":{"cb":345.74,"z":345.49,"x":40.0},"2026-02-28":{"cb":380.16,"esp":10.0,"z":373.33},"2026-03-03":{"cb":294.57,"z":291,"x":60.0},"2026-03-04":{"cb":313.88,"esp":10.0,"z":326.75,"x":35.0},"2026-03-05":{"cb":365.79,"z":365.85,"x":35.0},"2026-03-06":{"cb":379.66,"esp":5.0,"z":385.6,"x":60.0},"2026-03-07":{"cb":374.42,"esp":10.0,"z":386.22,"x":55.0},"2026-03-10":{"cb":400.7,"esp":55.0,"z":458.09,"x":20.0},"2026-03-11":{"cb":475.99,"esp":60.0,"z":534.54,"x":30.0},"2026-03-12":{"cb":448.9,"esp":60.0,"z":508.17,"x":15.0},"2026-03-13":{"cb":500.0,"esp":70.0,"z":572.43,"x":20.0},"2026-03-14":{"cb":448.96,"esp":15.0,"z":462.95,"x":40.0},"2026-03-17":{"cb":408.95,"z":404.39,"x":20.0},"2026-03-18":{"cb":462.38,"esp":10.0,"z":475.45},"2026-03-19":{"cb":480.1,"esp":40.0},"2026-03-20":{"cb":505.35,"esp":10.0,"z":515.16,"x":20.0},"2026-03-21":{"cb":409.35,"esp":30.0,"z":439.12,"x":40.0},"2026-03-24":{"cb":400.77,"esp":5.0,"z":404.35,"x":45.0},"2026-03-25":{"cb":492.11,"esp":30.0,"z":521.56},"2026-03-26":{"cb":507.07,"esp":15.0,"z":521.37,"x":40.0},"2026-03-27":{"cb":539.73,"esp":55.0,"z":595.11,"x":40.0},"2026-03-28":{"cb":503.0,"esp":25.0,"z":530.13},"2026-03-31":{"cb":432.27,"esp":30.0,"z":460.14},"2026-04-01":{"cb":443.69,"z":428.91},"2026-04-02":{"cb":417.72,"esp":10.0,"z":427.01,"x":15.0},"2026-04-03":{"cb":551.99,"esp":5.0,"z":556.04,"x":40.0},"2026-04-04":{"cb":363.57,"esp":10.0,"z":373.02},"2026-04-07":{"cb":413.96,"z":414.33,"x":65.0},"2026-04-08":{"cb":451.65,"z":439.63,"x":40.0},"2026-04-09":{"cb":404.64,"z":397.12,"x":40.0},"2026-04-10":{"cb":511.03,"z":497.28,"x":30.0},"2026-04-11":{"cb":388.08,"z":384.58,"x":50.0},"2026-04-14":{"cb":386.64,"z":377.93,"x":30.0},"2026-04-15":{"cb":437.63,"esp":10.0,"z":444.93},"2026-04-16":{"cb":361.51,"z":359.37,"x":40.0},"2026-04-17":{"cb":361.77,"esp":15.0,"z":376.6,"x":60.0},"2026-04-18":{"cb":368.29,"esp":20.0,"z":389.64,"x":40.0},"2026-04-21":{"cb":338.28,"esp":30.0,"z":369.66},"2026-04-22":{"cb":301.64,"esp":30.0,"z":328.99},"2026-04-23":{"cb":280.0,"z":284.74,"x":5.0},"2026-04-24":{"cb":347.02,"esp":10.0,"z":358.15,"x":50.0},"2026-04-25":{"cb":248.39,"z":243.0,"x":60.0},"2026-04-28":{"cb":272.27,"esp":25.0,"z":299.31},"2026-04-29":{"cb":256.2,"z":235.06,"x":5.0},"2026-04-30":{"cb":446.39,"z":449.67,"x":80.0},"2026-05-05":{"cb":443.41,"z":443.28,"x":55.0},"2026-05-06":{"cb":507.31,"z":507.0,"x":60.0},"2026-05-07":{"cb":488.19,"z":470.71,"x":5.0},"2026-05-08":{"cb":387.2,"z":379.14,"x":30.0},"2026-05-09":{"cb":252.44,"z":250.56,"x":45.0},"2026-05-12":{"cb":469.68,"z":469.32,"x":20.0},"2026-05-13":{"cb":303.09,"x":80.0},"2026-05-19":{"cb":448.18,"z":429.08,"x":30.0},"2026-05-20":{"cb":518.68,"esp":95.0,"z":612.84},"2026-05-21":{"cb":372.29,"z":371.22,"x":15.0},"2026-05-22":{"cb":409.3,"esp":60.0,"z":471.45,"x":30.0},"2026-05-23":{"cb":335.84,"esp":20.0,"z":353.93},"2026-05-26":{"cb":510.28,"z":510.32},"2026-05-27":{"cb":414.98,"esp":20.0,"z":437.89,"x":60.0},"2026-05-28":{"cb":408.36,"esp":15.0,"z":422.51,"x":10.0},"2026-05-29":{"cb":464.31,"z":464.46},"2026-05-30":{"cb":380.5,"esp":10.0,"z":385.31},"2026-06-02":{"cb":495.11,"z":478.3,"x":40.0},"2026-06-03":{"cb":375.99,"esp":30.0,"z":407.43,"x":10.0},"2026-06-04":{"cb":394.48,"esp":20.0,"z":423.04},"2026-06-05":{"cb":380.17,"z":379.34,"x":90.0},"2026-06-06":{"cb":454.89,"z":453.14,"x":20.0},"2026-06-09":{"cb":510.71,"z":510.54},"2026-06-10":{"cb":554.51,"z":554.84,"x":40.0},"2026-06-11":{"cb":454.98,"z":453.08,"x":30.0},"2026-06-12":{"cb":512.4,"z":513.9,"x":50.0},"2026-06-13":{"cb":382.77,"esp":20.0,"z":399.1},"2026-06-16":{"cb":491.48,"z":490.87,"x":40.0},"2026-06-17":{"cb":545.59,"z":526.91,"x":35.0},"2026-06-18":{"cb":316.59,"z":316.59,"x":40.0},"2026-06-19":{"cb":529.55,"esp":10.0,"z":541.33,"x":25.0},"2026-06-20":{"cb":431.59,"z":431.59,"x":35.0},"2026-06-23":{"cb":369.86,"z":370.19,"x":30.0},"2026-06-24":{"cb":326.44,"z":326.44,"x":70.0},"2026-06-25":{"cb":203.34,"z":201.93},"2026-06-26":{"cb":289.93,"z":285.12,"x":50.0},"2026-06-27":{"cb":371.14,"esp":15.0,"z":386.01,"x":20.0},"2026-06-30":{"cb":448.92,"z":452.58,"x":20.0},"2026-07-01":{"cb":418.03,"z":417.74,"x":25.0},"2026-07-02":{"cb":401.32,"esp":20.0,"z":421.39},"2026-07-03":{"cb":346.48,"esp":20.0,"z":369.78,"x":30.0},"2026-07-04":{"cb":420.91,"z":420.45},"2026-07-07":{"cb":454.42,"z":451.65,"x":25.0},"2026-07-08":{"cb":232.69,"z":227.23,"x":30.0},"2026-07-09":{"cb":357.51,"z":351.46,"x":20.0},"2026-07-10":{"cb":362.33,"z":355.71,"x":10.0},"2026-07-11":{"cb":217.34,"esp":20.0,"z":241.51,"x":30.0},"2026-07-15":{"cb":367.5,"z":370.98,"x":10.0},"2026-07-16":{"cb":314.18,"z":318.51,"x":45.0},"2026-07-17":{"cb":253.84,"esp":15.0,"z":268.76,"x":20.0},"2026-07-18":{"cb":326.57,"esp":30.0,"z":296.8,"x":15.0},"2026-07-21":{"cb":369.25,"z":370.0,"x":60.0},"2026-07-22":{"cb":303.24,"z":303.0,"x":40.0},"2026-07-23":{"cb":305.4,"z":293.33,"x":30.0},"2026-07-24":{"cb":329.01,"z":320.97,"x":10.0},"2026-07-25":{"cb":271.57,"z":279.13,"x":50.0},"2026-07-28":{"cb":226.37,"z":219.42,"x":25.0},"2026-07-29":{"cb":297.9,"z":299.92,"x":35.0},"2026-07-30":{"cb":295.82,"z":280.65},"2026-07-31":{"cb":291.26,"z":290.71,"x":60.0},"2026-08-01":{"cb":318.73,"z":316.19,"x":50.0},"2026-08-25":{"cb":308.02,"z":282.57,"x":20.0},"2026-08-26":{"cb":268.48,"z":268.28,"x":20.0},"2026-08-27":{"cb":260.02,"z":264.71,"x":50.0},"2026-08-28":{"cb":372.69,"z":372.14,"x":45.0},"2026-08-29":{"cb":436.55,"z":420.46,"x":20.0},"2026-09-01":{"cb":487.94,"z":487.25,"x":50.0},"2026-09-02":{"cb":456.47,"z":456.16,"x":50.0},"2026-09-03":{"cb":413.8,"esp":20.0,"z":437.66,"x":30.0},"2026-09-04":{"cb":410.16,"z":413.94,"x":60.0},"2026-09-05":{"cb":525.0,"z":494.49,"x":30.0},"2026-09-08":{"cb":467.14,"z":467.0,"x":35.0},"2026-09-09":{"cb":470.95,"z":470.95,"x":50.0},"2026-09-10":{"cb":402.46,"z":340.02,"x":65.0},"2026-09-11":{"cb":596.67,"z":596.7,"x":20.0},"2026-09-12":{"cb":397.77,"z":397.84,"x":60.0},"2026-09-15":{"cb":438.02,"z":438.88,"x":35.0},"2026-09-16":{"cb":540.1,"z":524.77,"x":45.0},"2026-09-17":{"cb":441.7,"z":417.27,"x":20.0},"2026-09-18":{"cb":472.68,"z":457.22,"x":20.0},"2026-09-19":{"cb":432.15,"z":432.15,"x":10.0},"2026-09-22":{"cb":455.08,"z":437.87,"x":65.0},"2026-09-23":{"cb":445.97,"esp":15.0,"z":461.79,"x":65.0},"2026-09-24":{"cb":408.59,"z":407.76,"x":35.0},"2026-09-25":{"cb":551.24,"z":547.16,"x":40.0},"2026-09-26":{"cb":486.06,"z":486.18,"x":10.0},"2026-09-29":{"cb":527.61,"z":530.84,"x":40.0},"2026-09-30":{"cb":520.99,"z":512.87,"x":50.0},"2026-10-01":{"cb":464.38,"z":464.38,"x":40.0},"2026-10-02":{"cb":547.18,"z":547.18,"x":30.0},"2026-10-03":{"cb":495.59,"esp":5.0,"z":504.08},"2026-10-06":{"cb":364.85,"z":364.62,"x":30.0},"2026-10-08":{"cb":390.7,"z":389.36,"x":40.0},"2026-10-09":{"cb":595.7,"esp":10.0,"z":609.74,"x":20.0},"2026-10-10":{"cb":521.27,"z":521.91,"x":25.0}};
+let ca=store.get("v16-ca")||{};
+// Bilan de fin de journée (boutique) {AAAA-MM-JJ:{pain:{r: reste, h: heure de rupture}}}
+let left=store.get("v17-left")||{};
+// Stock de farine en sacs {farine: sacs}, saisi à la main
+let stock=store.get("v18-stock")||{};
+// Date du comptage de chaque farine {farine: AAAA-MM-JJ} : le stock estimé = sacs comptés − farine utilisée par la production depuis
+let stockD=store.get("v21-stockD")||{};
+// Commandes clients (SMS, comptoir) [{id,date (retrait),name,items:{pain:n},note,done}]
+let orders=store.get("v19-orders")||[];
+// Relevé des livraisons pro : poids réellement livré {client:{AAAA-MM-JJ:{pain:kg}}} ; BL0 = reprise de l'onglet « Pro » (La Panza)
+const BL0={panza:{"2026-05-05":{"graine":1.05},"2026-05-06":{"focaccia":1.03},"2026-05-08":{"graine":1.135},"2026-05-12":{"graine":1.05},"2026-05-13":{"focaccia":1.5},"2026-05-19":{"graine":1.05},"2026-05-20":{"focaccia":1.25},"2026-05-21":{"graine":1.05},"2026-05-22":{"graine":1.05},"2026-05-26":{"graine":1.05},"2026-05-27":{"focaccia":1.18},"2026-05-28":{"graine":1.1},"2026-05-29":{"graine":1.05},"2026-06-02":{"graine":1.05},"2026-06-04":{"graine":1.05},"2026-06-05":{"graine":1.05},"2026-06-09":{"graine":1.05,"focaccia":0.605},"2026-06-11":{"graine":1.05},"2026-06-12":{"graine":1.05,"focaccia":1.07},"2026-06-16":{"graine":1.05},"2026-06-17":{"focaccia":1.3},"2026-06-18":{"graine":1.05},"2026-06-19":{"graine":1.05},"2026-06-23":{"graine":1.05,"focaccia":0.64},"2026-06-24":{"graine":1.05,"focaccia":1.25},"2026-06-25":{"graine":1.05},"2026-06-26":{"graine":1.05},"2026-06-30":{"graine":1.0},"2026-07-01":{"focaccia":1.25},"2026-07-02":{"graine":1.05},"2026-07-03":{"graine":1.1},"2026-07-07":{"graine":1.05,"focaccia":0.31},"2026-07-08":{"focaccia":1.25},"2026-07-09":{"graine":1.05},"2026-07-10":{"graine":1.05},"2026-07-14":{"graine":1.05},"2026-07-15":{"focaccia":1.25},"2026-07-16":{"graine":1.05},"2026-07-17":{"graine":1.05},"2026-07-21":{"graine":1.1},"2026-07-22":{"focaccia":0.93},"2026-07-23":{"graine":1.05},"2026-07-24":{"graine":1.15},"2026-07-28":{"graine":1.1},"2026-07-29":{"focaccia":1.1},"2026-07-30":{"graine":1.1},"2026-08-25":{"graine":1.1,"focaccia":0.5},"2026-08-27":{"graine":1.1},"2026-08-28":{"graine":1.1},"2026-09-01":{"graine":2.2},"2026-09-02":{"focaccia":1.3},"2026-09-03":{"graine":1.1},"2026-09-04":{"graine":1.1},"2026-09-09":{"graine":1.1,"focaccia":1.3},"2026-09-10":{"graine":1.1},"2026-09-11":{"graine":1.1},"2026-09-15":{"graine":1.1},"2026-09-16":{"focaccia":1.3},"2026-09-17":{"graine":1.1},"2026-09-22":{"graine":1.1},"2026-09-23":{"focaccia":1.45},"2026-09-24":{"graine":1.1},"2026-09-25":{"graine":1.1},"2026-09-29":{"graine":1.1},"2026-09-30":{"focaccia":1.45},"2026-10-01":{"graine":1.1},"2026-10-06":{"graine":1.1,"focaccia":1.45},"2026-10-07":{"graine":1.1},"2026-10-08":{"graine":1.1,"focaccia":1.45}}};
+let deliv=store.get("v20-deliv")||{};let editBL=false,blMonth=null,blAdd=null;
+let cday=store.get("v16-cday")||"Mar";
+// À l'ouverture : on revient sur la dernière page ouverte (onglet, semaine, jour). Si cette semaine est passée, on se place sur le jour J
+// (samedi, dimanche, lundi → mardi suivant) en gardant l'onglet.
+{const sw=store.get("v23-wk");if(sw&&sw>=wk)wk=sw;else{let td=WD[new Date().getDay()]||"Mar";if(td==="Sam"){wk=addDays(wk,7);td="Mar";}sday=td;cday=td;oday=td;pday=td;}}
+let editLv=null, editCmd=false, draft=null, editBilan=false, editBreads=false, editCard=null, editProd=false, editHyd=null, editPrice=null;
+let localUpdated=store.get("v9-updated")||0;
+const saveUI=()=>{store.set("v23-wk",wk);store.set("v16-cday",cday);store.set("v3-tab",tab);store.set("v3-sday",sday);store.set("v3-pday",pday);store.set("v6-cid",cid);store.set("v5-oday",oday);};
+const DATA=()=>({sales,stype,clients,extras,porder,iorder,removed,dorder,params,ca,left,stock,stockD,orders,deliv,timers,tmDur});
+// Synchronisation par rubrique : chaque rubrique (ventes de chaque jour, clients, réglages…) porte sa propre date de modification.
+// Quand deux appareils modifient des choses différentes, rien n'est écrasé : on garde la version la plus récente de chaque rubrique.
+const SDAY_KEYS=["Mar","Mer","Jeu","Ven","Sam"];
+// Anciennes ventes enregistrées par jour de semaine (avant les ventes datées) : rattachées à la semaine du 13 octobre 2026
+const MIG_WK="2026-10-13";
+const migSales=(sl,t)=>{SDAY_KEYS.forEach(wd=>{const dt=addDays(MIG_WK,OFF[wd]);
+  if(sl&&wd in sl){if(!(dt in sl))sl[dt]=sl[wd];delete sl[wd];}
+  if(t&&t["sales."+wd]!=null){t["sales."+dt]=Math.max(t["sales."+dt]||0,t["sales."+wd]);delete t["sales."+wd];}});};
+migSales(sales,null);
+const FIXED={clients:{get:()=>clients,set:v=>{clients=(v||[]).map(c=>({...c,type:c.type||{},mod:c.mod||{}}));migrate();if(!clients.find(c=>c.id===cid))cid=clients[0]&&clients[0].id;}},
+  stype:{get:()=>stype,set:v=>{stype=v||{};}},
+  extras:{get:()=>extras,set:v=>{extras=v||{};}},porder:{get:()=>porder,set:v=>{porder=v||[];}},iorder:{get:()=>iorder,set:v=>{iorder=v||{};}},
+  removed:{get:()=>removed,set:v=>{removed=v||{};}},dorder:{get:()=>dorder,set:v=>{dorder=normD(v);}},params:{get:()=>params,set:v=>{params=v||{};migBrioche();applyNames();}},ca:{get:()=>ca,set:v=>{ca=v||{};}},left:{get:()=>left,set:v=>{left=v||{};}},stock:{get:()=>stock,set:v=>{stock=v||{};}},stockD:{get:()=>stockD,set:v=>{stockD=v||{};}},orders:{get:()=>orders,set:v=>{orders=Array.isArray(v)?v:[];}},deliv:{get:()=>deliv,set:v=>{deliv=v||{};}},
+  // Minuteurs en cours et durées choisies : enregistrés en ligne pour survivre à une fermeture de l'appli (et suivis sur les deux appareils)
+  timers:{get:()=>timers,set:v=>{timers=Array.isArray(v)?v:[];try{localStorage.setItem("v22-timers",JSON.stringify(timers))}catch(e){}tmTick();}},tmDur:{get:()=>tmDur,set:v=>{tmDur=v||{};try{localStorage.setItem("v22-tdur",JSON.stringify(tmDur))}catch(e){}}}};
+const nz=v=>v&&Object.keys(v).length?v:null;
+const secGet=k=>k.startsWith("sales.")?nz(sales[k.slice(6)]):FIXED[k].get();
+const secSet=(k,v)=>{if(k.startsWith("sales.")){const d=k.slice(6);if(nz(v))sales[d]=v;else delete sales[d];}else FIXED[k].set(v);};
+const secVal=(d,k)=>k.startsWith("sales.")?nz((d.sales||{})[k.slice(6)]):d[k];
+const secJ=k=>JSON.stringify(secGet(k)??null);
+// Rubriques : les rubriques fixes + une rubrique par date de vente (ici, en ligne, ou déjà connue)
+const allKeys=rs=>[...Object.keys(FIXED),...new Set([...Object.keys(sales),...Object.keys(rs||{}),...Object.keys(lastSec||{}).filter(k=>k.startsWith("sales.")).map(k=>k.slice(6))].map(d=>"sales."+d))];
+let lastSec=null;
+let ts=store.get("v14-ts")||Object.fromEntries(allKeys().map(k=>[k,localUpdated]));
+migSales(null,ts);
+lastSec=Object.fromEntries(allKeys().map(k=>[k,secJ(k)]));
+// Version distante d'une ancienne appli (ventes par jour de semaine) : même conversion
+const normR=d=>{if(!d)return d;const sl={...(d.sales||{})},t=d.ts?{...d.ts}:null;migSales(sl,t);return {...d,sales:sl,ts:t||undefined};};
+let lastData=JSON.stringify(DATA());
+const storeAll=()=>{store.set("v13-params",params);store.set("v12-dorder",dorder);store.set("v10-porder",porder);store.set("v10-iorder",iorder);store.set("v11-removed",removed);
+  store.set("v9-updated",localUpdated);store.set("v5-sales",sales);store.set("v8-clients",clients);store.set("v3-extras",extras);store.set("v14-ts",ts);store.set("v15-stype",stype);store.set("v16-ca",ca);store.set("v17-left",left);store.set("v18-stock",stock);store.set("v21-stockD",stockD);store.set("v19-orders",orders);store.set("v20-deliv",deliv);};
+const save=()=>{adjMemo={};saveUI();const d=JSON.stringify(DATA());if(d===lastData)return;lastData=d;const now=Date.now();
+  allKeys().forEach(k=>{const j=secJ(k);if(j!==lastSec[k]){lastSec[k]=j;ts[k]=Math.max(now,(ts[k]||0)+1);}});
+  localUpdated=Math.max(now,localUpdated+1);storeAll();queuePush();};
+
+// ---- Synchronisation en ligne (données liées au compte Claude, partagées entre téléphone et iPad) ----
+let stateRef=null,pushTimer=null,syncState="local",pushing=false,dirty=false;
+function setSync(st){syncState=st;const el=document.getElementById("sync");if(!el)return;
+  el.className="sync "+st;el.textContent={local:canSave?"Enregistré sur cet appareil uniquement":"Rien n'est enregistré ici : tes modifications seront perdues à la fermeture",
+    pending:"Enregistrement…",ok:"Enregistré · téléphone et iPad à jour",err:"Hors ligne · gardé sur cet appareil, envoi dès le retour du réseau"}[st];}
+function queuePush(){dirty=true;if(!stateRef)return;setSync("pending");clearTimeout(pushTimer);pushTimer=setTimeout(push,600);}
+// Fusionne une version distante : chaque rubrique plus récente là-bas remplace la nôtre. Renvoie true si quelque chose a changé ici.
+function applyRemote(d){if(!d)return false;d=normR(d);const rts=d.ts||{};let changed=false;
+  allKeys(d.sales).forEach(k=>{const t=rts[k]??(d.ts?0:(d.updatedAt||0));if(t>(ts[k]||0)){
+    const j=JSON.stringify(secVal(d,k)??null);ts[k]=t;if(j!==lastSec[k]){secSet(k,JSON.parse(j));lastSec[k]=secJ(k);changed=true;}}});
+  if(d.updatedAt>localUpdated)localUpdated=d.updatedAt;lastData=JSON.stringify(DATA());storeAll();return changed;}
+// Une rubrique est-elle plus récente ici qu'en ligne ? (alors il faut renvoyer)
+const localNewer=d=>{if(!d)return true;d=normR(d);const rts=d.ts||{};return allKeys(d.sales).some(k=>(ts[k]||0)>(rts[k]??(d.ts?0:(d.updatedAt||0))));};
+// Envoi : on relit d'abord la version en ligne pour ne pas écraser ce qu'un autre appareil vient d'enregistrer.
+async function push(){if(!stateRef)return;if(pushing){clearTimeout(pushTimer);pushTimer=setTimeout(push,400);return;}
+  pushing=true;dirty=false;clearTimeout(pushTimer);
+  try{const snap=await stateRef.get();if(snap.exists&&applyRemote(snap.data()))render();
+    await stateRef.set({v:12,updatedAt:localUpdated,ts:{...ts},...DATA()});setSync(dirty?"pending":"ok");}
+  catch(e){dirty=true;setSync("err");if(!e||e.code!=="invalid_argument"){pushTimer=setTimeout(push,5000);}}
+  finally{pushing=false;if(dirty&&syncState!=="err"){clearTimeout(pushTimer);pushTimer=setTimeout(push,300);}}}
+// Quitter l'appli (changer d'appli, verrouiller le téléphone) envoie tout de suite ce qui reste.
+const flush=()=>{if(dirty&&stateRef){clearTimeout(pushTimer);push();}};
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")flush();else if(stateRef)stateRef.get().then(s=>{if(s.exists&&applyRemote(s.data()))render();}).catch(()=>{});});
+window.addEventListener("pagehide",flush);
+async function initSync(){
+  if(!window.claude||!window.claude.use){setSync("local");return;}
+  const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
+  const uid=user&&await user.id();
+  if(!db||!uid){setSync("local");return;}
+  stateRef=db.doc("data/users/"+uid+"/state");setSync("pending");
+  try{const snap=await stateRef.get();
+    if(snap.exists&&applyRemote(snap.data()))render();
+    if(dirty||localNewer(snap.exists?snap.data():null)){if(!localUpdated)localUpdated=Date.now();await push();}else setSync("ok");
+  }catch(e){setSync("err");pushTimer=setTimeout(push,5000);}
+  stateRef.onSnapshot(sn=>{if(sn.exists&&!sn.metadata.hasPendingWrites){if(applyRemote(sn.data()))render();if(!pushing&&!dirty&&!sn.metadata.fromCache&&localNewer(sn.data()))queuePush();}if(!sn.metadata.fromCache&&syncState==="ok")setSync("ok");},()=>setSync("err"));
+}
+// ---- Export (sauvegarde complète) ----
+let dl=null;
+async function initDownloads(){if(!window.claude||!window.claude.use)return;dl=await window.claude.use("downloads");
+  document.querySelectorAll(".needdl").forEach(b=>b.hidden=!dl);}
+async function saveFile(filename,data){if(!dl)return;try{await dl.save({filename,data});}catch(e){}}
+// Reprise d'une sauvegarde : chaque rubrique du fichier remplace celle de l'appli (puis part en ligne)
+function importAll(){const i=document.createElement("input");i.type="file";i.accept=".json,application/json";
+  i.onchange=()=>{const f=i.files&&i.files[0];if(!f)return;f.text().then(s=>{let d;try{d=JSON.parse(s);}catch(e){return ask("Fichier illisible");}if(!d||!d.sales)return ask("Fichier illisible");
+    ask("Remplacer les données de l'appli par cette sauvegarde ?").then(ok=>{if(!ok)return;const now=Math.max(Date.now(),localUpdated+1);
+      const {app,version,exportedAt,...data}=d;applyRemote({...data,updatedAt:now,ts:Object.fromEntries(allKeys(data.sales).map(k=>[k,now]))});render();dirty=true;queuePush();});});};i.click();}
+function exportAll(){const d=new Date();saveFile(`fournil-vivant-sauvegarde-${iso(d)}.json`,JSON.stringify({app:"Fournil Vivant",version:10,exportedAt:d.toISOString(),...DATA()},null,2));}
+
+const fmt=kg=>Math.round(kg*1000).toLocaleString("fr-FR").replace(/\u202f|\u00a0/g," ")+" g";
+const num=v=>(Math.round(v*10)/10).toLocaleString("fr-FR");
+const flat=items=>items.flatMap(i=>i.g?i.items:[i]);
+// Vente boutique d'un jour de la semaine affichée : saisie du jour, sinon vente type du jour de semaine, sinon cadencier
+const shopType0=(d,id)=>{const t=stype[d]||{};return id in t?t[id]:((SALES0[d]||{})[id]||0);};
+const shopType=(d,id)=>id==="focaccia"?snapF(shopType0(d,id)):shopType0(d,id);
+const shop=(d,id)=>blocked(d,id)?0:shop1(d,id);
+const shop1=(d,id)=>shopAt1(dateOf(d),id);
+const shopAt=(date,id)=>blocked(wdOf(date),id)?0:shopAt1(date,id);
+const isClosed=date=>!!((typeof ca!=="undefined"&&ca[date])||{}).closed;
+const shopAt1=(date,id)=>{if(isClosed(date))return 0;const v=rawAt(date,id);return id==="focaccia"?snapF(v):v;};
+// ---- À partir de la semaine du 20/10/2026 : chaque jour reprend la quantité prévue le même jour de la semaine d'avant (jour fermé : on remonte d'une semaine).
+// Les règles (bilans, ruptures, vacances, fériés) ne changent plus rien : elles donnent seulement une recommandation affichée à côté du chiffre.
+const NEW0="2026-10-20";
+const rawAt=(date,id)=>{const m=sales[date]||{};return id in m?m[id]:date<NEW0?autoQ(date,id):baseQ(date,id).q;};
+const offDay=d=>{if(isClosed(d))return true;const m=sales[d];if(!m)return false;const v=Object.values(m);return v.length>=3&&v.every(x=>!x);};
+function baseSrc(date,id){let p=addDays(date,-7),n=0;while(n<8&&offDay(p)){p=addDays(p,-7);n++;}return p;}
+function baseQ(date,id){const k="b|"+date+"|"+id;if(k in adjMemo)return adjMemo[k];const src=baseSrc(date,id);
+  adjMemo[k]={q:0,src};return adjMemo[k]={q:rawAt(src,id),src};}
+function reco(date,id,any){if(date<NEW0||blocked(wdOf(date),id)||isClosed(date)||(!any&&id in (sales[date]||{})))return null;
+  const {q:b,src}=baseQ(date,id);let r=b;const why=[];
+  if(id!=="focaccia"&&b){
+    if(ruleOn("week")&&(left[src]||{})[id]&&!blocked(wdOf(src),id)){const d=dayDelta(src,id);if(d){r+=d;why.push(d>0?"rupture":"invendus");}}
+    const sh=shortS(date,id);if(sh){r+=sh;why.push(sh>0?"rupture":"invendus");}}
+  const hd=isHol(date),hs=isHol(src);
+  if(hd&&!hs){if(id==="focaccia"){if(ruleOn("focHalf")&&r>FOC){r=FOC;why.push("vacances");}}else if(r){r=Math.round(r*(1-holR()));why.push(ferie(date)||isPont(date)?"férié":"vacances");}}
+  else if(!hd&&hs){let p=src,n=0;while(n<12&&(isHol(p)||offDay(p))){p=addDays(p,-7);n++;}const ref=n<12?rawAt(p,id):shopType(wdOf(date),id);if(Math.abs(ref-r)>.001){r=ref;why.push("fin des vacances");}}
+  if(id!=="focaccia"&&b)r=Math.max(AU(id),r);if(id==="canele")r=Math.round(r/6)*6;
+  if(Math.abs(r-b)<.001)return null;return {q:r,why:[...new Set(why)].join(" · ")};}
+// ---- Ajustement automatique par les invendus et ruptures ----
+// Les bilans comptent à partir de la semaine du 13/10/2026 ; ils modifient la semaine suivante, jamais la semaine du bilan.
+// Chaque semaine : quantité = cadencier + écart appris. Sans bilan, l'écart de la semaine d'avant est gardé.
+// Avec un bilan : écart = (quantité réellement prévue ce jour-là − cadencier) + correction du bilan.
+// Correction : invendus au-delà de la marge × réactivité, en moins ; rupture avant l'heure limite : +1 (+2 si 3 h avant ou plus).
+// La focaccia reste fixe (1 plaque/jour). Canelés : par 3 pièces.
+const ADJ0="2026-10-13";
+const AUTO_OK=id=>id!=="focaccia"&&!HIDDEN[id];
+const AU=id=>id==="canele"?6:1;
+const adjM=()=>params.adjM??1, adjT=()=>params.adjT??0.5, adjH=()=>params.adjH??18;
+let adjMemo={};
+// Correction dans la semaine, par le bilan le plus récent dont la fournée n'est pas encore lancée :
+// pains en direct (J0, faits le jour même) : le lendemain (mar → mer, mer → jeu, jeu → ven) ; samedi (fait vendredi) ← jeudi.
+// pains faits la veille (J1) : deux jours après (mar → jeu, mer → ven, jeu → sam). Brioche (faite le mardi pour la semaine) : rien.
+// Seulement si les deux jours sont tous deux normaux ou tous deux en vacances/fériés. Vaut pour ce seul jour.
+let noShort=false;
+const SHORT_J0={Mer:"Mar",Jeu:"Mer",Ven:"Jeu",Sam:"Jeu"}, SHORT_J1={Jeu:"Mar",Ven:"Mer",Sam:"Jeu"};
+const srcDay=(wd,id)=>RULE[id]==="J0"?(ruleOn("j0")?SHORT_J0[wd]:null):RULE[id]==="J1"?(ruleOn("j1")?SHORT_J1[wd]:null):null;
+const shortS=(date,id)=>{const wd=wdOf(date),src=srcDay(wd,id);if(noShort||!src)return 0;const sd=addDays(date,OFF[src]-OFF[wd]);
+  if(!(left[sd]||{})[id]||blocked(wdOf(sd),id)||isHol(sd)!==isHol(date))return 0;return dayDelta(sd,id);};
+const autoQ0=(date,id)=>{const b=shopType(wdOf(date),id);if(!b||!AUTO_OK(id))return b;return Math.max(AU(id),b+adjD(date,id)+shortS(date,id));};
+// ---- Vacances scolaires (zone C, Paris) et jours fériés : boutique −20 % (réglable), focaccia à ½ plaque, commandes pro inchangées ----
+// Période = du jour de fin des cours (samedi des départs inclus) à la veille de la reprise. Source : service-public.gouv.fr.
+// Ponts de l'Ascension : du jeudi au samedi. Été 2028 : fin août par défaut (reprise pas encore publiée).
+const HOL=[["2026-10-17","2026-11-01","Toussaint"],["2026-12-19","2027-01-03","Noël"],["2027-02-06","2027-02-21","Hiver"],["2027-04-03","2027-04-18","Printemps"],["2027-05-06","2027-05-09","Pont de l'Ascension"],["2027-07-03","2027-09-01","Été"],
+  ["2027-10-23","2027-11-07","Toussaint"],["2027-12-18","2028-01-02","Noël"],["2028-02-12","2028-02-27","Hiver"],["2028-04-15","2028-05-01","Printemps"],["2028-05-25","2028-05-28","Pont de l'Ascension"],["2028-07-04","2028-08-31","Été"]];
+// Interrupteurs des règles (Réglages > Règles automatiques) : tout est activé par défaut
+const ruleOn=k=>((params.rules||{})[k])!==false;
+const adjP1=()=>params.adjP1??1, adjP2=()=>params.adjP2??2, adjH2=()=>params.adjH2??3;
+const easter=y=>{const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return iso(new Date(y,mo-1,da));};
+const ferie=date=>{const y=+date.slice(0,4),md=date.slice(5),E=easter(y);return ["01-01","05-01","05-08","07-14","08-15","11-01","11-11","12-25"].includes(md)||[1,39,50].some(n=>addDays(E,n)===date);};
+// Ponts et longs week-ends créés par un férié : férié lundi → samedi d'avant ; mardi → samedi d'avant (lundi = pont, fermé) ;
+// jeudi → vendredi (pont) et samedi ; vendredi → samedi d'après. Férié mercredi, samedi ou dimanche : rien.
+const FNAME={"01-01":"Jour de l'an","05-01":"1er mai","05-08":"8 mai","07-14":"14 juillet","08-15":"15 août","11-01":"Toussaint","11-11":"11 novembre","12-25":"Noël"};
+const ferieName=d=>{const E=easter(+d.slice(0,4));return FNAME[d.slice(5)]||(addDays(E,1)===d?"Lundi de Pâques":addDays(E,39)===d?"Ascension":"Lundi de Pentecôte");};
+const PONT={1:[-2],2:[-3],4:[1,2],5:[1]};
+const pontDays=F=>(PONT[parse(F).getDay()]||[]).map(o=>addDays(F,o));
+const isPont=date=>{if(!ruleOn("ponts"))return false;for(let n=-3;n<=3;n++){const F=addDays(date,n);if(ferie(F)&&pontDays(F).includes(date))return true;}return false;};
+const isHol=date=>ruleOn("hol")&&(ferie(date)||isPont(date)||HOL.some(([a,z])=>date>=a&&date<=z&&!(date===a&&!ruleOn("depSat")&&wdOf(a)==="Sam")));
+const holR=()=>params.holR??0.2;
+const autoQ=(date,id)=>{const q=autoQ0(date,id);if(!q||!isHol(date))return q;if(id==="focaccia")return ruleOn("focHalf")?Math.min(q,FOC):q;return Math.max(1,Math.round(q*(1-holR())));};
+function dayDelta(date,id){const e=(left[date]||{})[id];if(!e)return 0;const U=AU(id);
+  if(e.h!=null){const early=adjH()-e.h;return early>0?U*(early>=adjH2()?adjP2():adjP1()):0;}
+  const r=(e.r||0)/U-adjM();return r>0?-U*Math.round(r*adjT()):0;}
+function adjD(date,id){if(!ruleOn("week")||tuesdayOf(parse(date))<=ADJ0)return 0;const k=date+"|"+id;if(k in adjMemo)return adjMemo[k];
+  adjMemo[k]=0;const prev=addDays(date,-7);let d;
+  if((left[prev]||{})[id]&&!blocked(wdOf(prev),id)&&!isHol(prev)){const bp=shopType(wdOf(prev),id);d=(bp?rawAt(prev,id)-bp:adjD(prev,id))+dayDelta(prev,id);}
+  else d=adjD(prev,id);
+  const b=shopType(wdOf(date),id);if(b)d=Math.max(d,AU(id)-b);
+  return adjMemo[k]=d;}
+const parseH=t=>{const m=String(t||"").trim().toLowerCase().replace(/\s/g,"").match(/^(\d{1,2})(?:[h:.,](\d{0,2}))?$/);if(!m)return null;const h=+m[1],mn=m[2]?+m[2].padEnd(2,"0"):0;return h<24&&mn<60?h+mn/60:null;};
+const fmtH=h=>{const H=Math.floor(h),M=Math.round((h-H)*60);return H+"h"+(M?String(M).padStart(2,"0"):"");};
+const dateOf=sd=>addDays(wk,OFF[sd]);
+const wdOf=date=>WD[parse(date).getDay()];
+const ctype=(c,date,id)=>date<c.start?0:(((c.type[wdOf(date)]||{})[id])||0);
+const cq0=(c,date,id)=>{const m=c.mod[date]||{};return id in m?m[id]:ctype(c,date,id);};
+const cq=(c,date,id)=>blocked(wdOf(date),id)?0:cq1(c,date,id);
+const cq1=(c,date,id)=>id==="focaccia"?snapF(cq0(c,date,id)):cq0(c,date,id);
+const ordersQ=(date,id)=>blocked(wdOf(date),id)?0:orders.filter(o=>o.date===date).reduce((s,o)=>s+((o.items||{})[id]||0),0);
+const proBy=(date,id)=>[...clients.map(c=>[c.name,cq(c,date,id)]),["Commandes",ordersQ(date,id)]].filter(x=>x[1]>0);
+const proQ=(date,id)=>proBy(date,id).reduce((s,x)=>s+x[1],0);
+const focKg=()=>params.focKg||2.6;
+const plq=v=>{const h=Math.round(v/focKg()*2),w=Math.floor(h/2);return (w?w:"")+(h%2?"½":"")||"0";};
+const tva=()=>params.tva??0.055;
+const matr=()=>params.matr??0.178;
+const objCA=()=>params.obj??150000, objM=()=>params.objM??10;
+const weekTarget=()=>objCA()/(objM()*4.33);
+const unitTTC=id=>{const sp=salePrice(id);if(sp==null)return 0;return (id==="canele"||id==="focaccia")?sp:sp*Wv(id);};
+const shopCA=d=>pIds().reduce((s,id)=>s+shop(d,id)*unitTTC(id),0);
+const proCA=d=>pIds().reduce((s,id)=>s+proQ(dateOf(d),id)*unitTTC(id),0);
+const payM=()=>params.pay??PAY0;
+const actuals=()=>{const o={...ACT0,...(params.act||{})};Object.keys(o).forEach(k=>{if(o[k]==null)delete o[k];});return o;};
+const fixes=()=>({...FIX0,...(params.fix||{})});
+const PUNIT=id=>id==="canele"?"€ la pièce":"€/kg";
+const salePrice=id=>{id=bid(id);return ((params.sale||{})[id])??SALEP0[id];};
+const ingPrice=name=>{const o=(params.price||{})[name];if(o!==undefined)return o;
+  if(name==="Graines topping"){const it=prepItems("trempage").filter(x=>x[0]!=="Eau");const w=it.reduce((s,x)=>s+x[1],0);
+    const c=it.reduce((s,x)=>{const p=ingPrice(x[0]);return p==null?NaN:s+x[1]*p;},0);return isNaN(c)?null:c/w;}
+  return PRICE0[name]??null;};
+const batchSize=id=>((params.batch||{})[id])||BATCH[id];
+function batchPlan(id){const size=batchSize(id);let stock=0;const out={};
+  PDAYS.forEach(pd=>{const sds=SDAYS.filter(sd=>prodDay(RULE[id],sd)===pd);
+    const from=sds.map(sd=>[sd,sale(sd,id),proBy(dateOf(sd),id)]).filter(x=>x[1]);
+    const need=from.reduce((s,x)=>s+x[1],0),start=stock;
+    const b=need>stock?Math.ceil((need-stock)/size-1e-9):0;stock=stock+b*size-need;
+    out[pd]={q:b,from,need,used:Math.min(start,need),left:stock,size};});
+  return out;}
+const loss=()=>params.loss??0.149; // 1,175 kg de pâte = 1 kg cuit
+const doughW=id=>flat(itemsOf(id)).reduce((s,i)=>s+i.q,0);
+// Poids vendu d'un pain (vente au poids) = pâton × (1 − perte au four), sauf valeur saisie à la main. Canelé et focaccia : à part.
+// Poids vendu = poids en caisse (pain 1,175 kg de pâte → 1 kg ; petit épeautre 950 g → 12 € à 14 €/kg, soit ≈ 857 g ; pain de mie 2 × 250 g de pâte → 2 × ≈ 208 g ; brioche 2 × 320 → 2 × 300 g, 20 €/kg = 6 € la demi)
+const WAUTO=id=>W[id];
+const Wv=id=>{id=bid(id);return ((params.w||{})[id])??WAUTO(id);};
+const lvF=k=>((params.lv||{})[k])??(LV[k]?LV[k].f:null);
+const prepItems=pid=>{const o=(params.prep||{})[pid]||{};return PREPS[pid].items.map(([n,f,x])=>[n,o[n]??f,x||{}]);};
+const rqOf=(id,key,def)=>(((params.rq||{})[id]||{})[key])??def;
+const recipeRaw=id=>R[id].items.map(i=>{
+  if(i.prep){const Q=rqOf(id,"g:"+i.g,i.q);return {g:i.g,prep:i.prep,q:Q,items:prepItems(i.prep).map(([n,f,x])=>({n,q:f*Q,...x}))};}
+  return {...i,q:rqOf(id,i.n+"|"+(i.k||""),i.q)};});
+const ikey=i=>i.g?"g:"+i.g:i.n+"|"+(i.k||"");
+// Recette à poids fixe (ex. focaccia : plaque de 3 kg) : on garde les proportions et on ajuste tout, sauf les ingrédients « keep » (olives)
+const tsum=list=>list.reduce((s,i)=>s+i.q,0);
+const scaleF=(id,list)=>{const T=R[id].target;if(!T)return 1;const keep=tsum(list.filter(i=>i.keep)),rest=tsum(list)-keep;return rest>0?(T-keep)/rest:1;};
+const applyScale=(list,f)=>f===1?list:list.map(i=>i.keep?i:(i.g?{...i,q:i.q*f,items:i.items.map(x=>({...x,q:x.q*f}))}:{...i,q:i.q*f}));
+const itemsRawOf=id=>{if(R[id].base)return directOf(itemsRawOf(R[id].base),R[id].base);const rm=removed[id]||[];return recipeRaw(id).filter(i=>!rm.includes(ikey(i)));};
+// Levain/farine (farines de la pâte + des préparations) × 1,25 ; le reste baisse d'autant pour garder le même pâton
+const levF=list=>tsum(list.flatMap(i=>i.g?i.items:[i]).filter(i=>i.k==="farine"));
+const levRatio=id=>{const l=itemsOf(id),F=levF(l);return F?tsum(l.filter(i=>i.k==="levain"))/F:0;};
+const dlvDef=b=>{const l=itemsRawOf(b),F=levF(l);return F?LV_DIRECT*tsum(l.filter(i=>i.k==="levain"))/F:0;};
+const directOf=(list,b)=>{const L=tsum(list.filter(i=>i.k==="levain")),T=tsum(list),F=levF(list);if(!L||!F||T<=L)return list;
+  const r1=((params.dlv||{})[b])??(LV_DIRECT*L/F),k=T/((T-L)+r1*F),lf=r1*F*k/L;
+  return list.map(i=>{const f=i.k==="levain"?lf:k;return i.g?{...i,q:i.q*f,items:i.items.map(x=>({...x,q:x.q*f}))}:{...i,q:i.q*f};});};
+const scaleOf=id=>scaleF(id,itemsRawOf(id));
+const itemsOf=id=>{const l=itemsRawOf(id);return applyScale(l,scaleF(id,l));};
+const recipeItems=id=>{const l=recipeRaw(id);return applyScale(l,scaleF(id,l));};
+const pIds=()=>{const base=P.map(x=>x[0]).filter(id=>!HIDDEN[id]);return [...porder.filter(id=>RULE[id]&&!HIDDEN[id]&&!R[id].base),...base.filter(id=>!porder.includes(id))];};
+const rank=id=>{if(R[id]&&R[id].base)return rank(R[id].base)-.5;const o=pIds();const i=o.indexOf(id);return i<0?999:i;};
+const byRank=(a,b)=>rank(a)-rank(b);
+// Rang d'un pain dans l'ordre du jour de production affiché (sinon ordre commun, sinon ordre boutique) ; un pain en direct suit son pain de base tant qu'on ne l'a pas placé
+const dlist=(day=pday)=>((dorder.d||{})[day])||dorder.all||[];
+const drank=(id,day=pday)=>{const o=(dorder.d||{})[day];if(o){const i=o.indexOf(id);if(i>=0)return i;}if(R[id]&&R[id].base)return drank(R[id].base,day)-.5;const j=(dorder.all||[]).indexOf(id);return j<0?2000+rank(id):o?1000+j:j;};
+const byDay=(a,b)=>drank(a)-drank(b);
+function sortRows(card,rows){const o=iorder[card]||[];const idx=k=>{const i=o.indexOf(k);return i<0?1000+rows.findIndex(r=>r.key===k):i;};return rows.slice().sort((a,b)=>idx(a.key)-idx(b.key));}
+const cIds=(c,date)=>[...new Set([...(date<c.start?[]:Object.keys(c.type[wdOf(date)]||{})),...Object.keys(c.mod[date]||{})])].filter(id=>RULE[id]&&!HIDDEN[id]).sort(byRank);
+const cur=()=>clients.find(c=>c.id===cid);
+const sale=(sd,id)=>shop(sd,id)+proQ(dateOf(sd),id);
+function production(pd){
+  const out={};
+  P.filter(([id])=>!BATCH[id]).forEach(([id,rule])=>SDAYS.forEach(sd=>{const v=sale(sd,id);
+    if(v&&prodDay(rule,sd)===pd){const q=(TO_PROD[id]||(x=>x))(v),o=DIRECT[id]&&pd===sd?id+"D":id;(out[o]=out[o]||{q:0,from:[]});out[o].q+=q;out[o].from.push([sd,v,proBy(dateOf(sd),id)]);}}));
+  Object.keys(BATCH).forEach(id=>{const b=batchPlan(id)[pd];if(b.need>0||b.q>0)out[id]={q:b.q,from:b.from,batch:b};});
+  Object.entries(extras[pd]||{}).forEach(([id,v])=>{if(v)(out[id]=out[id]||{q:0,from:[]}).q+=v,out[id].extra=v;});
+  return out;
+}
+
+function stepper(value,label,onSet,step){
+  const w=document.createElement("div");w.className="stepper";
+  w.innerHTML=`<button aria-label="Moins">−</button><input type="text" inputmode="decimal" value="${num(value)}" aria-label="${label}"><button aria-label="Plus">+</button>`;
+  const [m,i,p]=w.children;let cur=value;
+  const set=(v,typing)=>{v=Math.max(0,Math.round((+String(v).replace(",",".")||0)*10)/10);if(step===FOC&&!typing)v=snapF(v);cur=v;onSet(v);if(!typing)i.value=num(v);};
+  m.onclick=()=>set(cur-step);p.onclick=()=>set(cur+step);
+  i.oninput=()=>set(i.value,true);i.onblur=()=>set(cur);i.onfocus=()=>i.select();
+  return w;
+}
+
+function renderHead(){document.body.dataset.tab=tab;
+  document.getElementById("tabV").setAttribute("aria-selected",tab==="V");
+  document.getElementById("tabP").setAttribute("aria-selected",tab==="P");
+  document.getElementById("tabO").setAttribute("aria-selected",tab==="O");
+  document.getElementById("viewV").hidden=tab!=="V";document.getElementById("viewP").hidden=tab!=="P";document.getElementById("viewO").hidden=tab!=="O";document.getElementById("viewS").hidden=tab!=="S";document.getElementById("tabS").setAttribute("aria-selected",tab==="S");document.getElementById("viewR").hidden=tab!=="R";document.getElementById("viewC").hidden=tab!=="C";document.getElementById("tabC").setAttribute("aria-selected",tab==="C");document.getElementById("tabR").setAttribute("aria-selected",tab==="R");document.getElementById("days").hidden=tab==="S"||tab==="R";
+  document.getElementById("title").textContent={C:"Chiffre d'affaires",V:"Ventes boutique",O:"Commandes pro",P:"Production du jour",S:"Réglages",R:"Rentabilité"}[tab];
+  document.getElementById("subtitle").textContent={C:"",V:"",O:"",P:"",R:"Marge sur coût matière de chaque produit (hors main-d'œuvre, énergie, emballage), et ce qu'il rapporte sur la semaine affichée.",S:"Toutes les hypothèses chiffrées. Une valeur modifiée se met en couleur ; « Valeurs d'origine » revient au fichier de départ."}[tab];
+  const dated=tab==="O"||tab==="P"||tab==="V"||tab==="C";document.getElementById("week").hidden=!dated;
+  if(dated){const a=parse(wk),z=parse(addDays(wk,4));
+    document.getElementById("wLabel").textContent=`Du ${a.getDate()}${a.getMonth()!==z.getMonth()?" "+MONTHS[a.getMonth()]:""} au ${z.getDate()} ${MONTHS[z.getMonth()]}`;}
+  const el=document.getElementById("days");el.innerHTML="";
+  (tab==="P"?PDAYS:SDAYS).forEach(d=>{const b=document.createElement("button");b.innerHTML=d+(dated?`<small>${parse(dateOf(d)).getDate()}</small>`:"");b.title=DAYNAMES[d];if(dated&&dateOf(d)===iso(new Date())){b.classList.add("today");b.insertAdjacentHTML("beforeend",`<i class="tdl">auj.</i>`);}if(tab==="V"){const n=orders.filter(o=>o.date===dateOf(d)&&!o.done).length;if(n){b.insertAdjacentHTML("beforeend",`<span class="dbadge" role="button" aria-label="${n} commande${n>1?"s":""}">${n}</span>`);b.querySelector(".dbadge").onclick=e=>{e.stopPropagation();sday=d;draft=null;editCmd=true;editBilan=false;editBreads=false;save();render();};}}if(tab==="V"&&isHol(dateOf(d)))b.classList.add("hol");
+    b.setAttribute("aria-pressed",d===({V:sday,O:oday,P:pday,C:cday}[tab]));
+    b.onclick=()=>{if(tab==="V"){sday=d;draft=null;}else if(tab==="O")oday=d;else if(tab==="C")cday=d;else pday=d;save();render();};el.appendChild(b);});
+}
+function renderSales(){
+  const el=document.getElementById("sales");el.innerHTML="";
+  {const b=document.getElementById("orderBtn");b.textContent=editBreads?"✓":"⇅";b.classList.toggle("on",editBreads);b.hidden=editBilan;}
+  {const b=document.getElementById("bilanBtn");b.innerHTML=editBilan?IC.check:BASKET;b.classList.toggle("on",editBilan);b.hidden=editBreads||editCmd;}
+  {const b=document.getElementById("cmdBtn"),n=orders.filter(o=>o.date===dateOf(sday)).length;b.innerHTML=editCmd?IC.check:CAL+(n?`<span class="badge">${n}</span>`:"");b.classList.toggle("on",editCmd);b.hidden=editBreads||editBilan;
+    document.getElementById("orderBtn").hidden=editBilan||editCmd;}
+  if(editCmd){renderCmd(el);return;}
+  if(editBilan){renderBilan(el);return;}
+  if(editBreads){const ids=pIds();ids.forEach((id,i)=>{const row=document.createElement("div");row.className="row";
+    row.dataset.k=id;row.innerHTML=`${HANDLE}<div class="name"><b>${R[id].name}</b>${salePrice(id)!=null?`<small>${fmtIn(salePrice(id),1)} ${PUNIT(id)}</small>`:""}</div><button class="iconbtn" data-price="${id}" aria-label="Prix de ${R[id].name}"><b style="font-size:18px">€</b></button><button class="iconbtn" data-rename="${id}" aria-label="Renommer ${R[id].name}">${IC.pen}</button>`;
+    el.appendChild(row);});makeSortable(el,".row",keys=>{porder=keys;save();});
+    el.querySelectorAll("[data-rename]").forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.rename;ask("Nom du pain",R[id].name).then(n=>{if(n==null)return;const v=n.trim();params.names=params.names||{};if(!v||v===NAME0[id])delete params.names[id];else params.names[id]=v;applyNames();save();renderSales();});});
+    el.querySelectorAll("[data-price]").forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.price;ask(`Prix ${R[id].name} (${PUNIT(id)})`,fmtIn(salePrice(id)??0,1)).then(n=>{if(n==null)return;const v=+String(n).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<0)return;setP("sale",id,"",v);save();renderSales();});});return;}
+  pIds().map(id=>[id,RULE[id]]).forEach(([id,rule])=>{
+    const v=shop(sday,id),pd=prodDay(rule,sday),tv=shopType(sday,id);
+    const row=document.createElement("div");row.className="row"+(v?"":" off");
+    const when=pd===sday?"produit le jour même":"produit "+DAYNAMES[pd];
+    const caTxt=x=>x&&unitTTC(id)?` · <b>${Math.round(x*unitTTC(id))} €</b>`:"";
+    const plq=x=>id==="focaccia"?` (${num(x/focKg())} plaque${x/focKg()>1?"s":""})`:"";
+    if(blocked(sday,id)){row.className="row off";row.innerHTML=`<div class="name"><b>${R[id].name}</b><small>pas le mardi</small></div>`;el.appendChild(row);return;}
+    const rc=dateOf(sday)>=NEW0?reco(dateOf(sday),id):(()=>{const a=!(id in (sales[dateOf(sday)]||{}))&&AUTO_OK(id)?v-tv:0;return null;})();
+    const adjTag=rc&&Math.abs(rc.q-v)>.001?`<button class="reco${rc.q<v?" dn":""}" data-reco="${id}" data-q="${rc.q}" aria-label="Appliquer la recommandation">${rc.q>v?"↑":"↓"} ${num(rc.q)}${rc.why?`<i>${rc.why}</i>`:""}</button>`:"";
+    row.innerHTML=`<div class="name"><b>${R[id].name}</b>${adjTag}<small>${SALE_UNIT[id]?"en kg"+`<span class="plq">${plq(v)}</span> · `:BATCH[id]?"en pièces · ":""}${when}<span class="rca">${caTxt(v)}</span></small></div>`;
+    if(id==="canele"){row.classList.add("canl");const sg=document.createElement("div");sg.className="seg";
+      sg.innerHTML=[0,6,12,18,24,30,36,42,48].map(n=>`<button class="${n===v?"on":""}" data-cn="${n}">${n}</button>`).join("");
+      sg.onclick=e=>{const b=e.target.closest("button");if(!b)return;const dt=dateOf(sday);(sales[dt]=sales[dt]||{}).canele=+b.dataset.cn;save();renderSales();};
+      row.appendChild(sg);el.appendChild(row);return;}
+    row.appendChild(stepper(v,"Ventes "+R[id].name,x=>{const dt=dateOf(sday);(sales[dt]=sales[dt]||{})[id]=x;save();row.classList.toggle("off",!x);row.querySelector(".rca").innerHTML=caTxt(x);const pq=row.querySelector(".plq");if(pq)pq.textContent=plq(x);renderSalesHint();},SALE_STEP[id]||1));
+    el.appendChild(row);
+  });
+  el.querySelectorAll("[data-reco]").forEach(b=>b.onclick=e=>{e.stopPropagation();const dt=dateOf(sday);(sales[dt]=sales[dt]||{})[b.dataset.reco]=+b.dataset.q;save();renderSales();});
+  renderSalesHint();
+}
+const BASKET=`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a2 2 0 1 0 4 0a2 2 0 0 0-4 0"/><path d="M5 8h14a2 2 0 0 1 1.98 2.3l-1.26 7.16a3 3 0 0 1-2.96 2.54h-9.52a3 3 0 0 1-2.96-2.54l-1.26-7.16a2 2 0 0 1 1.98-2.3z"/><path d="M17 10l-2-6"/><path d="M7 10l2-6"/></svg>`;
+const CLOCK=`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v5l3 3"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/></svg>`;
+const setLeft=(dt,id,e)=>{const m=left[dt]=left[dt]||{};if(!e||(!e.r&&e.h==null))delete m[id];else m[id]=e;if(!Object.keys(m).length)delete left[dt];};
+// Bilan de fin de journée : reste ou heure de rupture de chaque pain vendu ce jour-là
+function renderBilan(el){const dt=dateOf(sday),bl=left[dt]||{};
+  const ids=pIds().filter(id=>!blocked(sday,id)&&shop(sday,id)>0);
+  if(!ids.length)el.innerHTML=`<div class="row"><div class="name"><b>Rien en boutique</b></div></div>`;
+  ids.forEach(id=>{const e=bl[id]||{},v=shop(sday,id),foc=id==="focaccia";
+    const row=document.createElement("div");row.className="row";
+    row.innerHTML=`<div class="name"><b>${R[id].name}</b><small class="${e.h!=null?"rup":""}">${e.h!=null?"rupture "+fmtH(e.h):"prévu "+num(v)+(foc?" kg":"")}</small></div>`;
+    const wrap=document.createElement("div");wrap.className="bil";
+    if(e.h==null)wrap.appendChild(stepper(e.r||0,"Reste "+R[id].name,x=>{setLeft(dt,id,x?{r:x}:null);save();renderSalesHint();},SALE_STEP[id]||1));
+    const rb=document.createElement("button");rb.className="iconbtn big"+(e.h!=null?" on":"");rb.setAttribute("aria-label",e.h!=null?"Annuler la rupture":"Rupture");rb.innerHTML=CLOCK;
+    rb.onclick=()=>{if(e.h!=null){setLeft(dt,id,null);save();renderSales();return;}
+      ask("Rupture à quelle heure ?",String(adjH()-2)+"h").then(t=>{if(t==null)return;const h=parseH(t);if(h==null)return;setLeft(dt,id,{h});save();renderSales();});};
+    wrap.appendChild(rb);row.appendChild(wrap);el.appendChild(row);});
+  renderSalesHint();}
+const CAL=`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2z"/><path d="M16 3v4M8 3v4M4 11h16"/></svg>`;
+const itemsTxt=it=>Object.entries(it||{}).filter(e=>e[1]>0&&R[e[0]]).sort((a,b)=>rank(a[0])-rank(b[0])).map(([id,q])=>`<span class="chip"><i>${R[id].name}</i>${num(q)}${id==="focaccia"?" kg":""}</span>`).join("");
+// Commandes clients du jour sélectionné + calendrier des commandes à venir
+const PHONE=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5-2.5l5 2v4a2 2 0 0 1-2 2a16 16 0 0 1-15-15a2 2 0 0 1 2-2"/></svg>`;
+// Téléphone : champ dédié, sinon numéro trouvé dans la note (anciennes commandes)
+const telOf=o=>{if(o.phone)return {tel:o.phone,note:o.note||""};const m=(o.note||"").match(/(\+33\s?|0)[1-9](?:[\s.\-]?\d{2}){4}/);if(!m)return {tel:"",note:o.note||""};return {tel:m[0],note:(o.note||"").replace(m[0],"").replace(/^[\s,;·-]+|[\s,;·-]+$/g,"")};};
+const fmtTel=t=>{const d=t.replace(/[^\d]/g,"").replace(/^33/,"0");return d.length===10?d.replace(/(\d{2})(?=\d)/g,"$1 "):t;};
+// Appel : l'appli Claude peut bloquer les liens « tel: » ; on tente l'appel et on affiche le numéro en grand (copie, appui long)
+// Fiche d'une commande : tout le détail, numéro en grand (appui long sur iPhone = Appeler / Copier), boutons copier et appeler
+function showOrder(ord){const {tel,note}=telOf(ord),n=tel.replace(/[^+\d]/g,""),x=parse(ord.date),wd=WD[x.getDay()];
+  const esc=t=>String(t||"").replace(/</g,"&lt;");
+  const o=document.createElement("div");o.className="askbg";
+  o.innerHTML=`<div class="ask osheet" role="dialog" aria-modal="true"><p style="margin-bottom:2px">${esc(ord.name)}</p><small class="d" style="color:var(--muted)">${wd?DAYNAMES[wd][0].toUpperCase()+DAYNAMES[wd].slice(1):""} ${x.getDate()} ${MONTHS[x.getMonth()]}${ord.done?" · retirée":""}</small>
+    ${tel?`<div class="bigtel">${fmtTel(tel)}</div>`:`<div class="d" style="margin:12px 0;color:var(--muted)">Pas de téléphone</div>`}
+    <div class="chips big" style="margin:8px 0">${itemsTxt(ord.items)}</div>
+    <div class="onote" style="margin:8px 0 0">${note?esc(note):`<span style="color:var(--muted)">Pas de note</span>`}</div>
+    <small id="telHint" style="display:block;margin-top:10px;color:var(--muted);font-size:13px">${tel?"Pour appeler : appui long sur le numéro, ou copie-le et colle-le dans Téléphone.":""}</small>
+    <div class="askb" style="justify-content:space-between"><button class="iconbtn big" data-a="close" aria-label="Fermer">${IC.x}</button><span style="display:flex;gap:10px"><button class="iconbtn big del" data-a="del" aria-label="Supprimer la commande"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg></button><button class="iconbtn big" data-a="edit" aria-label="Modifier">${IC.pen}</button>${tel?`<button class="iconbtn big" data-a="copy" aria-label="Copier le numéro"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8m0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2z"/><path d="M16 8v-2a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button><button class="iconbtn big ok" data-a="call" aria-label="Appeler">${PHONE}</button>`:""}</span></div></div>`;
+  document.body.appendChild(o);const h=o.querySelector("#telHint");
+  o.onclick=e=>{const b=e.target.closest("button");if(e.target===o){o.remove();return;}if(!b)return;const a=b.dataset.a;
+    if(a==="close"){o.remove();return;}
+    if(a==="del"){o.remove();ask(`Supprimer la commande de ${esc(ord.name)} ?`).then(ok=>{if(!ok)return;orders=orders.filter(x=>x.id!==ord.id);save();renderSales();renderHead();});return;}
+    if(a==="edit"){o.remove();const t=telOf(ord);draft={...ord,phone:t.tel,note:t.note,items:{...ord.items}};renderSales();return;}
+    if(a==="call"){let ok=false;try{ok=!!window.open("tel:"+n,"_blank");}catch(err){}if(!ok)h.textContent="L'appli bloque l'appel direct : appui long sur le numéro, ou copie-le.";}
+    if(a==="copy"){const fail=()=>{h.textContent="Copie impossible ici : appui long sur le numéro puis « Copier ».";};
+      try{navigator.clipboard.writeText(n).then(()=>{h.textContent="Numéro copié : ouvre Téléphone et colle-le.";},fail);}catch(err){fail();}}};}
+function renderCmd(el){const dt=dateOf(sday),list=orders.filter(o=>o.date===dt);
+  document.getElementById("salesCA").innerHTML="";
+  if(draft){const it=draft.items;
+    el.innerHTML=`<div class="row"><input class="cin" id="dName" placeholder="Nom" autocomplete="off" value="${(draft.name||"").replace(/"/g,"&quot;")}"></div>`;
+    Object.keys(it).sort(byRank).forEach(id=>{const row=document.createElement("div");row.className="row";row.innerHTML=`<div class="name"><b>${R[id].name}</b>${id==="focaccia"?"<small>en kg</small>":""}</div>`;
+      row.appendChild(stepper(it[id],"Quantité "+R[id].name,x=>{it[id]=x;},SALE_STEP[id]||1));el.appendChild(row);});
+    const ad=document.createElement("div");ad.className="row";ad.innerHTML=`<select class="cin" id="dAdd" aria-label="Ajouter un produit"><option value="">Ajouter un produit…</option>${pIds().filter(id=>!(id in it)&&!blocked(sday,id)).map(id=>`<option value="${id}">${R[id].name}</option>`).join("")}</select>`;el.appendChild(ad);
+    const ph=document.createElement("div");ph.className="row";ph.innerHTML=`<input class="cin" id="dPhone" type="tel" inputmode="tel" placeholder="Téléphone" autocomplete="off" value="${(draft.phone||"").replace(/"/g,"&quot;")}">`;el.appendChild(ph);
+    const nt=document.createElement("div");nt.className="row";nt.innerHTML=`<input class="cin" id="dNote" placeholder="Note (tranché, heure de passage…)" autocomplete="off" value="${(draft.note||"").replace(/"/g,"&quot;")}">`;el.appendChild(nt);
+    const keep=()=>{draft.name=document.getElementById("dName").value;draft.phone=document.getElementById("dPhone").value;draft.note=document.getElementById("dNote").value;};
+    document.getElementById("dAdd").onchange=e=>{const v=e.target.value;if(!v)return;keep();it[v]=v==="focaccia"?FOC:1;renderSales();};
+    document.getElementById("salesHint").innerHTML=`<div class="foot" style="justify-content:flex-end"><button class="iconbtn big" id="dCancel" aria-label="Annuler">${IC.x}</button><button class="iconbtn big ok" id="dOk" aria-label="Valider">${IC.check}</button></div>`;
+    document.getElementById("dCancel").onclick=()=>{draft=null;renderSales();};
+    document.getElementById("dOk").onclick=()=>{keep();const items=Object.fromEntries(Object.entries(it).filter(e=>e[1]>0));const name=(draft.name||"").trim();
+      if(!name&&!Object.keys(items).length){draft=null;renderSales();return;}
+      const o={id:draft.id||"o"+Date.now(),date:dt,name:name||"Client",items,phone:(draft.phone||"").trim(),note:(draft.note||"").trim(),done:!!draft.done};
+      orders=[...orders.filter(x=>x.id!==o.id),o];draft=null;save();renderSales();};
+    if(!draft.name)setTimeout(()=>{const i=document.getElementById("dName");if(i)i.focus();},50);return;}
+  if(!list.length)el.innerHTML=`<div class="row"><div class="name"><b>Aucune commande</b></div></div>`;
+  list.forEach(o=>{const row=document.createElement("div");row.className="row"+(o.done?" off":"");row.dataset.oid=o.id;
+    const {tel,note}=telOf(o);
+    row.innerHTML=`<div class="name golink"><b>${o.name.replace(/</g,"&lt;")}</b>${tel?`<span class="tel">${PHONE}<span class="telnum">${fmtTel(tel)}</span></span>`:""}<div class="chips big">${itemsTxt(o.items)}</div>${note?`<small class="onote">${note.replace(/</g,"&lt;")}</small>`:""}</div>
+      <button class="iconbtn${o.done?" on":""}" data-done="${o.id}" aria-label="${o.done?"Pas encore retirée":"Retirée"}">${IC.check}</button><button class="iconbtn" data-edit="${o.id}" aria-label="Modifier">${IC.pen}</button>`;el.appendChild(row);});
+  el.querySelectorAll("[data-oid] .name").forEach(nm=>nm.onclick=()=>{const o=orders.find(x=>x.id===nm.parentNode.dataset.oid);if(o)showOrder(o);});
+  el.querySelectorAll("[data-done]").forEach(b=>b.onclick=()=>{const o=orders.find(x=>x.id===b.dataset.done);o.done=!o.done;save();renderSales();});
+  el.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{const o=orders.find(x=>x.id===b.dataset.edit);{const t=telOf(o);draft={...o,phone:t.tel,note:t.note,items:{...o.items}};}renderSales();});
+  const today=iso(new Date()),up=orders.filter(o=>o.date>=today&&!o.done).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+  const by={};up.forEach(o=>(by[o.date]=by[o.date]||[]).push(o));
+  document.getElementById("salesHint").innerHTML=`<div class="foot" style="justify-content:flex-end">${list.length?`<button class="iconbtn big del" id="dDel" aria-label="Supprimer les commandes retirées" ${list.some(o=>o.done)?"":"hidden"}>${IC.erase}</button>`:""}<button class="iconbtn big ok" id="dNew" aria-label="Nouvelle commande">${IC.plus}</button></div>`
+    +(Object.keys(by).length?`<h2>À venir</h2><div class="list">`+Object.entries(by).map(([d,os])=>{const x=parse(d),wd=WD[x.getDay()];
+      return `<div class="row golink" data-go="${d}"><div class="name"><b>${DAYNAMES[wd][0].toUpperCase()+DAYNAMES[wd].slice(1)} ${x.getDate()} ${MONTHS[x.getMonth()]}</b><small>${os.map(o=>o.name.replace(/</g,"&lt;")).join(", ")}</small></div><b class="cav">${os.length}</b></div>`;}).join("")+`</div>`:"");
+  document.getElementById("dNew").onclick=()=>{draft={name:"",items:{},note:""};renderSales();};
+  const dd=document.getElementById("dDel");if(dd)dd.onclick=()=>{ask("Supprimer les commandes retirées de ce jour ?").then(ok=>{if(!ok)return;orders=orders.filter(o=>!(o.date===dt&&o.done));save();renderSales();});};
+  document.querySelectorAll("[data-go]").forEach(r=>r.onclick=()=>{const d=r.dataset.go;wk=tuesdayOf(parse(d));sday=WD[parse(d).getDay()];save();render();});}
+// CA si on applique toutes les recommandations affichées
+// Référence fixe : quantités reprises de la semaine d'avant, avec les recommandations (vacances −20 %…), sans tenir compte des ajustements manuels
+const rcCA=days=>{let t=0,b=0;const why=new Set();days.forEach(d=>{const dt=dateOf(d),pc=proCA(d);t+=pc;b+=pc;pIds().forEach(id=>{if(blocked(d,id)||isClosed(dt))return;const q0=dt<NEW0?shop(d,id):baseQ(dt,id).q,r=reco(dt,id,true);b+=q0*unitTTC(id);if(r){t+=r.q*unitTTC(id);r.why.split(" · ").forEach(w=>w&&why.add(w));}else t+=q0*unitTTC(id);});});return {t,b,why:[...why].join(" · ")};};
+const rcTag=(r,cur)=>Math.abs(r.t-r.b)<1?"":`<span class="reco rcca${r.t<cur?" dn":""}">${r.t>cur?"↑":"↓"} ${eur0(r.t)}${r.why?`<i>${r.why}</i>`:""}</span>`;
+function renderSalesHint(){
+  document.getElementById("salesHint").textContent="";
+  if(editBilan){const dt=dateOf(sday),bl=left[dt]||{},ids=Object.keys(bl).filter(id=>R[id]);
+    const lv=ids.reduce((s,id)=>s+(bl[id].r||0)*unitTTC(id),0),np=ids.filter(id=>id!=="focaccia"&&id!=="canele").reduce((s,id)=>s+(bl[id].r||0),0),nr=ids.filter(id=>bl[id].h!=null).length;
+    const nx=addDays(dt,7),rcl=(d,ids)=>ids.map(id=>{const r=reco(d,id);return r?[id,shopAt(d,id),r.q]:null;}).filter(x=>x&&Math.abs(x[2]-x[1])>.001),ch=nx>=NEW0?rcl(nx,pIds().filter(id=>!blocked(sday,id))):pIds().filter(id=>AUTO_OK(id)&&!blocked(sday,id)).map(id=>[id,shop(sday,id),shopAt(nx,id)]).filter(x=>Math.abs(x[2]-x[1])>.001);
+    document.getElementById("salesCA").innerHTML=`<div class="levains" style="margin-bottom:16px">
+      <div class="lv"><span>Invendus</span><strong>${eur0(lv)}</strong>${np?`<em>${num(np)} pain${np>1?"s":""}</em>`:""}</div>
+      <div class="lv"><span>Ruptures</span><strong>${nr}</strong></div></div>`;
+    const cap=d=>DAYNAMES[d][0].toUpperCase()+DAYNAMES[d].slice(1),box=(t,l)=>l.length?`<div class="nextw"><b>${t}</b><div class="chips">${l.map(([id,a,b])=>`<span class="chip"><i>${R[id].name}</i>${num(a)} → ${num(b)}</span>`).join("")}</div></div>`:"";
+    let h2="";SDAYS.filter(w=>OFF[w]>OFF[sday]).forEach(w2=>{const d2=addDays(dt,OFF[w2]-OFF[sday]);
+      const ids2=pIds().filter(id=>AUTO_OK(id)&&!blocked(w2,id)&&srcDay(w2,id)===sday);if(!ids2.length)return;
+      if(d2>=NEW0){h2+=box(`${cap(w2)} ${parse(d2).getDate()} · conseil`,rcl(d2,ids2));return;}
+      noShort=true;adjMemo={};const before=ids2.map(id=>shopAt(d2,id));noShort=false;adjMemo={};
+      h2+=box(`${cap(w2)} ${parse(d2).getDate()}`,ids2.map((id,i)=>[id,before[i],shopAt(d2,id)]).filter(x=>Math.abs(x[2]-x[1])>.001));});
+    document.getElementById("salesHint").innerHTML=h2+box(`${cap(sday)} ${parse(nx).getDate()}${nx>=NEW0?" · conseil":""}`,ch);
+    return;}
+  const day=shopCA(sday),dayPro=proCA(sday),wk=SDAYS.reduce((s,d)=>s+shopCA(d)+proCA(d),0),tg=weekTarget(),pct=Math.min(100,wk/tg*100);
+  const pmw=(Object.values(fixes()).reduce((a,b)=>a+b,0)+payM())/(1-matr())*(1+tva())*12/objM()/(4.33*12/12);
+  document.getElementById("salesCA").innerHTML=`<div class="levains" style="margin-bottom:10px">
+    <div class="lv"><span>CA prévu</span><strong>${eur0(day+dayPro)}</strong>${rcTag(rcCA([sday]),day+dayPro)}</div>
+    <div class="lv"><span>Semaine</span><strong>${eur0(wk)}</strong><em>objectif ${eur0(tg)} · ${Math.round(wk/tg*100)} %</em>${rcTag(rcCA(SDAYS),wk)}</div></div>
+    <div class="gauge" style="margin-bottom:16px"><i style="width:${pct}%;background:${wk>=tg?"var(--levain)":wk>=pmw?"var(--flour)":"var(--warn)"}"></i><s style="left:${Math.min(100,pmw/tg*100)}%"></s></div>`;
+}
+
+// ---- Relevé des livraisons pro (poids livrés, pour moi) ----
+const blOf=(c,dt)=>((deliv[c.id]||{})[dt])??((BL0[c.id]||{})[dt])??null;
+const blPlan=(c,dt)=>{const wd=wdOf(dt);if(!wd)return {};const o={};Object.keys(R).forEach(id=>{if(!RULE[id]||R[id].base)return;const q=cq(c,dt,id);if(q>0)o[id]=q;});return o;};
+const kgIn=v=>v==null||v===""?"":String(Math.round(v*1000)/1000).replace(".",",");
+function renderBL(c){const el=document.getElementById("blView");
+  const today=iso(new Date());if(!blMonth)blMonth=today.slice(0,7);
+  const [y,m]=blMonth.split("-").map(Number),first=blMonth+"-01",last=iso(new Date(y,m,0));
+  const days=[];for(let d=first;d<=last;d=addDays(d,1)){const rec=blOf(c,d),pl=d<=addDays(today,7)?blPlan(c,d):{};if(rec||Object.keys(pl).length)days.push([d,rec||{},pl]);}
+  const tot={};days.forEach(([,rec])=>Object.entries(rec).forEach(([id,v])=>{if(v)tot[id]=(tot[id]||0)+v;}));
+  const prod=id=>R[id]?R[id].name:id.startsWith("x:")?id.slice(2):id;
+  const addOpts=have=>`<option value="">Ajouter un produit…</option>`+pIds().filter(id=>!have.includes(id)).map(id=>`<option value="${id}">${R[id].name}</option>`).join("")+`<option value="__new">Autre produit…</option>`;
+  const free=[];for(let d=first;d<=last;d=addDays(d,1)){const wd=WD[parse(d).getDay()];if(wd&&!days.some(x=>x[0]===d))free.push(d);}
+  el.innerHTML=`<div class="week"><button id="blPrev" aria-label="Mois précédent">‹</button><span>${MONTHS[m-1][0].toUpperCase()+MONTHS[m-1].slice(1)} ${y}</span><button id="blNext" aria-label="Mois suivant">›</button></div>
+    <div class="list" style="margin-bottom:14px">${Object.keys(tot).length?Object.entries(tot).sort((a,b)=>rank(a[0])-rank(b[0])).map(([id,v])=>`<div class="row catot"><div class="name"><b>${prod(id)}</b></div><b class="cav">${num(v)} kg</b></div>`).join(""):`<div class="row"><div class="name"><b>Rien de livré ce mois-ci</b></div></div>`}</div>
+    ${days.map(([d,rec,pl])=>{const x=parse(d),wd=WD[x.getDay()],ids=[...new Set([...Object.keys(pl),...Object.keys(rec)])].sort((a,b)=>rank(a)-rank(b));
+      const tday=d===today;return `<h2 id="bl_${d}" class="blh${tday?" tday":""}" style="margin:18px 4px 8px;font-size:17px;display:flex;align-items:center;justify-content:space-between"><span>${wd?DAYNAMES[wd][0].toUpperCase()+DAYNAMES[wd].slice(1):""} ${x.getDate()}${tday?`<em class="tdtag">aujourd'hui</em>`:""}</span><button class="iconbtn${blAdd===d?" on":""}" data-bltog="${d}" aria-label="Ajouter un produit">${blAdd===d?IC.x:IC.plus}</button></h2><div class="list caform${tday?" tlist":""}">`+ids.map(id=>`<div class="carow"><label>${prod(id)}${pl[id]?`<small class="caz">commandé ${id==="focaccia"?num(pl[id])+" kg":num(pl[id])}</small>`:""}</label><div class="cain"><input data-bld="${d}" data-blp="${id}" type="text" inputmode="decimal" autocomplete="off" placeholder="—" value="${rec[id]?kgIn(rec[id]):""}"><span>kg</span></div></div>`).join("")+(blAdd===d?`<div class="carow"><select class="cin" data-bladd="${d}" aria-label="Ajouter un produit">${addOpts(ids)}</select></div>`:"")+`</div>`;}).join("")}
+    ${free.length?`<div class="add" style="margin-top:18px"><select id="blDay" aria-label="Ajouter une livraison"><option value="">Ajouter une livraison…</option>${free.map(d=>{const x=parse(d),wd=WD[x.getDay()];return `<option value="${d}">${DAYNAMES[wd][0].toUpperCase()+DAYNAMES[wd].slice(1)} ${x.getDate()}</option>`;}).join("")}</select></div>`:""}`;
+  document.getElementById("blPrev").onclick=()=>{blMonth=iso(new Date(y,m-2,1)).slice(0,7);renderPro();};
+  document.getElementById("blNext").onclick=()=>{blMonth=iso(new Date(y,m,1)).slice(0,7);renderPro();};
+  const setRec=(d,fn)=>{const dc=deliv[c.id]=deliv[c.id]||{};const cur={...(blOf(c,d)||{})};fn(cur);dc[d]=cur;blAdd=null;save();renderPro();};
+  el.querySelectorAll("[data-bltog]").forEach(b=>b.onclick=()=>{blAdd=blAdd===b.dataset.bltog?null:b.dataset.bltog;renderPro();});
+  const bd=document.getElementById("blDay");if(bd)bd.onchange=()=>{const d=bd.value;if(!d)return;setRec(d,()=>{});blAdd=d;renderPro();};
+  el.querySelectorAll("select[data-bladd]").forEach(sl=>sl.onchange=()=>{const d=sl.dataset.bladd,v=sl.value;if(!v)return;
+    if(v==="__new"){ask("Nom du produit","").then(n=>{n=(n||"").trim();if(!n){sl.value="";return;}setRec(d,cur=>{cur["x:"+n]=cur["x:"+n]||0;});setTimeout(()=>{const i=el.querySelector(`input[data-bld="${d}"][data-blp="x:${CSS.escape(n)}"]`);if(i)i.focus();},50);});return;}
+    setRec(d,cur=>{cur[v]=cur[v]||0;});setTimeout(()=>{const i=el.querySelector(`input[data-bld="${d}"][data-blp="${v}"]`);if(i)i.focus();},50);});
+  el.querySelectorAll("input[data-bld]").forEach(i=>{i.onfocus=()=>i.select();i.onchange=()=>{const d=i.dataset.bld,id=i.dataset.blp,raw=i.value.trim().replace(",",".").replace(/\s|kg/g,"");
+    const cur={...(blOf(c,d)||{})};if(raw===""||+raw===0)delete cur[id];else{const v=+raw;if(!isFinite(v)||v<0){i.value=kgIn(cur[id]);return;}cur[id]=Math.round(v*1000)/1000;}
+    const dc=deliv[c.id]=deliv[c.id]||{};dc[d]=cur;save();renderPro();};});
+}
+function renderPro(){
+  const cl=document.getElementById("clients");cl.innerHTML="";
+  clients.forEach(c=>{const b=document.createElement("button");b.textContent=c.name;b.setAttribute("aria-pressed",c.id===cid);
+    b.onclick=()=>{cid=c.id;save();renderPro();};cl.appendChild(b);});
+  const c=cur();document.getElementById("clientBody").hidden=!c||editBL;document.getElementById("renameC").hidden=!c||editBL;document.getElementById("deleteC").hidden=!c||editBL;document.getElementById("newC").hidden=editBL;
+  {const b=document.getElementById("blBtn");b.hidden=!c;b.classList.toggle("on",editBL);document.getElementById("blView").hidden=!c||!editBL;document.getElementById("week").hidden=editBL;document.getElementById("days").hidden=editBL;}
+  if(!c)return;if(editBL){renderBL(c);return;}
+  const date=dateOf(oday),dl=`${DAYNAMES[oday]} ${parse(date).getDate()} ${MONTHS[parse(date).getMonth()]}`;
+  const el=document.getElementById("proList");el.innerHTML="";
+  const ids=cIds(c,date);
+  if(!ids.length)el.innerHTML=`<div class="row"><div class="name"><b>Pas de livraison ${dl}</b><small>Ajoute un produit si ${c.name} commande ce jour-là.</small></div></div>`;
+  ids.forEach(id=>{
+    const v=cq(c,date,id),t=ctype(c,date,id),pd=prodDay(RULE[id],oday),changed=Math.abs(v-t)>.001,foc=id==="focaccia";
+    const row=document.createElement("div");row.className="row"+(v?"":" off");
+    if(blocked(oday,id)){row.className="row off";row.innerHTML=`<div class="name"><b>${R[id].name}</b><small>pas le mardi</small></div>`;el.appendChild(row);return;}
+    row.innerHTML=`<div class="name"><b>${R[id].name}</b><small>${foc?"en kg · ":""}${v?"produit "+(pd===oday?"le jour même":DAYNAMES[pd]):"pas livré"}</small></div>`;
+    row.appendChild(stepper(v,"Quantité "+R[id].name,x=>{(c.mod[date]=c.mod[date]||{})[id]=x;save();renderPro();},foc?SALE_STEP.focaccia:1));
+    el.appendChild(row);
+  });
+  const sel=document.getElementById("proAdd");
+  sel.innerHTML=`<option value="">Ajouter un produit…</option>`+pIds().filter(id=>!ids.includes(id)).map(id=>`<option value="${id}">${R[id].name}</option>`).join("");
+  document.getElementById("proHint").textContent="";
+}
+// Total de la production du jour : pains (pièces), focaccia en plaques, canelés, et poids total de pâte
+function renderProdTot(pr,ids){const el=document.getElementById("prodTot");if(!el)return;
+  let pains=0,plaques=0,caneles=0,brioches=0,pate=0;
+  ids.forEach(id=>{const o=pr[id],r=R[id];if(!o||!(o.q>0))return;const q=o.q;
+    if(o.batch){caneles+=q*o.batch.size;pate+=flat(itemsOf(id)).reduce((s,i)=>s+i.q,0)*q;return;}
+    pate+=doughW(id)*q;
+    if(r.unit==="plaque")plaques+=q;else if(r.unit==="brioche")brioches+=q;else pains+=q;});
+  if(!ids.length){el.innerHTML="";return;}
+  const extra=[plaques?`${plq(plaques*focKg())} plaque${plaques>1?"s":""} de focaccia`:"",brioches?`${num(brioches)} brioche${brioches>1?"s":""}`:"",caneles?`${num(caneles)} canelés`:""].filter(Boolean).join(" · ");
+  el.innerHTML=`<span>Pâte</span><b>${num(pate)} kg</b>`;}
+function renderProd(){
+  const pr=production(pday);
+  const el=document.getElementById("prod");el.innerHTML="";
+  const ids=pIds().filter(id=>pr[id]).concat(Object.keys(pr).filter(id=>!RULE[id]||R[id].base)).sort(byDay);
+  renderProdTot(pr,ids);
+  document.getElementById("prodOrderBtn").hidden=ids.length<2;{const b=document.getElementById("prodOrderBtn");b.textContent=editProd?"✓":"⇅";b.classList.toggle("on",editProd);}
+  if(!ids.length)el.innerHTML=`<div class="row"><div class="name"><b>Rien à produire</b><small>Aucune vente rattachée à ce jour.</small></div></div>`;
+  ids.forEach((id,idx)=>{
+    const o=pr[id],r=R[id];const row=document.createElement("div");row.className="row prod";
+    if(editProd){row.dataset.k=id;row.innerHTML=`${HANDLE}<div class="name"><b>${r.name}</b></div>`;el.appendChild(row);return;}
+    const fq=v=>id==="focaccia"?plq(v):num(v);
+    const from=o.from.map(([d,v,pv])=>`<span class="chip"><i>${d===pday?"Auj.":d+"."}</i>${fq(v)}</span>`+pv.map(([n,q])=>`<span class="chip pro">${n} ${fq(q)}</span>`).join("")).join("");
+    const unit=r.unit==="plaque"?" plaques":o.batch?(o.q>1?" fournées":" fournée"):"";
+    if(o.batch){const b=o.batch;row.innerHTML=`<div class="name"><b>${r.name}</b><div class="chips">${from}${b.used?`<span class="chip m">−${b.used} veille</span>`:""}${b.left?`<span class="chip m">reste ${b.left}</span>`:""}</div></div><div class="qty">${num(o.q)}<small style="font-size:14px;color:var(--muted)">${unit}</small></div>`;el.appendChild(row);return;}
+    if(RULE[id]){row.innerHTML=`<div class="name"><b>${r.name}</b><div class="chips">${from}${o.extra?`<span class="chip"><i>+</i>${fq(o.extra)}</span>`:""}</div></div><div class="qty">${id==="focaccia"?plq(o.q*focKg()):num(o.q)}<small style="font-size:14px;color:var(--muted)">${unit}</small></div>`;}
+    else{row.innerHTML=`<div class="name"><b>${r.name}</b><small>Hors ventes</small></div>`;
+      row.appendChild(stepper(o.extra||0,"Ajout "+r.name,x=>{(extras[pday]=extras[pday]||{})[id]=x;save();renderResults();},1));}
+    const nm=row.querySelector(".name");if(nm&&pr[id].q>0){nm.classList.add("golink");nm.querySelector("b").insertAdjacentHTML("beforeend",' <span class="go">›</span>');nm.onclick=()=>goRecipe(id);}
+    el.appendChild(row);
+  });
+  if(editProd)makeSortable(el,".row",keys=>{
+    // Ordre propre à ce jour de la semaine : les pains absents cette fois-ci gardent leur place pour les semaines suivantes.
+    const all=[...new Set([...dlist(),...pIds(),...Object.keys(R)])].sort(byDay);let k=0;
+    dorder={...dorder,d:{...(dorder.d||{}),[pday]:all.map(id=>keys.includes(id)?keys[k++]:id)}};save();renderResults();});
+  const sel=document.getElementById("extra");
+  sel.innerHTML=`<option value="">Ajouter un pain hors ventes…</option>`+Object.keys(R).filter(id=>!RULE[id]&&!pr[id]&&!R[id].base).map(id=>`<option value="${id}">${R[id].name}</option>`).join("");
+  renderResults();
+}
+// Hydratation d'une recette = eau du pétrin ÷ farines de la pâte (hors levain et préparations)
+const hydInfo=id=>{const its=itemsOf(id).filter(i=>!i.g);const fl=its.filter(i=>i.k==="farine").reduce((s,i)=>s+i.q,0);
+  const w=its.find(i=>/^Eau/.test(i.n));return w&&fl?{h:w.q/fl,key:ikey(w),fl}:null;};
+// Pourcentages boulanger : chaque ingrédient rapporté aux farines de la pâte (hors levain et préparations)
+const flourOf=id=>itemsOf(id).filter(i=>!i.g&&i.k==="farine").reduce((s,i)=>s+i.q,0);
+const fmtPct=p=>{const v=p*100;return (v<10?(Math.round(v*10)/10).toString().replace(".",","):Math.round(v))+" %";};
+const pctStep=p=>p<0.1?0.001:0.01;
+const ptag=(target,p,editable)=>`<span class="hpct">${fmtPct(p)}${editable?`<button class="gear" data-hydedit="${target}" aria-label="Modifier le pourcentage">${editHyd===target?"✓":"⚙︎"}</button>`:""}</span>`;
+const pctOfKey=(id,key)=>{const raw=itemsRawOf(id),fl=raw.filter(i=>!i.g&&i.k==="farine").reduce((s,i)=>s+i.q,0),it=raw.find(i=>ikey(i)===key);return it&&fl?{p:it.q/fl,fl,it}:null;};
+const pctCtl=(id,key,label)=>{const pi=pctOfKey(id,key);if(!pi)return "";
+  return `<tr class="hyd on"><td colspan="2"><div class="hyrow"><span>${label?label+" · ":""}${pi.it.g||pi.it.n}</span><span class="hy"><button data-pid="${id}" data-pkey="${key}" data-d="-1" aria-label="Moins">−</button><b>${fmtPct(pi.p)}</b><button data-pid="${id}" data-pkey="${key}" data-d="1" aria-label="Plus">+</button></span></div></td></tr>`;};
+function makeSortable(container,sel,onDone){if(!container)return;
+  // Écoute au niveau de la fenêtre : déplacer la ligne dans la page ne coupe pas le geste (cas d'iOS).
+  const start=(item,y0,x0,isTouch)=>{let moved=false;item.classList.add("dragging");document.body.classList.add("nodrag");
+    const at=(x,y)=>{if(y<70)window.scrollBy(0,-12);else if(y>window.innerHeight-70)window.scrollBy(0,12);
+      const el=document.elementFromPoint(x,y),t=el&&el.closest(sel);
+      if(t&&t!==item&&t.parentNode===item.parentNode){const r=t.getBoundingClientRect();t.parentNode.insertBefore(item,y>r.top+r.height/2?t.nextSibling:t);moved=true;}};
+    const tm=ev=>{ev.preventDefault();const t=ev.touches[0];if(t)at(t.clientX,t.clientY);};
+    const mm=ev=>{ev.preventDefault();at(ev.clientX,ev.clientY);};
+    const end=()=>{window.removeEventListener("touchmove",tm,{passive:false});window.removeEventListener("touchend",end);window.removeEventListener("touchcancel",end);
+      window.removeEventListener("mousemove",mm);window.removeEventListener("mouseup",end);
+      item.classList.remove("dragging");document.body.classList.remove("nodrag");
+      if(moved)onDone([...container.querySelectorAll(sel)].map(x=>x.dataset.k));};
+    if(isTouch){window.addEventListener("touchmove",tm,{passive:false});window.addEventListener("touchend",end);window.addEventListener("touchcancel",end);}
+    else{window.addEventListener("mousemove",mm);window.addEventListener("mouseup",end);}};
+  container.querySelectorAll(sel+" .handle").forEach(h=>{
+    h.addEventListener("touchstart",e=>{const item=h.closest(sel);if(!item)return;e.preventDefault();const t=e.touches[0];start(item,t.clientY,t.clientX,true);},{passive:false});
+    h.addEventListener("mousedown",e=>{const item=h.closest(sel);if(!item)return;e.preventDefault();start(item,e.clientY,e.clientX,false);});});}
+const priceName=i=>/^Eau/.test(i.n)?null:i.k==="levain"?LVFLOUR[i.l]:i.k==="farine"?i.f:(PRICE_ALIAS[i.n]||i.n);
+const eurBtn=(t,i)=>priceName(i)?`<button class="gear eur${editPrice===t?" on":""}" data-pedit="${t}" aria-label="Prix de l'ingrédient">€</button>`:"";
+const priceRow=(t,i,qty)=>{if(editPrice!==t)return "";const name=priceName(i);if(!name)return "";const p=ingPrice(name);
+  const kgBuy=i.k==="levain"?qty*(lvF(i.l)??.5):qty;
+  return `<tr class="hyd on"><td>Prix ${i.k==="levain"?"de la farine du levain ("+name+")":name}<small class="d">${p==null?"prix à renseigner":`coût de la ligne : ${eur(kgBuy*p)}`}</small></td><td class="q">${pin("price",name,"",p??0,1,"€")}<small class="d">/kg HT</small></td></tr>`;};
+const coefX=id=>{const e=unitEco(id);return e&&e.cost?`coef. ×${fmtIn(e.coef,1)}${e.miss.length?"*":""}`:"";};
+const ptile=(lab,w,sub,id)=>`<div class="pt"><em>${lab}</em><b>${w}</b>${sub?`<small>${sub}</small>`:""}${coefX(id)?`<span>${coefX(id)}</span>`:""}</div>`;
+const pstrip=tiles=>`<tr class="ptn"><td colspan="2"><div class="pts">${tiles}</div></td></tr>`;
+const coefTag=id=>{const e=unitEco(id);return e&&e.cost?`<span class="ctag">coef. ×${fmtIn(e.coef,1)}${e.miss.length?"*":""}</span>`:"";};
+const HANDLE=`<span class="handle" aria-label="Glisser pour déplacer">≡</span>`;
+function cardRows(card,rows){const sorted=sortRows(card,rows),ed=editCard===card;
+  if(!ed)return sorted.map(r=>r.html("")).join("");
+  // Poignée à gauche du nom, ✕ à droite de la quantité : la ligne tient dans la largeur du téléphone
+  return sorted.map(r=>`<tbody class="dg" data-k="${r.key}">`+r.html(`<span class="mv"><button class="del" data-card="${card}" data-del="${r.key}" aria-label="Retirer">✕</button></span>`).replace("<td>",`<td><span class="lh">${HANDLE}</span>`)+`</tbody>`).join("")+`<tbody>`;}
+const keyLabel=k=>k.startsWith("g:")?k.slice(2):k.split("|")[0];
+const orderRow=(card,left="")=>{const ids=card.split("+"),rm=[...new Set(ids.flatMap(id=>removed[id]||[]))];
+  const restore=editCard===card&&rm.length?`<tr><td colspan="2" class="restore">Retirés : `+rm.map(k=>`<button class="linkbtn" data-card="${card}" data-restore="${k}">+ ${keyLabel(k)}</button>`).join(" ")+`</td></tr>`:"";
+  return restore+`<tr class="ptn"><td colspan="2"><div class="pbar"><div class="pts">${left}</div><button class="iconbtn${editCard===card?" on":""}" data-edit="${card}" aria-label="${editCard===card?"Terminé":"Modifier"}">${editCard===card?IC.check:IC.pen}</button></div></td></tr>`;};
+function onPeseesClick(e){const b=e.target.closest("button");if(!b)return;e.preventDefault();if(b.classList.contains("tmb")){e.stopPropagation();tmPick(b.dataset.tk,b.dataset.tn);return;}if(b.classList.contains("totop")){e.stopPropagation();window.scrollTo({top:0,behavior:"smooth"});return;}
+  if(b.dataset.pedit){editPrice=editPrice===b.dataset.pedit?null:b.dataset.pedit;renderResults();return;}
+  if(b.dataset.hydedit&&/ \(direct\)\|levain$/.test(b.dataset.hydedit)){const d=b.dataset.hydedit.split("::")[0].split("+").find(x=>R[x]&&R[x].base);if(!d)return;const base=R[d].base;
+    ask(`Levain direct ${R[base].name} (% de la farine)`,fmtIn(levRatio(d),100)).then(n=>{if(n==null)return;const v=+String(n).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<=0||v>=100)return;params.dlv=params.dlv||{};if(Math.abs(v/100-dlvDef(base))<.0005)delete params.dlv[base];else params.dlv[base]=v/100;save();renderResults();});return;}
+  if(b.dataset.hydedit){editHyd=editHyd===b.dataset.hydedit?null:b.dataset.hydedit;renderResults();return;}
+  if(b.dataset.pid){const id=b.dataset.pid,key=b.dataset.pkey,pi=pctOfKey(id,key);if(!pi)return;const st=pctStep(pi.p);
+    const np=Math.max(0,Math.round((pi.p+st*(+b.dataset.d))/st)*st);
+    if(R[id].base){if(!np)return;const base=R[id].base,v=levRatio(id)*np/pi.p;params.dlv=params.dlv||{};if(Math.abs(v-dlvDef(base))<.0005)delete params.dlv[base];else params.dlv[base]=v;save();renderResults();return;}
+    setP("rq",id,key,Math.round(np*pi.fl*100000)/100000);save();renderResults();return;}
+  if(b.dataset.edit){editCard=editCard===b.dataset.edit?null:b.dataset.edit;renderResults();return;}
+  if(b.dataset.del){const ids=b.dataset.card.split("+"),k=b.dataset.del;
+    ask(`Retirer « ${keyLabel(k)} » ?`).then(ok=>{if(!ok)return;
+    ids.forEach(id=>{if(R[id].items.some(i=>ikey(i)===k)){removed[id]=[...new Set([...(removed[id]||[]),k])];}});save();renderResults();});return;}
+  if(b.dataset.restore){const k=b.dataset.restore;b.dataset.card.split("+").forEach(id=>{removed[id]=(removed[id]||[]).filter(x=>x!==k);});save();renderResults();return;}}
+// ---- Réglages : hypothèses chiffrées modifiables ----
+const DEF={resA:()=>5000,openDays:()=>217,sarlNet:()=>2000,tnsR:()=>0.45,loss:()=>0.20,obj:()=>150000,objM:()=>10,matr:()=>0.178,pay:()=>PAY0,act:(a)=>ACT0[a],fix:(a)=>FIX0[a],tva:()=>0.055,sale:(a)=>SALEP0[a],price:(a)=>PRICE0[a],batch:(a)=>BATCH[a],lv:(a)=>LV[a].f,prep:(a,b)=>PREPS[a].items.find(x=>x[0]===b)[1],rq:(a,b)=>R[a].items.find(i=>ikey(i)===b).q,w:(a)=>WAUTO(a),focKg:()=>2.6,adjM:()=>1,adjT:()=>0.5,adjH:()=>18,holR:()=>0.2,adjP1:()=>1,adjP2:()=>2,adjH2:()=>3,ordW:()=>5,bag:()=>25};
+const getP=(kind,a,b)=>["focKg","tva","matr","pay","obj","objM","loss","adjM","adjT","adjH","holR","adjP1","adjP2","adjH2","ordW","bag"].includes(kind)?params[kind]:["lv","w","batch","sale","price","act","fix"].includes(kind)?((params[kind]||{})[a]):(((params[kind]||{})[a]||{})[b]);
+function setP(kind,a,b,v){
+  if(["focKg","tva","matr","pay","obj","objM","loss","adjM","adjT","adjH","holR","adjP1","adjP2","adjH2","ordW","bag"].includes(kind)){if(Math.abs(v-DEF[kind]())<1e-9)delete params[kind];else params[kind]=v;return;}
+  params[kind]=params[kind]||{};
+  if(["lv","w","batch","sale","price","act","fix"].includes(kind)){if(DEF[kind](a)!=null&&Math.abs(v-DEF[kind](a))<1e-9)delete params[kind][a];else params[kind][a]=v;return;}
+  params[kind][a]=params[kind][a]||{};
+  if(Math.abs(v-DEF[kind](a,b))<1e-9)delete params[kind][a][b];else params[kind][a][b]=v;
+  if(!Object.keys(params[kind][a]).length)delete params[kind][a];}
+const fmtIn=(v,scale)=>{const x=Math.round(v*scale*10)/10;return String(x).replace(".",",");};
+function pin(kind,a,b,cur,scale,unit){const mod=getP(kind,a,b)!==undefined;
+  return `<span class="pin"><input class="${mod?"mod":""}" inputmode="decimal" value="${fmtIn(cur,scale)}" data-kind="${kind}" data-a="${a||""}" data-b="${b||""}" data-scale="${scale}"><em>${unit}</em></span>`;}
+const resetBtn=(kind,a)=>`<tr><td colspan="2" style="text-align:right"><button class="iconbtn" data-reset="${kind}" data-a="${a||""}" aria-label="Valeurs d'origine">${IC.undo}</button></td></tr>`;
+const tog=k=>`<label class="sw"><input type="checkbox" data-tog="${k}" ${ruleOn(k)?"checked":""} aria-label="Activer"><i></i></label>`;
+const dshort=d=>{const x=parse(d);return x.getDate()+" "+MOISC[x.getMonth()];};
+function rulesHTML(){const today=iso(new Date()),lim=addDays(today,365);
+  const per=HOL.filter(([a,z])=>z>=today&&a<=lim).map(([a,z,n])=>`<tr class="${ruleOn("hol")?"":"offr"}"><td>${n}</td><td class="q d">${dshort(ruleOn("depSat")||wdOf(a)!=="Sam"?a:addDays(a,1))} → ${dshort(z)}</td></tr>`).join("");
+  const fer=[];for(let d=today;d<=lim;d=addDays(d,1))if(ferie(d)&&(WD[parse(d).getDay()]||pontDays(d).length))fer.push(d);
+  const off=k=>ruleOn(k)?"":"offr";
+  return `<h2 style="margin-top:4px">Recommandations</h2>
+  <details class="card" open><summary><b>Invendus et ruptures</b></summary><table>
+    <tr><td>Marge de sécurité<small class="d">invendus sans baisse</small></td><td class="q">${pin("adjM","","",adjM(),1,"pain")}</td></tr>
+    <tr><td>Réactivité<small class="d">part des invendus en trop retirée</small></td><td class="q">${pin("adjT","","",adjT(),100,"%")}</td></tr>
+    <tr><td>Heure limite<small class="d">rupture avant cette heure</small></td><td class="q">${pin("adjH","","",adjH(),1,"h")}</td></tr>
+    <tr><td>Ajout si rupture</td><td class="q">${pin("adjP1","","",adjP1(),1,"pain")}</td></tr>
+    <tr><td>Rupture très tôt<small class="d">heures avant la limite</small></td><td class="q">${pin("adjH2","","",adjH2(),1,"h")}</td></tr>
+    <tr><td>Ajout si rupture très tôt</td><td class="q">${pin("adjP2","","",adjP2(),1,"pain")}</td></tr>
+  </table></details>
+  <details class="card" open><summary><b>Quand corriger</b></summary><table>
+    <tr class="${off("j0")}"><td>Pains en direct : le lendemain<small class="d">samedi : par le jeudi</small></td><td class="q">${tog("j0")}</td></tr>
+    <tr class="${off("j1")}"><td>Pousse retardée : 2 jours après<small class="d">mar → jeu, mer → ven, jeu → sam</small></td><td class="q">${tog("j1")}</td></tr>
+    <tr class="${off("week")}"><td>Même jour, semaine suivante<small class="d">invendus et ruptures</small></td><td class="q">${tog("week")}</td></tr>
+  </table></details>
+  <details class="card" open><summary><b>Vacances scolaires et fériés</b><span>zone C</span></summary><table>
+    <tr class="${off("hol")}"><td>Activer</td><td class="q">${tog("hol")}</td></tr>
+    <tr><td>Baisse de la boutique</td><td class="q">${pin("holR","","",holR(),100,"%")}</td></tr>
+    <tr class="${off("depSat")}"><td>Samedi des départs</td><td class="q">${tog("depSat")}</td></tr>
+    <tr class="${off("focHalf")}"><td>Focaccia à ½ plaque</td><td class="q">${tog("focHalf")}</td></tr>
+    <tr class="grp"><td colspan="2">Vacances à venir</td></tr>${per}
+    <tr class="${off("ponts")}"><td>Ponts et longs week-ends<small class="d">férié jeudi → ven. + sam. ; lundi, mardi ou vendredi → le samedi</small></td><td class="q">${tog("ponts")}</td></tr>
+    <tr class="grp"><td colspan="2">Fériés à venir et jours en baisse</td></tr>${fer.map(d=>{const pd=ruleOn("ponts")?pontDays(d):[];const wd=WD[parse(d).getDay()];
+      const days=[...(wd?[d]:[]),...pd].sort().map(x=>DAYNAMES[WD[parse(x).getDay()]].slice(0,3)+". "+parse(x).getDate());
+      return `<tr class="${ruleOn("hol")?"":"offr"}"><td>${ferieName(d)}<small class="d">${["dim.","lun.","mar.","mer.","jeu.","ven.","sam."][parse(d).getDay()]} ${dshort(d)} ${d.slice(0,4)}</small></td><td class="q d">${days.join(", ")||"—"}</td></tr>`;}).join("")}
+    <tr><td colspan="2" style="text-align:right"><button class="iconbtn" data-reset="adj" aria-label="Valeurs d'origine">${IC.undo}</button></td></tr>
+  </table></details>`;}
+function renderSettings(){
+  let h=rulesHTML()+`<h2>Levains</h2><details class="card" open><summary><b>Part de farine dans le levain mûr</b></summary><table>`;
+  Object.keys(LV).forEach(k=>{const f=lvF(k);h+=`<tr><td>Levain de ${k.toLowerCase()}<small class="d">eau : ${fmtIn(1-f,100)} %</small></td><td class="q">${pin("lv",k,"",f,100,"%")}</td></tr>`;});
+  h+=resetBtn("lv")+`</table></details>`;
+  h+=`<h2>Préparations</h2>`;
+  Object.entries(PREPS).forEach(([pid,pp])=>{const its=prepItems(pid),tot=its.reduce((s,x)=>s+x[1],0);
+    const users=Object.keys(R).filter(id=>R[id].items.some(i=>i.prep===pid)).map(id=>{const i=R[id].items.find(x=>x.prep===pid);return `${R[id].name} ${fmtIn(rqOf(id,"g:"+i.g,i.q),1000)} g`;}).join(", ");
+    h+=`<details class="card"><summary><b>${pp.name}</b><span>composition</span></summary><table>`+its.map(([n,f])=>`<tr><td>${n}</td><td class="q">${pin("prep",pid,n,f,100,"%")}</td></tr>`).join("")
+      +`<tr class="tot"><td>Total${Math.abs(tot-1)>.0005?' <span class="warn">doit faire 100 %</span>':""}</td><td class="q">${fmtIn(tot,100)} %</td></tr><tr><td colspan="2" class="d">Par pain : ${users}. La quantité par pain se règle dans Recettes.</td></tr>`+resetBtn("prep",pid)+`</table></details>`;});
+  h+=`<h2>Recettes</h2>`;
+  const ids=[...pIds(),...Object.keys(R).filter(id=>!RULE[id])];
+  ids.forEach(id=>{const items=recipeItems(id);let tot=0;const hi=hydInfo(id);
+    const rows=items.map(i=>{const key=ikey(i);tot+=i.q;
+      return `<tr class="${i.g?"grp":(i.k||"")}"><td>${i.g||i.n}</td><td class="q">${pin("rq",id,key,i.q,1000,"g")}</td></tr>`;}).join("");
+    h+=`<details class="card"><summary><b>${R[id].name}</b><span>${fmt(tot)}</span></summary><table>${rows}${R[id].target?`<tr><td colspan="2" class="d">Poids fixé à ${fmt(R[id].target)} par ${R[id].unit} : en changeant un ingrédient, les autres s'ajustent pour garder ce poids (sauf ${R[id].items.filter(i=>i.keep).map(i=>i.n.toLowerCase()).join(", ")||"aucun"}).</td></tr>`:""}<tr class="tot"><td>Pâte pour 1 ${R[id].unit}${hi?`<small class="d">hydratation ${Math.round(hi.h*100)} % (eau ÷ farines de la pâte)</small>`:""}</td><td class="q">${fmt(tot)}</td></tr>${resetBtn("rq",id)}</table></details>`;});
+  h+=`<h2>Ventes et facturation</h2><details class="card"><summary><b>Focaccia et poids de référence</b></summary><table>
+    <tr><td>Focaccia : kg vendus par plaque</td><td class="q">${pin("focKg","","",focKg(),1,"kg")}</td></tr>
+    <tr><td>Objectif de CA annuel (TTC)</td><td class="q">${pin("obj","","",objCA(),1,"€")}</td></tr>
+    <tr><td>Mois d'ouverture par an</td><td class="q">${pin("objM","","",objM(),1,"mois")}</td></tr>
+    <tr><td>Commande farines : semaines à couvrir</td><td class="q">${pin("ordW","","",ordW(),1,"sem.")}</td></tr>
+    <tr><td>Poids d'un sac de farine<small class="d">par défaut ; châtaigne 5 kg</small></td><td class="q">${pin("bag","","",bagKg(),1,"kg")}</td></tr>
+    <tr><td>Canelés par fournée</td><td class="q">${pin("batch","canele","",batchSize("canele"),1,"pièces")}</td></tr>
+    <tr class="grp"><td colspan="2">Poids vendu d'un pain (poids en caisse)</td></tr>`
+    +pIds().filter(id=>id!=="focaccia").map(id=>`<tr><td>${R[id].name}</td><td class="q">${pin("w",id,"",Wv(id),1000,"g")}</td></tr>`).join("")
+    +`<tr><td colspan="2" style="text-align:right"><button class="iconbtn" data-reset="misc" aria-label="Valeurs d'origine">${IC.undo}</button></td></tr></table></details>`;
+
+  // Sauvegarde complète : exporter un fichier, ou reprendre un fichier (passage vers l'appli installée)
+  h+=`<h2>Sauvegarde</h2><div class="ltools" style="justify-content:flex-start">${dl?`<button class="iconbtn big" data-bk="out" aria-label="Exporter les données"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 11l5 5l5-5"/><path d="M12 4v12"/></svg></button>`:""}<button class="iconbtn big" data-bk="in" aria-label="Reprendre une sauvegarde"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 9l5-5l5 5"/><path d="M12 4v12"/></svg></button></div>`;
+  const el=document.getElementById("settings");const open=[...el.querySelectorAll("details")].map(d=>d.open);
+  el.innerHTML=h;el.querySelectorAll("details").forEach((d,i)=>{if(open[i]!==undefined)d.open=open[i];});
+}
+function onSettingsChange(e){const t=e.target;if(t.dataset&&t.dataset.tog){params.rules=params.rules||{};if(t.checked)delete params.rules[t.dataset.tog];else params.rules[t.dataset.tog]=false;if(!Object.keys(params.rules).length)delete params.rules;save();renderSettings();return;}if(!t.dataset||!t.dataset.kind)return;
+  const v=+String(t.value).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<0){renderSettings();return;}
+  let val=v/(+t.dataset.scale);if(t.dataset.kind==="rq"&&R[t.dataset.a]&&R[t.dataset.a].target&&!(R[t.dataset.a].items.find(i=>ikey(i)===t.dataset.b)||{}).keep)val=val/scaleOf(t.dataset.a);
+  setP(t.dataset.kind,t.dataset.a,t.dataset.b,val);save();tab==="R"?renderProfit():tab==="P"?renderResults():renderSettings();}
+function onSettingsClick(e){const bk=e.target.closest("button[data-bk]");if(bk){if(bk.dataset.bk==="out")exportAll();else importAll();return;}
+  const b=e.target.closest("button[data-reset]");if(!b)return;e.preventDefault();const k=b.dataset.reset,a=b.dataset.a;ask(k==="act"?"Remettre les encaissements Qonto d'origine ?":"Revenir aux valeurs d'origine ?").then(ok=>{if(!ok)return;
+  if(k==="lv")delete params.lv;else if(k==="misc"){delete params.w;delete params.focKg;delete params.batch;delete params.obj;delete params.objM;delete params.loss;delete params.ordW;delete params.bag;delete params.bagF;}else if(k==="sale"){delete params.sale;delete params.tva;}else if(k==="price")delete params.price;else if(k==="act")delete params.act;else if(k==="adj"){delete params.adjM;delete params.adjT;delete params.adjH;delete params.holR;delete params.adjP1;delete params.adjP2;delete params.adjH2;delete params.rules;}else if(k==="fix"){delete params.fix;delete params.pay;delete params.matr;}
+  else if(params[k])delete params[k][a];
+  save();tab==="R"?renderProfit():renderSettings();});}
+// ---- Rentabilité ----
+function costOf(id){let c=0;const miss=new Set();
+  const add=(x)=>{if(/^Eau/.test(x.n))return;let name,q=x.q;
+    if(x.k==="levain"){const t=x.l;name=LVFLOUR[t];q=x.q*(lvF(t)??.5);}
+    else if(x.k==="farine")name=x.f;else name=PRICE_ALIAS[x.n]||x.n;
+    const p=ingPrice(name);if(p==null){miss.add(name);return;}c+=q*p;};
+  itemsOf(id).forEach(i=>i.g?i.items.forEach(add):add(i));return {c,miss:[...miss]};}
+function unitEco(id){const sp=salePrice(id);if(sp==null)return null;const {c,miss}=costOf(id);
+  let cost,ttc,unit;
+  if(id==="canele"){cost=c/batchSize(id);ttc=sp;unit="pièce";}
+  else if(id==="focaccia"){cost=c/focKg();ttc=sp;unit="kg";}
+  else{cost=c;ttc=sp*Wv(id);unit=R[id].unit;}
+  const ht=ttc/(1+tva()),m=ht-cost;return {cost,ht,ttc,m,rate:ht?m/ht:0,coef:cost?ht/cost:0,unit,miss};}
+const eur=v=>(Math.round(v*100)/100).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+const MOISC=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const mlabel=k=>{const [y,m]=k.split("-").map(Number);return MOISC[m-1]+" "+String(y).slice(2);};
+const eur0=v=>Math.round(v).toLocaleString("fr-FR").replace(/\u202f|\u00a0/g," ")+" €";
+function realSection(){
+  const A=actuals(),keys=Object.keys(A).sort(),F=fixes(),rigid=Object.values(F).reduce((a,b)=>a+b,0),mr=matr(),pay=payM();
+  // Logique annuelle : 12 mois de charges et de paie, payés par les seuls mois ouverts (Réglages > mois d'ouverture)
+  const k12=12/objM(),rigA=rigid*k12,payA=pay*k12;
+  const pm=rigA/(1-mr),pmPay=(rigA+payA)/(1-mr);
+  const res=k=>A[k]*(1-mr)-rigA;
+  const med=keys.map(k=>A[k]).sort((a,b)=>a-b)[Math.floor(keys.length/2)]||0;
+  const closed=keys.filter(k=>A[k]<med*0.5),open=keys.filter(k=>!closed.includes(k));
+  const last3=open.slice(-3),avg3=last3.length?last3.reduce((s,k)=>s+A[k],0)/last3.length:0,avgAll=keys.length?keys.reduce((s,k)=>s+A[k],0)/keys.length:0;
+  const max=Math.max(pmPay,...keys.map(k=>A[k]))*1.05;
+  // Au jour ouvert : caisse jour par jour (jours fermés exclus), 12 mois de charges et de paie ÷ jours ouverts par an
+  const D=params.openDays??217,tv=1+tva(),dk=[...new Set([...Object.keys(CA0),...Object.keys(ca)])].filter(k=>k<=iso(new Date())&&!caOf(k).closed&&caTot(caOf(k))>0).filter(k=>k>addDays(iso(new Date()),-365)).sort();
+  const avgD=dk.length?dk.reduce((t,k)=>t+caTot(caOf(k)),0)/dk.length/tv:0;
+  const MD=Math.round(5*52/12*10)/10,needD=12*(rigid+pay)/(1-mr)/D,chgD=12*rigid/(1-mr)/D,forPay=(avgD*D*(1-mr)-12*rigid)/12;
+  // Objectifs 2027 : paie SARL 2 000 € net toute l'année + 10 mois ouverts (217 jours) + une réserve, sur l'année civile
+  const g27=(()=>{const now=iso(new Date()),Y=Math.max(2027,+now.slice(0,4)),y=+now.slice(0,4)<Y?+now.slice(0,4):Y,dry=y<Y;
+    const tues=(a,b)=>{let n=0;for(let x=a;x<=b;x=addDays(x,1))if(WD[parse(x).getDay()])n++;return n;};
+    const y0=y+"-01-01",y1=y+"-12-31",yd=addDays(now,-1),poss=tues(y0,y1),el=tues(y0,yd);
+    const ks=[...new Set([...Object.keys(CA0),...Object.keys(ca)])].filter(k=>k>=y0&&k<=yd&&!caOf(k).closed&&caTot(caOf(k))>0);
+    const od=ks.length,avg=od?ks.reduce((t,k)=>t+caTot(caOf(k)),0)/od/tv:0,pace=Math.round(D*el/poss),proj=el?Math.round(od*poss/el):0;
+    const net=params.sarlNet??2000,tr=params.tnsR??0.45,cost=net*(1+tr),res=params.resA??5000,tgt=(12*(rigid+cost)+res)/(1-mr)/D;
+    const pn=Math.max(0,((avg*D*(1-mr)-12*rigid-res)/12)/(1+tr));
+    return `<h2 style="margin-top:4px">Objectifs ${Y}${dry?` <small style="font-size:14px;color:var(--muted);font-weight:500">répétition sur ${y}</small>`:""}</h2>
+    <div class="levains" style="margin-bottom:8px">
+      <div class="lv"><span>Jours ouverts</span><strong>${od}</strong><em>au rythme de ${D} jours/an : ${pace} à date · fin d'année ≈ ${proj}${proj>D?` (${proj-D} de trop)`:" ✓"}</em></div>
+      <div class="lv"><span>CA HT par jour</span><strong>${eur0(avg)}</strong><em>visé ${eur0(tgt)} · ${avg>=tgt?"✓":"manque "+eur0(tgt-avg)}</em></div></div>
+    <div class="gauge" style="margin-bottom:6px"><i style="width:${Math.min(100,avg/tgt*100)}%;background:${avg>=tgt?"var(--levain)":"var(--flour)"}"></i></div>
+    <p class="hint">À ce rythme, sur ${D} jours : paie nette possible ≈ <b>${eur0(pn)}</b>/mois (objectif ${eur0(net)}), après ${eur0(res)} de réserve par an.</p>`;})();
+  let h=g27+`<h2>Suivi réel</h2><div class="levains" style="margin-bottom:8px">
+    <div class="lv"><span>À faire par jour ouvert</span><strong>${eur0(needD)}</strong><em>HT (≈ ${eur0(needD*tv)} TTC) · <i class="bi">${eur0(needD*MD)}</i> par mois plein (${String(MD).replace(".",",")} j) · ta moyenne ${eur0(avgD)} HT sur 12 mois glissants (${dk.length} jours ouverts${dk.length&&dk[0]>addDays(iso(new Date()),-330)?`, depuis ${mlabel(dk[0].slice(0,7))}`:""})${avgD<needD?` · manque ${eur0(needD-avgD)}`:" ✓"}</em></div>
+    <div class="lv"><span>Pour ta paie</span><strong>${eur0(forPay)}</strong><em>par mois, sur 12 · il en faut ${eur0(pay)} · ${forPay>=pay?"reste":"manque"} ${eur0(Math.abs(forPay-pay))}</em></div></div>
+    <p class="hint">Sur ${D} jours ouverts par an, il faut <b>${eur0(chgD)}</b> HT par jour pour couvrir les charges, <b>${eur0(needD)}</b> pour couvrir aussi ta paie (${eur0(pay)} × 12). Calcul sur ta caisse jour par jour : les jours fermés ne comptent pas.</p>
+    ${(()=>{const net=params.sarlNet??2000,tr=params.tnsR??0.45,cost=net*(1+tr),yr=12*(rigid+cost)/(1-mr),need=yr/D,gap=need-avgD;
+      return `<div class="list sarl"><div class="row"><div class="name"><b>Objectif SARL · ${eur0(net)} net × 12</b><small>CA nécessaire ${eur0(yr)} HT/an, soit <i class="bi">${eur0(need)}</i> HT par jour ouvert, ${eur0(need*MD)} par mois plein · projection ${eur0(avgD*D)}</small></div><b class="sgap${gap<=0?" ok":""}">${gap<=0?"✓ atteint":"− "+eur0(gap)}</b></div>
+        <div class="row" style="display:block"><div class="gauge"><i style="width:${Math.min(100,avgD/need*100)}%;background:${gap<=0?"var(--levain)":"var(--flour)"}"></i></div>
+        <small class="d">${gap>0?`il manque ${eur0(gap)} HT par jour ouvert (+${Math.round(gap/avgD*100)} %), soit ≈ ${eur0(gap*tv)} TTC de plus par jour, ≈ ${eur0(gap*D)} HT sur l'année`:"ta moyenne couvre déjà cette paie"}</small></div></div>`;})()}
+    <div class="list">`+(()=>{const mm={};[...new Set([...Object.keys(CA0),...Object.keys(ca)])].filter(k=>k<=iso(new Date())&&!caOf(k).closed&&caTot(caOf(k))>0).forEach(k=>{const m=k.slice(0,7);(mm[m]=mm[m]||{n:0,t:0});mm[m].n++;mm[m].t+=caTot(caOf(k))/tv;});
+      const ms=Object.keys(mm).sort(),mx=Math.max(needD,...ms.map(m=>mm[m].t/mm[m].n))*1.08;
+      return ms.map(m=>{const o=mm[m],pd=o.t/o.n,w=Math.max(2,pd/mx*100);
+        return `<div class="row mrow"><div class="name"><b>${mlabel(m)}</b><div class="bar"><i style="width:${w}%;background:${pd>=needD?"var(--levain)":pd>=chgD?"var(--flour)":"var(--warn)"}"></i><s style="left:${chgD/mx*100}%"></s><s style="left:${needD/mx*100}%"></s></div>
+        <small>${o.n} jour${o.n>1?"s":""} ouvert${o.n>1?"s":""} · <i class="bi">${eur0(o.t)}</i> HT sur ${eur0(needD*o.n)} visés (${o.t>=needD*o.n?"+":"−"}${eur0(Math.abs(o.t-needD*o.n))})</small></div><b class="cav">${eur0(pd)}<small style="display:block;font-size:12px;color:var(--muted);font-weight:500;text-align:right">fait / jour<br>visé ${eur0(needD)}</small></b></div>`;}).join("");})()+`</div>
+    <p class="hint">Barres : CA HT moyen par jour ouvert, d'après ta caisse. Vert = paie couverte, ocre = charges couvertes, rouge = sous le point mort. Les deux traits : ${eur0(chgD)} et ${eur0(needD)} par jour.</p>
+    <details class="card"><summary><b>Charges mensuelles</b><span>${eur0(rigid)} + paie</span></summary><table>`
+    +Object.keys(F).map(n=>`<tr><td>${n}</td><td class="q">${pin("fix",n,"",F[n],1,"€")}</td></tr>`).join("")
+    +`<tr class="tot"><td>Total charges</td><td class="q">${eur0(rigid)}</td></tr>
+      <tr><td>Ta paie (net + Urssaf + retraite)</td><td class="q">${pin("pay","","",pay,1,"€")}</td></tr>
+      <tr><td>Jours d'ouverture par an<small class="d">mardi → samedi, hors fermetures</small></td><td class="q">${pin("openDays","","",params.openDays??217,1,"j")}</td></tr>
+      <tr><td>Réserve visée par an<small class="d">impôt, imprévus</small></td><td class="q">${pin("resA","","",params.resA??5000,1,"€")}</td></tr>
+      <tr><td>Objectif paie nette SARL</td><td class="q">${pin("sarlNet","","",params.sarlNet??2000,1,"€")}</td></tr>
+      <tr><td>Cotisations TNS<small class="d">en % du net, estimation</small></td><td class="q">${pin("tnsR","","",params.tnsR??0.45,100,"%")}</td></tr>
+      <tr><td>Part matière dans le CA<small class="d">mesurée sur tes achats réels</small></td><td class="q">${pin("matr","","",mr,100,"%")}</td></tr>
+      <tr><td colspan="2" style="text-align:right"><button class="iconbtn" data-reset="act" aria-label="Encaissements Qonto">${IC.bank}</button> <button class="iconbtn" data-reset="fix" aria-label="Valeurs d'origine">${IC.undo}</button></td></tr></table></details>`;
+  return h;
+}
+function renderProfit(){
+  const rows=pIds().map(id=>{const e=unitEco(id);if(!e)return null;const vol=SDAYS.reduce((s,sd)=>s+sale(sd,id),0);return {id,e,vol,wm:vol*e.m,wht:vol*e.ht,wc:vol*e.cost};}).filter(Boolean);
+  const T=rows.reduce((a,r)=>({ht:a.ht+r.wht,c:a.c+r.wc,m:a.m+r.wm}),{ht:0,c:0,m:0});
+  const best=rows.filter(r=>r.vol).sort((a,b)=>b.wm-a.wm);
+  let h=`<div class="levains" style="margin-bottom:8px"><div class="lv"><span>CA HT semaine</span><strong>${eur(T.ht)}</strong></div><div class="lv"><span>Marge sur matière</span><strong>${eur(T.m)}</strong><em>${T.ht?Math.round(T.m/T.ht*100):0} % du CA HT · matière ${eur(T.c)}</em></div></div>`;
+  h=realSection()+`<h2>Semaine type du cadencier (théorique)</h2>`+h;
+  h+=`<p class="hint">Volumes : ventes boutique de la semaine type + commandes pro de la semaine affichée. Prix de vente du cadencier, TVA ${fmtIn(tva(),100)} %.</p>`;
+  if(best.length)h+=`<p class="hint">Ce qui rapporte le plus cette semaine : ${best.slice(0,3).map(r=>`<b>${R[r.id].name}</b> (${eur(r.wm)})`).join(", ")}.</p>`;
+  h+=`<h2>Par produit</h2><div class="list">`+rows.map(({id,e,vol,wm})=>`<div class="row prow2"><div class="name"><b>${R[id].name}</b>
+    <small>Prix HT ${eur(e.ht)} / ${e.unit} · matière ${eur(e.cost)} · marge ${eur(e.m)} (${Math.round(e.rate*100)} %)</small>
+    <small>${vol?`Semaine : ${num(vol)} ${id==="focaccia"?"kg":id==="canele"?"pièces":e.unit+(vol>1?"s":"")} → <b>${eur(wm)}</b> de marge`:"Pas de vente cette semaine"}${e.miss.length?` · <span class="warn">prix manquant : ${e.miss.join(", ")}</span>`:""}</small></div>
+    <div class="coef"><b>×${fmtIn(e.coef,1)}</b><small>coef.</small></div></div>`).join("")+`</div>
+  <p class="hint">Coefficient = prix de vente HT ÷ coût matière. ×10 veut dire que chaque euro de matière se revend 10 € HT.</p>`;
+  h+=`<h2>Prix de vente</h2><details class="card"><summary><b>Prix TTC (cadencier)</b><span>€/kg</span></summary><table>`
+    +`<tr><td>TVA</td><td class="q">${pin("tva","","",tva(),100,"%")}</td></tr>`
+    +pIds().filter(id=>SALEP0[id]!=null||getP("sale",id)!==undefined).map(id=>`<tr><td>${R[id].name}<small class="d">${id==="canele"?"€ par pièce":"€ par kg"}</small></td><td class="q">${pin("sale",id,"",salePrice(id),1,"€")}</td></tr>`).join("")
+    +`<tr><td colspan="2" style="text-align:right"><button class="iconbtn" data-reset="sale" aria-label="Valeurs d'origine">${IC.undo}</button></td></tr></table></details>`;
+  const names=new Set();Object.keys(R).forEach(id=>itemsOf(id).forEach(i=>(i.g?i.items:[i]).forEach(x=>{if(/^Eau/.test(x.n))return;if(x.k==="levain")names.add(LVFLOUR[x.l]);else if(x.k==="farine")names.add(x.f);else names.add(PRICE_ALIAS[x.n]||x.n);})));
+  const list=[...names].filter(n=>n&&n!=="Graines topping").sort((a,b)=>a.localeCompare(b,"fr"));
+  h+=`<h2>Prix des ingrédients</h2><details class="card"><summary><b>Prix HT</b><span>€/kg</span></summary><table>`
+    +list.map(n=>{const p=ingPrice(n);return `<tr><td>${n}${p==null?' <span class="warn">à renseigner</span>':""}</td><td class="q">${pin("price",n,"",p??0,1,"€")}</td></tr>`;}).join("")
+    +`<tr><td colspan="2" class="d">Graines topping : prix moyen du mélange de trempage (${ingPrice("Graines topping")!=null?eur(ingPrice("Graines topping")):"incomplet"} /kg). Levains : prix de leur farine.</td></tr>`
+    +`<tr><td colspan="2" style="text-align:right"><button class="iconbtn" data-reset="price" aria-label="Valeurs d'origine">${IC.undo}</button></td></tr></table></details>`;
+  const el=document.getElementById("profit");const open=[...el.querySelectorAll("details")].map(d=>d.open);
+  el.innerHTML=h;el.querySelectorAll("details").forEach((d,i)=>{if(open[i]!==undefined)d.open=open[i];});
+  const am=document.getElementById("addMonth");if(am)am.onclick=()=>{const keys=Object.keys(actuals()).sort();const [y,m]=keys[keys.length-1].split("-").map(Number);
+    const nk=m===12?(y+1)+"-01":y+"-"+String(m+1).padStart(2,"0");params.act=params.act||{};params.act[nk]=0;save();renderProfit();};
+}
+function goRecipe(id){const c=document.querySelector(`#pesees details[data-ids~="${id}"]`);if(!c)return;c.open=true;
+  c.scrollIntoView({behavior:"smooth",block:"start"});c.classList.remove("flash");void c.offsetWidth;c.classList.add("flash");}
+function renderWeekly(){
+  const wrap=document.getElementById("weeklyWrap");wrap.hidden=pday!==WEEKLY_DAY;if(wrap.hidden)return;
+  const agg={};
+  PDAYS.forEach(d=>{const pr=production(d);Object.keys(pr).forEach(id=>{const n=pr[id].q;if(!n)return;
+    itemsOf(id).filter(i=>i.g&&WEEKLY.includes(i.g)).forEach(i=>{
+      const a=agg[i.g]=agg[i.g]||{items:new Map(),byDay:{},by:{}};
+      const sub=i.items.reduce((s,x)=>s+x.q,0)*n;
+      a.byDay[d]=(a.byDay[d]||0)+sub;a.by[R[id].name]=(a.by[R[id].name]||0)+n;
+      i.items.forEach(x=>{const y=a.items.get(x.n)||{...x,q:0};y.q+=x.q*n;a.items.set(x.n,y);});});});});
+  const el=document.getElementById("weekly");
+  const names=WEEKLY.filter(g=>agg[g]);
+  if(!names.length){el.innerHTML=`<div class="empty">Aucune préparation cette semaine.</div>`;return;}
+  el.innerHTML=names.map(g=>{const a=agg[g];let items=[...a.items.values()];const tot=items.reduce((s,x)=>s+x.q,0);
+    if(g==="Trempage des graines"){const eau=items.filter(x=>x.n==="Eau"),gr=items.filter(x=>x.n!=="Eau");
+      items=[{n:"Mélange de graines",q:gr.reduce((s,x)=>s+x.q,0)},...eau];}
+    const pains=Object.entries(a.by).map(([k,v])=>`${num(v)} ${k}`).join(", ");
+    return `<details class="card" open><summary><b>${g}</b><span>${fmt(tot)}</span></summary><table>`
+      +items.map(x=>`<tr class="${x.k||""}"><td>${x.n}</td><td class="q">${fmt(x.q)}</td></tr>`).join("")
+      +`<tr class="tot"><td>Total</td><td class="q">${fmt(tot)}</td></tr></table></details>`;}).join("");
+}
+const prepSub=its=>{const T=its.reduce((a,b)=>a+b.q,0);if(!T)return "";return `<tr class="psub"><td colspan="2"><div class="lvs">${its.map(x=>`<div><em>${x.n} ${Math.round(x.q/T*100)} %</em><b>${fmt(x.q)}</b></div>`).join("")}</div></td></tr>`;};
+function renderResults(){
+  renderWeekly();
+  const pr=production(pday);const active=Object.keys(pr).filter(id=>pr[id].q>0);
+  const lv={},fl={};
+  active.forEach(id=>flat(itemsOf(id)).forEach(i=>{const t=i.q*pr[id].q;
+    if(i.k==="levain")lv[i.l]=(lv[i.l]||0)+t;if(i.k==="farine")fl[i.f]=(fl[i.f]||0)+t;}));
+  const L=document.getElementById("levains"),Pz=document.getElementById("pesees"),F=document.getElementById("flours");
+  if(!active.length){L.innerHTML=`<div class="empty">Aucune production ce jour.</div>`;Pz.innerHTML="";F.innerHTML="";return;}
+  L.innerHTML=`<div class="list lvl">`+Object.entries(lv).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const c=LV[k]?{f:lvF(k)}:null;const pf=c?Math.round(c.f*100):0;return `<div class="lvr"><div class="lvh"><b>${k}${c?`<button class="gear" data-lvedit="${k}" aria-label="Modifier le taux">${editLv===k?"✓":"⚙︎"}</button>`:""}</b><span>${fmt(v)}</span></div>`+(c?`<div class="lvs"><div><em>Farine ${pf} %</em><b>${fmt(v*c.f)}</b></div><div><em>Eau ${100-pf} %</em><b>${fmt(v*(1-c.f))}</b></div></div>`+(editLv===k?`<div class="lve"><span>Farine dans le levain</span>${pin("lv",k,"",lvF(k),100,"%")}</div>`:""):"")+`</div>`;}).join("")+`</div>`;
+  const order=pIds().concat(Object.keys(pr).filter(id=>!RULE[id]||R[id].base)).filter(id=>pr[id]&&pr[id].q>0).sort(byDay);
+  const groups=GROUPS.filter(g=>g.every(id=>order.includes(id))).sort((a,b)=>Math.min(...a.map(x=>drank(x)))-Math.min(...b.map(x=>drank(x))));
+  const grouped=groups.flat();
+  const groupCard=g=>{const m=new Map();
+    g.forEach(id=>itemsOf(id).forEach(i=>{if(i.g)return;const k=i.n+"|"+(i.k||"");const e=m.get(k)||{n:i.n,k:i.k,f:i.f,l:i.l,q:0};e.q+=i.q*pr[id].q;m.set(k,e);}));
+    const sm=new Map();
+    g.forEach(id=>itemsOf(id).filter(i=>i.g).forEach(i=>{const e=sm.get(i.g)||{g:i.g,m:new Map()};
+      i.items.forEach(x=>{const y=e.m.get(x.n)||{...x,q:0};y.q+=x.q*pr[id].q;e.m.set(x.n,y);});sm.set(i.g,e);}));
+    const subs=[...sm.values()].map(e=>({g:e.g,items:[...e.m.values()]}));
+    const items=[...m.values()],tot=items.reduce((s,i)=>s+i.q,0)+subs.reduce((s,x)=>s+x.items.reduce((a,b)=>a+b.q,0),0);
+    const flour=items.filter(i=>i.k==="farine").reduce((s,i)=>s+i.q,0),water=items.filter(i=>/^Eau/.test(i.n)).reduce((s,i)=>s+i.q,0);
+    const card=g.join("+");
+    const gFl=g.reduce((s,id)=>s+flourOf(id)*pr[id].q,0);
+    const nF=items.filter(i=>i.k==="farine").length;
+    const rows=cardRows(card,[...items.map(i=>{const key=i.n+"|"+(i.k||""),t=card+"::"+key,isF=i.k==="farine";
+      const own=null;
+      return {key,html:mv=>`<tr class="${i.k||""}"><td>${i.n}${gFl&&(!isF||nF>1)?ptag(t,own??i.q/gFl,!isF):""}${eurBtn(t,i)}</td><td class="q">${fmt(i.q)}${mv}</td></tr>`+priceRow(t,i,i.q)+(editHyd===t?g.filter(id=>itemsOf(id).some(x=>ikey(x)===key)).map(id=>pctCtl(id,key,R[id].name)).join(""):"")};}),
+      ...subs.map(x=>({key:"g:"+x.g,html:mv=>`<tr class="grp"><td>${x.g}${gFl?ptag(card+"::g:"+x.g,x.items.reduce((a,b)=>a+b.q,0)/gFl,true):""}</td><td class="q">${fmt(x.items.reduce((a,b)=>a+b.q,0))}${mv}</td></tr>`+prepSub(x.items)+(editHyd===card+"::g:"+x.g?g.filter(id=>itemsOf(id).some(z=>ikey(z)==="g:"+x.g)).map(id=>pctCtl(id,"g:"+x.g,R[id].name)).join(""):"")+""}))]);
+    const split=g.map(id=>{const t=flat(itemsOf(id)).reduce((s,i)=>s+i.q,0)*pr[id].q;return `<tr class="sub"><td>${R[id].name} × ${num(pr[id].q)}</td><td class="q">${fmt(t)}</td></tr>`;}).join("");
+    return `<details class="card" open data-ids="${g.join(" ")}"><summary><b>${g.map(id=>R[id].name+" × "+num(pr[id].q)).join(" + ")}</b><span>${fmt(tot)}${tmBtn(g.join("+"),g.map(id=>R[id].name).join(" + "))}<button class="totop" aria-label="Remonter au programme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M6 11l6-6l6 6"/></svg></button></span></summary><table>${rows}${orderRow(card,g.map(id=>ptile(R[id].name,fmt(doughW(id)),"",id)).join(""))}</table></details>`;};
+  const singleCard=id=>{const h=singleCard0(id);return R[id].base?h.replace(/<button class="(gear|iconbtn)[^"]*" data-(hydedit|pedit|edit)="([^"]*)"[^>]*>[\s\S]*?<\/button>/g,(m,c,k,v)=>k==="hydedit"&&/\|levain$/.test(v)?m:""):h;};
+  const singleCard0=id=>{const r=R[id],n=pr[id].q;let tot=0;
+    const rows=cardRows(id,itemsOf(id).map(i=>{
+      if(i.g){const sub=i.items.reduce((s,x)=>s+x.q,0)*n;tot+=sub;
+        const fl=flourOf(id),t=id+"::g:"+i.g;
+        return {key:"g:"+i.g,html:mv=>`<tr class="grp"><td>${i.g}${fl?ptag(t,i.q/fl,true):""}</td><td class="q">${fmt(sub)}${mv}</td></tr>`+prepSub(i.items.map(x=>({n:x.n,q:x.q*n})))+(editHyd===t?pctCtl(id,"g:"+i.g):"")+""};}
+      const fl=flourOf(id),key=i.n+"|"+(i.k||""),t=id+"::"+key,isF=i.k==="farine",multiF=itemsOf(id).filter(x=>!x.g&&x.k==="farine").length>1;
+      tot+=i.q*n;return {key,html:mv=>`<tr class="${i.k||""}"><td>${i.n}${fl&&(!isF||multiF)?ptag(t,i.q/fl,!isF):""}${eurBtn(t,i)}</td><td class="q">${fmt(i.q*n)}${mv}</td></tr>`+priceRow(t,i,i.q*n)+(editHyd===t?pctCtl(id,key):"")};}));
+    return `<details class="card" open data-ids="${id}"><summary><b>${r.name} × ${num(n)}</b><span>${fmt(tot)}${tmBtn(id,r.name)}<button class="totop" aria-label="Remonter au programme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M6 11l6-6l6 6"/></svg></button></span></summary><table>${rows}${orderRow(id,ptile(BATCH[id]?"par pièce":"par "+r.unit,fmt(BATCH[id]?tot/(n*batchSize(id)):tot/n),BATCH[id]?`${batchSize(id)} pièces par fournée`:r.split?`${r.split} × ${fmt(tot/n/r.split)}`:"",id))}</table></details>`;};
+  const cards=[...groups.map(g=>({r:Math.min(...g.map(x=>drank(x))),h:()=>groupCard(g)})),...order.filter(id=>!grouped.includes(id)).map(id=>({r:drank(id),h:()=>singleCard(id)}))];
+  Pz.innerHTML=cards.sort((a,b)=>a.r-b.r).map(c=>c.h()).join("");
+  if(editCard){const first=Pz.querySelector("tbody.dg");if(first)makeSortable(first.parentNode,"tbody.dg",keys=>{iorder[editCard]=keys;save();renderResults();});}
+  const sumF=Object.values(fl).reduce((a,b)=>a+b,0);
+  const lf=Object.entries(lv).filter(([k,v])=>v>0&&LV[k]).map(([k,v])=>[LV[k].flour,v*lvF(k)]);
+  const sumL=lf.reduce((a,b)=>a+b[1],0);
+  const line=([k,v])=>`<tr class="farine"><td>${k}<small>${(v/25*100).toFixed(0)} % d'un sac de 25 kg</small></td><td class="q">${fmt(v)}</td></tr>`;
+  F.innerHTML=`<div class="flours"><table>`+Object.entries(fl).sort((a,b)=>b[1]-a[1]).map(line).join("")+`<tr class="tot"><td>Farines des pâtes</td><td class="q">${fmt(sumF)}</td></tr>`
+    +lf.map(line).join("")+`<tr class="tot"><td>Farines des levains</td><td class="q">${fmt(sumL)}</td></tr><tr class="tot"><td>Total farines du jour</td><td class="q">${fmt(sumF+sumL)}</td></tr></table></div>`;
+}
+
+// ---- Chiffre d'affaires du jour ----
+const caOf=dt=>ca[dt]??CA0[dt]??{};
+const caTot=e=>(e.cb||0)+(e.esp||0);
+const caFull=e=>caTot(e)+(e.x||0);
+const eur2=v=>(Math.round(v*100)/100).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}).replace(/ | /g," ")+" €";
+const caIn=v=>v==null?"":String(v).replace(".",",");
+function renderCA(){const el=document.getElementById("caView");const dt=dateOf(cday),e=caOf(dt);
+  const wkDays=SDAYS.map(d=>[d,dateOf(d)]),wkTot=wkDays.reduce((s,[,x])=>s+caFull(caOf(x)),0),tg=weekTarget();
+  const prev=SDAYS.reduce((s,d)=>s+shopCA(d)+proCA(d),0);
+  const pct=Math.min(100,wkTot/tg*100);
+  const m=dt.slice(0,7),mk=Object.keys({...CA0,...ca}).filter(k=>k.startsWith(m)),mTot=mk.reduce((s,k)=>s+caFull(caOf(k)),0),mTg=objCA()/objM();
+  const mName=MONTHS[+m.slice(5,7)-1];
+  const field=(k,lab,note)=>`<div class="carow"><label for="ca_${k}">${lab}${note||""}</label><div class="cain"><input id="ca_${k}" data-cak="${k}" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="${caIn(e[k])}"><span>€</span></div></div>`;
+  const ecart=e.z!=null&&caTot(e)?caTot(e)-e.z:null;
+  el.innerHTML=`<div class="levains" style="margin-bottom:10px">
+      <div class="lv"><span>${DAYNAMES[cday][0].toUpperCase()+DAYNAMES[cday].slice(1)} ${parse(dt).getDate()}</span><strong>${eur0(caFull(e))}</strong></div>
+      <div class="lv"><span>Semaine</span><strong>${eur0(wkTot)}</strong><em>prévu ${eur0(prev)}</em></div></div>
+    <div class="gauge" style="margin-bottom:16px"><i style="width:${pct}%;background:${wkTot>=tg?"var(--levain)":"var(--tint-fill)"}"></i></div>
+    <div class="list caform"><div class="carow"><label for="ca_closed">Magasin fermé</label><label class="sw"><input type="checkbox" id="ca_closed" ${e.closed?"checked":""} aria-label="Magasin fermé"><i></i></label></div>${e.closed?"":field("cb","Carte")}${e.closed?"":field("esp","Espèces")}
+      ${e.closed?"":`<div class="carow catot"><span>Total (espèces + CB)</span><b>${eur2(caTot(e))}</b></div>
+      ${field("x","Autre caisse")}
+      <div class="carow catot"><span>Total</span><b>${eur2(caFull(e))}</b></div>
+      ${field("z","Ticket Z1",ecart!=null?`<small class="caz${Math.abs(ecart)>1?" cawarn":""}">écart ${ecart>0?"+":""}${eur2(ecart)}</small>`:"")}`}
+      </div>
+    <h2>Semaine</h2><div class="list">${wkDays.map(([d,x])=>{const t=caFull(caOf(x));return `<div class="row cawk${d===cday?" on":""}${x===iso(new Date())?" tday":""}" data-cday="${d}"><div class="name"><b>${DAYNAMES[d][0].toUpperCase()+DAYNAMES[d].slice(1)} ${parse(x).getDate()}${x===iso(new Date())?`<em class="tdtag">aujourd'hui</em>`:""}</b></div><b class="cav">${caOf(x).closed?"fermé":t?eur0(t):"—"}</b></div>`;}).join("")}
+      <div class="row catot"><div class="name"><b>Total</b><small>objectif ${eur0(tg)} · ${Math.round(wkTot/tg*100)} %</small></div><b class="cav">${eur0(wkTot)}</b></div></div>
+    <h2>${mName[0].toUpperCase()+mName.slice(1)}</h2><div class="list"><div class="row catot"><div class="name"><b>Total du mois</b><small>objectif ${eur0(mTg)} · ${Math.round(mTot/mTg*100)} %</small></div><b class="cav">${eur0(mTot)}</b></div></div>`;
+  el.querySelectorAll("input[data-cak]").forEach(i=>{i.onfocus=()=>i.select();i.onchange=()=>{const k=i.dataset.cak,raw=i.value.trim().replace(",",".").replace(/\s|€/g,"");
+    const cur={...caOf(dt)};if(raw===""){delete cur[k];}else{const v=+raw;if(!isFinite(v)||v<0){i.value=caIn(cur[k]);return;}cur[k]=Math.round(v*100)/100;}
+    ca[dt]=cur;save();renderCA();};});
+  el.querySelectorAll("[data-cday]").forEach(r=>r.onclick=()=>{cday=r.dataset.cday;save();render();});
+  const cc=document.getElementById("ca_closed");if(cc)cc.onchange=()=>{const cur={...caOf(dt)};if(cc.checked)cur.closed=true;else delete cur.closed;ca[dt]=cur;adjMemo={};save();render();};
+}
+// ---- Commande au moulin : farines des pâtes, des préparations et des levains, sur les semaines à couvrir à partir de la semaine affichée ----
+// Poids du sac par farine (châtaigne : 5 kg), modifiable en touchant « sac de … kg » ; sinon poids par défaut des réglages
+const BAG0={"Châtaigne":5};
+// Désignations et références des Moulins de Précy (bon de livraison n° 2609 000790 du 29/09/2026)
+const MILL={"Froment T80":["Perle de meule bio crème FR (25)","30608025"],"Froment T65":["Terroire bio FR T65 (25)","30206525"],"Froment T80 ancien":["Perle meule bio crème FR Antan (25)","30658025"],
+  "Petit épeautre T130":["Bio One petit épeautre BLA (25)","30928025"],"Sarrasin T130":["Farine de sarrasin bio (25)","30930025"],"Seigle T130":["Farine seigle T170 bio (25)","30967025"],
+  "Riz":["Pain au riz complet bio (25 kg)","30014225"],"Khorasan T80":["Bio One Khorasan blanc meul (25)","30656525"],"Châtaigne":["Farine de châtaignes bio (5)","39091605"]};
+const ordW=()=>params.ordW??5, bagKg=()=>params.bag??25, bagOf=f=>((params.bagF||{})[f])??BAG0[f]??bagKg();
+function weekFlour(w){const sv=wk;wk=w;const fl={};
+  try{PDAYS.forEach(pd=>{const pr=production(pd);Object.keys(pr).forEach(id=>{if(!(pr[id].q>0)||!R[id])return;
+    flat(itemsOf(id)).forEach(i=>{const t=i.q*pr[id].q;if(i.k==="farine")fl[i.f]=(fl[i.f]||0)+t;
+      if(i.k==="levain"&&LVFLOUR[i.l]){const f=LVFLOUR[i.l];fl[f]=(fl[f]||0)+t*(lvF(i.l)??.5);}});});});}
+  finally{wk=sv;}return fl;}
+// Farine utilisée par la production d'un jour donné (pâtes + préparations + levains)
+const dayFlourMemo={};
+function dayFlour(date){const wd=wdOf(date);if(!wd||!PDAYS.includes(wd))return {};const sv=wk;wk=tuesdayOf(parse(date));const fl={};
+  try{const pr=production(wd);Object.keys(pr).forEach(id=>{if(!(pr[id].q>0)||!R[id])return;
+    flat(itemsOf(id)).forEach(i=>{const t=i.q*pr[id].q;if(i.k==="farine")fl[i.f]=(fl[i.f]||0)+t;
+      if(i.k==="levain"&&LVFLOUR[i.l]){const f=LVFLOUR[i.l];fl[f]=(fl[f]||0)+t*(lvF(i.l)??.5);}});});}
+  finally{wk=sv;}return fl;}
+// Stock estimé aujourd'hui (kg) : comptage − production des jours suivant le comptage, jusqu'à aujourd'hui inclus
+function stockNow(f,today){const B=bagOf(f),st=(stock[f]||0)*B,d0=stockD[f];if(!d0)return st;let used=0;
+  for(let d=addDays(d0,1);d<=today;d=addDays(d,1))used+=(dayFlour(d)[f]||0);return st-used;}
+function renderOrder(){const el=document.getElementById("order");if(!el)return;const N=Math.max(1,Math.round(ordW()));
+  const today=iso(new Date()),start=addDays(today,1),end=addDays(start,7*N-1);
+  const days=[];for(let d=start;d<=addDays(start,7*8-1);d=addDays(d,1))days.push([d,dayFlour(d)]);
+  const fl=new Set([...Object.keys(MILL),...(params.xflour||[]),...Object.keys(stock),...days.flatMap(([,x])=>Object.keys(x))]);
+  const rows=[...fl].map(f=>{const B=bagOf(f),now=stockNow(f,today);let need=0,left=now,until=null;
+    days.forEach(([d,x])=>{const u=x[f]||0;if(d<=end)need+=u;if(until===null&&u>0){left-=u;if(left<0)until=d;}});
+    const q=Math.max(0,Math.ceil((need-Math.max(0,now))/B-1e-9));return {f,B,now,need,q,until,counted:stockD[f]};});
+  rows.sort((a,b)=>(b.q-a.q)||((a.until||"9")<(b.until||"9")?-1:1));
+  const cost=rows.reduce((s,r)=>{const p=ingPrice(r.f);return s+(p?r.q*r.B*p:0);},0),nb=rows.reduce((s,r)=>s+r.q,0);
+  const dfmt=d=>{const x=parse(d),w=["dim.","lun.","mar.","mer.","jeu.","ven.","sam."][x.getDay()];return w+" "+x.getDate()+" "+MOISC[x.getMonth()];};
+  el.innerHTML=`<div class="list">`+rows.map(r=>`<div class="row"><div class="name"><b>${r.f}</b>${MILL[r.f]?`<small style="display:block;font-size:12px">${MILL[r.f][0]}</small>`:""}<small>${r.counted||stock[r.f]?`≈ <b style="display:inline;font-size:13px">${num(Math.max(0,r.now)/r.B)} sac${r.now/r.B>=2?"s":""}</b> aujourd'hui · `:""}${r.until?`<span class="${r.until<=end?"warn":""}">vide le ${dfmt(r.until)}</span>`:r.need>.05?"tient 8 sem. et +":"pas utilisée ces 5 sem."}<br>besoin ${num(r.need)} kg · <button class="linkbtn" style="font-size:13px;padding:0" data-bag="${r.f}">sac de ${num(r.B)} kg</button></small></div>
+    <span class="pin ost"><input data-stock="${r.f}" inputmode="decimal" value="${fmtIn(stock[r.f]||0,1)}" aria-label="Sacs comptés ${r.f}"><em>${r.counted?"compté "+parse(r.counted).getDate()+"/"+(parse(r.counted).getMonth()+1):"compté"}</em></span>
+    <div class="oq${r.q?"":" z"}">${r.q}</div></div>`).join("")
+    +`<div class="row catot"><div class="name"><b>À commander</b><small>pour ${N} semaine${N>1?"s":""} à partir de demain · ${eur0(cost)} HT environ</small></div><div class="oq">${nb}<small style="font-size:14px;color:var(--muted);font-weight:500"> sacs</small></div></div></div>
+    <div class="foot" style="justify-content:flex-end"><button class="iconbtn big" id="addFlour" aria-label="Ajouter une farine">${IC.plus}</button><button class="iconbtn big" id="copyOrder" aria-label="Copier la commande"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8m0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2z"/><path d="M16 8v-2a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button></div>`;
+  el.querySelectorAll("input[data-stock]").forEach(i=>{i.onfocus=()=>i.select();i.onchange=()=>{const v=+String(i.value).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<0){renderOrder();return;}
+    const f=i.dataset.stock;if(v)stock[f]=Math.round(v*10)/10;else delete stock[f];stockD[f]=today;save();renderOrder();};});
+  el.querySelectorAll("[data-bag]").forEach(b=>b.onclick=()=>{const f=b.dataset.bag;ask(`Poids d'un sac de ${f} (kg)`,fmtIn(bagOf(f),1)).then(n=>{if(n==null)return;const v=+String(n).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<=0)return;
+    params.bagF=params.bagF||{};if(Math.abs(v-(BAG0[f]??bagKg()))<1e-9)delete params.bagF[f];else params.bagF[f]=v;if(!Object.keys(params.bagF).length)delete params.bagF;save();renderOrder();});});
+  document.getElementById("addFlour").onclick=()=>{ask("Nom de la farine ou du produit","").then(n=>{n=(n||"").trim();if(!n)return;params.xflour=[...new Set([...(params.xflour||[]),n])];save();renderOrder();});};
+  const txt="Bonjour, commande pour la Boulangerie Vivant (client 11930105, 34 rue Servan, Paris 11e) :\n"+rows.filter(r=>r.q).map(r=>{const m=MILL[r.f];return `- ${r.q} sac${r.q>1?"s":""} ${m?m[0]+" – réf. "+m[1]:r.f+(r.B!==25?` (${num(r.B)} kg)`:"")}`;}).join("\n")+"\nMerci !";
+  document.getElementById("copyOrder").onclick=async()=>{let ok=false;try{await navigator.clipboard.writeText(txt);ok=true;}catch(e){}
+    const b=document.getElementById("copyOrder");if(ok){b.innerHTML=IC.check;setTimeout(renderOrder,1200);}else ask("Commande",txt);};}
+let stockMode=!!store.get("v23-stockm");
+function renderStockMode(){const v=document.getElementById("viewP");v.classList.toggle("stockmode",stockMode);const b=document.getElementById("stockBtn");b.classList.toggle("on",stockMode);
+  document.getElementById("prodOrderBtn").hidden=stockMode||document.getElementById("prodOrderBtn").hidden;document.getElementById("days").hidden=stockMode;document.getElementById("week").hidden=stockMode;
+  if(stockMode)renderOrder();}
+function render(){adjMemo={};saveUI();store.set("v23-stockm",stockMode);renderHead();if(tab==="C")renderCA();else if(tab==="V")renderSales();else if(tab==="O")renderPro();else if(tab==="S")renderSettings();else if(tab==="R")renderProfit();else{renderProd();renderStockMode();}}
+document.getElementById("tabV").onclick=()=>{tab="V";save();render();};
+document.getElementById("tabO").onclick=()=>{tab="O";save();render();};
+const closeNew=()=>{document.getElementById("newc").hidden=true;};
+document.getElementById("newCancel").onclick=closeNew;
+const okNew=()=>{const n=document.getElementById("newName").value.trim();if(!n)return;const f=document.getElementById("newc");
+  if(f.dataset.mode==="rename"){cur().name=n;}else{const c={id:"c"+Date.now(),name:n,start:tuesdayOf(new Date()),type:{},mod:{}};clients.push(c);cid=c.id;}
+  closeNew();save();render();};
+document.getElementById("newOk").onclick=okNew;
+document.getElementById("newName").onkeydown=e=>{if(e.key==="Enter")okNew();};
+document.getElementById("blBtn").onclick=()=>{editBL=!editBL;closeNew();if(editBL)blMonth=iso(new Date()).slice(0,7);render();if(editBL)setTimeout(()=>{const t=iso(new Date());const hs=[...document.querySelectorAll("#blView h2.blh")];const h=hs.find(x=>x.id.slice(3)>=t)||hs[hs.length-1];if(h)h.scrollIntoView({behavior:"smooth",block:"center"});},60);};
+document.getElementById("newC").onclick=()=>{const f=document.getElementById("newc");f.hidden=false;f.dataset.mode="new";const i=document.getElementById("newName");i.value="";i.focus();};
+document.getElementById("renameC").onclick=()=>{const f=document.getElementById("newc");f.hidden=false;f.dataset.mode="rename";const i=document.getElementById("newName");i.value=cur().name;i.focus();};
+document.getElementById("deleteC").onclick=()=>{const c=cur();ask(`Supprimer ${c.name} et toutes ses commandes ?`).then(ok=>{if(!ok)return;clients=clients.filter(x=>x!==c);cid=clients[0]&&clients[0].id;save();render();});};
+document.getElementById("proAddBtn").onclick=()=>{const v=document.getElementById("proAdd").value;if(!v)return;const c=cur(),date=dateOf(oday);(c.mod[date]=c.mod[date]||{})[v]=1;save();render();};
+
+// Calendrier du mois : appui sur le titre de la semaine
+function openCal(){let m=parse(wk);m=new Date(m.getFullYear(),m.getMonth(),1);const o=document.createElement("div");o.className="askbg";const today=iso(new Date());
+  const sel=dateOf(tab==="V"?sday:tab==="O"?oday:tab==="C"?cday:pday);
+  const draw=()=>{const y=m.getFullYear(),mo=m.getMonth(),first=new Date(y,mo,1),start=new Date(y,mo,1-((first.getDay()+6)%7));
+    let cells="";for(let i=0;i<42;i++){const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i),k=iso(d),wd=WD[d.getDay()],inM=d.getMonth()===mo;
+      if(i===35&&!inM)break;
+      const tw=tuesdayOf(d)===wk&&wd,cl=["cd"];if(!inM)cl.push("om");if(!wd)cl.push("x");if(k===today)cl.push("td");if(tw)cl.push("wk");if(k===sel)cl.push("sel");if(wd&&offDay(k))cl.push("cl");
+      const n=wd?orders.filter(x=>x.date===k&&!x.done).length:0,h=wd&&isHol(k);
+      cells+=`<button class="${cl.join(" ")}" ${wd?`data-d="${k}"`:"disabled"}>${d.getDate()}${h?'<i class="hd"></i>':""}${n?`<b class="cb">${n}</b>`:""}</button>`;}
+    o.innerHTML=`<div class="ask cal" role="dialog" aria-modal="true"><div class="calh"><button data-m="-1" aria-label="Mois précédent">‹</button><p>${MONTHS[mo][0].toUpperCase()+MONTHS[mo].slice(1)} ${y}</p><button data-m="1" aria-label="Mois suivant">›</button></div>
+      <div class="calg">${["L","M","M","J","V","S","D"].map(x=>`<span>${x}</span>`).join("")}${cells}</div></div>`;};
+  draw();document.body.appendChild(o);
+  o.onclick=e=>{const b=e.target.closest("button");if(!b){if(e.target===o)o.remove();return;}
+    if(b.dataset.m){m=new Date(m.getFullYear(),m.getMonth()+ +b.dataset.m,1);draw();return;}
+    if(b.dataset.d){const k=b.dataset.d,wd=wdOf(k);wk=tuesdayOf(parse(k));
+      if(tab==="V"){sday=wd;draft=null;}else if(tab==="O")oday=wd;else if(tab==="C")cday=wd;else pday=PDAYS.includes(wd)?wd:"Ven";
+      o.remove();save();render();}};
+  let x0=null;o.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;},{passive:true});
+  o.addEventListener("touchend",e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50){m=new Date(m.getFullYear(),m.getMonth()+(dx<0?1:-1),1);draw();}},{passive:true});}
+document.getElementById("wLabel").onclick=openCal;
+document.getElementById("wPrev").onclick=()=>{wk=addDays(wk,-7);render();};
+document.getElementById("wNext").onclick=()=>{wk=addDays(wk,7);render();};
+{const W=document.getElementById("week");let x0=null,y0=null;
+  const go=d=>{const l=document.getElementById("wLabel");l.style.transition="none";l.style.transform=`translateX(${d>0?40:-40}px)`;l.style.opacity="0";
+    (d>0?document.getElementById("wNext"):document.getElementById("wPrev")).click();requestAnimationFrame(()=>{l.style.transition="transform .22s ease,opacity .22s ease";l.style.transform="";l.style.opacity="";});};
+  W.addEventListener("touchstart",e=>{const t=e.touches[0];x0=t.clientX;y0=t.clientY;},{passive:true});
+  W.addEventListener("touchend",e=>{if(x0==null)return;const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.5)go(dx<0?1:-1);},{passive:true});
+  let px=null;W.addEventListener("pointerdown",e=>{if(e.pointerType==="mouse")px=e.clientX;});W.addEventListener("pointerup",e=>{if(px==null)return;const dx=e.clientX-px;px=null;if(Math.abs(dx)>40)go(dx<0?1:-1);});}
+document.getElementById("tabP").onclick=()=>{tab="P";save();render();};
+document.getElementById("resetP").onclick=()=>{ask("Effacer les ajouts de ce jour ?").then(ok=>{if(!ok)return;extras[pday]={};save();render();});};
+document.getElementById("addBtn").onclick=()=>{const v=document.getElementById("extra").value;if(!v)return;(extras[pday]=extras[pday]||{})[v]=1;save();render();};
+document.getElementById("tabS").onclick=()=>{tab="S";save();render();};document.getElementById("tabR").onclick=()=>{tab="R";save();render();};document.getElementById("tabC").onclick=()=>{tab="C";save();render();};document.getElementById("profit").addEventListener("change",onSettingsChange);document.getElementById("profit").addEventListener("click",onSettingsClick);document.getElementById("settings").addEventListener("change",onSettingsChange);document.getElementById("settings").addEventListener("click",onSettingsClick);document.getElementById("pesees").addEventListener("click",onPeseesClick);document.getElementById("levains").addEventListener("click",e=>{const b=e.target.closest("button[data-lvedit]");if(!b)return;e.preventDefault();editLv=editLv===b.dataset.lvedit?null:b.dataset.lvedit;renderResults();});document.getElementById("levains").addEventListener("change",onSettingsChange);document.getElementById("pesees").addEventListener("change",onSettingsChange);document.getElementById("stockBtn").onclick=()=>{stockMode=!stockMode;render();window.scrollTo(0,0);};document.getElementById("prodOrderBtn").onclick=()=>{editProd=!editProd;renderProd();};document.getElementById("orderBtn").onclick=()=>{editBreads=!editBreads;renderSales();};document.getElementById("bilanBtn").onclick=()=>{editBilan=!editBilan;renderSales();};document.getElementById("cmdBtn").onclick=()=>{editCmd=!editCmd;draft=null;renderSales();};
+render();setSync("local");initSync();initDownloads();
+</script>
+<script>(function(){const h=document.getElementById("head");const f=()=>document.documentElement.style.setProperty("--hh",(h.offsetHeight+8)+"px");if(window.ResizeObserver)new ResizeObserver(f).observe(h);f();})();</script>
+</body>
+</html>
