@@ -38,7 +38,8 @@ jobs:
             mailer_templates_magic_link_content:"<p>Votre code Vivant :</p><h2>{{ .Token }}</h2>",
             mailer_subjects_confirmation:"Code Vivant : {{ .Token }}",
             mailer_templates_confirmation_content:"<p>Votre code Vivant :</p><h2>{{ .Token }}</h2>"}' > a.json
-          curl -fsS -X PATCH -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @a.json $API/projects/$REF/config/auth > /dev/null
+          C=$(curl -sS -o r.json -w '%{http_code}' -X PATCH -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @a.json $API/projects/$REF/config/auth)
+          [ "${C:0:1}" = "2" ] || { echo "HTTP $C"; cat r.json; exit 1; }
       - uses: supabase/setup-cli@v1
         with:
           version: latest
