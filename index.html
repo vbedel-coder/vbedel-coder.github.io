@@ -438,6 +438,10 @@ const R = {
     {n:"Œuf",q:0.1306},{n:"Sucre",q:0.0784},{n:"Sel",q:0.0052},
     {n:"Levain",q:0.0522,k:"levain",l:"Froment"},
     {n:"Levure",q:0.0078},{n:"Beurre",q:0.1045}]},
+  // Brioche pépites : pâte de la brioche prélevée avant le beurre, beurre −30 %, eau de bassinage, pépites en fin de pétrissage (2 × 320 g, 25 €/kg)
+  brioPep:{name:"Brioche pépites",unit:"brioche",split:2,days:["Ven","Sam"],items:[
+    {g:"Pâte à brioche",prep:"pateBrioche",q:0.5},
+    {n:"Beurre",q:0.068},{n:"Eau de bassinage",q:0.005},{n:"Pépites de chocolat",q:0.072}]},
   campagne:{name:"Campagne",unit:"pain",items:[
     {n:"Froment",q:.6,k:"farine",f:"Froment T80"},
     {n:"Eau",q:.408},{n:"Sel",q:.012},
@@ -477,16 +481,18 @@ const PREPS={
   tangzhong:{name:"Tangzhong",items:[["Froment T65",.22,{k:"farine",f:"Froment T65"}],["Lait demi-écrémé",.78]]},
   bouillieSarrasin:{name:"Bouillie de sarrasin",items:[["Farine de sarrasin",.37,{k:"farine",f:"Sarrasin T130"}],["Eau",.63]]},
   bouillieChataigne:{name:"Bouillie de châtaigne",items:[["Farine de châtaigne",.4,{k:"farine",f:"Châtaigne"}],["Eau",.6]]},
-  porridgeSeigle:{name:"Porridge de seigle",items:[["Grains de seigle",.28],["Eau",.72]]}
+  porridgeSeigle:{name:"Porridge de seigle",items:[["Grains de seigle",.28],["Eau",.72]]},
+  // Composition reprise de la recette de la brioche, sans le beurre
+  pateBrioche:{name:"Pâte à brioche",from:"brioche",minus:"Beurre"}
 };
 // Prix des ingrédients (€/kg HT ; farines, sel et tournesol = facture Moulin Decollogne du 09/06/2026 (Antan 1,75 €/kg confirmé par Vincent) ; levure, lait, beurre, cassonade, œufs (≈60 g pièce), huile d'olive = facture Gusto du 30/06/2026 ; le reste = onglet Ingrédients ; null = à renseigner)
 const PRICE0={"Froment T80":1.08,"Froment T80 ancien":1.75,"Froment T65":1.08,"Petit épeautre T130":3.33,"Seigle T130":0.98,"Sarrasin T130":2.98,"Khorasan T80":2.68,"Riz":2.99,"Châtaigne":11.17,
   "Sel":1.28,"Sucre de canne blond":2.98,"Sucre semoule":1.65,"Lin brun":3.06,"Tournesol":2.83,"Flocons d'avoine":2.06,"Sarrasin décortiqué":5.68,"Courge":11.37,"Noix":13.09,
-  "Beurre":8.59,"Huile d'olive":7.73,"Huile de colza":null,"Lait demi-écrémé":0.95,"Œuf":6.2,"Levure":9.88,"Vanille en poudre":185,"Rhum":10,"Psyllium":null,"Grains de seigle":null,"Fruits & graines":null,"Olives":null};
+  "Beurre":8.59,"Huile d'olive":7.73,"Huile de colza":null,"Lait demi-écrémé":0.95,"Œuf":6.2,"Levure":9.88,"Vanille en poudre":185,"Rhum":10,"Psyllium":null,"Grains de seigle":null,"Fruits & graines":null,"Olives":null,"Pépites de chocolat":20};
 const PRICE_ALIAS={"Œufs":"Œuf","Sucre":"Sucre semoule","Lait":"Lait demi-écrémé","Huile colza (plaque)":"Huile de colza"};
 const LVFLOUR={"Froment":"Froment T80","Seigle":"Seigle T130","Petit épeautre":"Petit épeautre T130","Riz":"Riz"};
 // Prix de vente TTC (cadencier) : €/kg pour les pains et la focaccia, €/pièce pour le canelé
-const SALEP0={campagne:8,campagneGraines:11,epeautre:14,riz:14,seigle:10,meteil:14,chataigne:14,rugbrod:11,khorasan:12,blesAnciens:10,fss:10,froment:8,graine:11,focaccia:12,mie:12,brioche:20,canele:1.5};
+const SALEP0={campagne:8,campagneGraines:11,epeautre:14,riz:14,seigle:10,meteil:14,chataigne:14,rugbrod:11,khorasan:12,blesAnciens:10,fss:10,froment:8,graine:11,focaccia:12,mie:12,brioche:20,brioPep:25,canele:1.5};
 // Suivi réel : encaissements carte HT par mois (Qonto) et charges mensuelles (factures et relevés)
 const ACT0={"2026-03":9033,"2026-04":7974,"2026-05":6461,"2026-06":8827,"2026-07":7048,"2026-08":2147,"2026-09":9350};
 const FIX0={"Loyer (SCI LDBV)":2200,"Leasing matériel (HT)":865,"Prêt CIC":718,"Expert-comptable (HT)":275,"Énergie (HT)":200,"Maintenance (HT)":300,"Emballages (HT)":200,"Télécom":77,"Assurance":94,"Banques":75};
@@ -498,7 +504,7 @@ const PAY0=2008; // rémunération de Vincent + Urssaf + retraite
 const P=[
   ["campagne","J0"],["campagneGraines","J0"],["epeautre","J0"],["riz","J0"],["seigle","J0"],
   ["meteil","J0"],["chataigne","J0"],["rugbrod","J1"],["khorasan","J1"],["blesAnciens","J1"],
-  ["fss","J1"],["froment","J1"],["graine","J1"],["focaccia","J1"],["mie","J0"],["brioche","hebdo"],["canele","J1"]
+  ["fss","J1"],["froment","J1"],["graine","J1"],["focaccia","J1"],["mie","J0"],["brioche","hebdo"],["brioPep","hebdo"],["canele","J1"]
 ];
 const RULE=Object.fromEntries(P);
 // Recette en direct (faite et vendue le jour même, levain ×1,25 : 20 % → 25 % de la farine, pâton inchangé) pour les ventes du mardi
@@ -532,7 +538,7 @@ const LV={"Froment":{f:.55,flour:"Froment (levain)"},"Seigle":{f:.48,flour:"Seig
 // Commande type pro = colonnes Pro du cadencier, en pains (focaccia en kg).
 const PANZA_TYPE={Mar:{graine:1},Mer:{focaccia:1.25},Jeu:{graine:1}};
 // Poids d'un pain (onglet Cadencier, colonne poids) : poids livré proposé par défaut
-const W={canele:.044,campagne:1,campagneGraines:1,epeautre:12/14,riz:.9,seigle:1,meteil:1,chataigne:1,rugbrod:.9,khorasan:1,blesAnciens:1,fss:1,froment:1,graine:1,focaccia:1,mie:.4167,brioche:.6};
+const W={canele:.044,campagne:1,campagneGraines:1,epeautre:12/14,riz:.9,seigle:1,meteil:1,chataigne:1,rugbrod:.9,khorasan:1,blesAnciens:1,fss:1,froment:1,graine:1,focaccia:1,mie:.4167,brioche:.6,brioPep:.6};
 // Dates : semaine = mardi → samedi
 const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const parse=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);};
@@ -803,7 +809,7 @@ const doughW=id=>flat(itemsOf(id)).reduce((s,i)=>s+i.q,0);
 const WAUTO=id=>W[id];
 const Wv=id=>{id=bid(id);return ((params.w||{})[id])??WAUTO(id);};
 const lvF=k=>((params.lv||{})[k])??(LV[k]?LV[k].f:null);
-const prepItems=pid=>{const o=(params.prep||{})[pid]||{};return PREPS[pid].items.map(([n,f,x])=>[n,o[n]??f,x||{}]);};
+const prepItems=pid=>{const pp=PREPS[pid];if(pp.from){const its=recipeRaw(pp.from).filter(i=>!i.g&&i.n!==pp.minus),T=tsum(its);return its.map(i=>[i.n,T?i.q/T:0,{k:i.k,f:i.f,l:i.l}]);}const o=(params.prep||{})[pid]||{};return PREPS[pid].items.map(([n,f,x])=>[n,o[n]??f,x||{}]);};
 const rqOf=(id,key,def)=>(((params.rq||{})[id]||{})[key])??def;
 const recipeRaw=id=>R[id].items.map(i=>{
   if(i.prep){const Q=rqOf(id,"g:"+i.g,i.q);return {g:i.g,prep:i.prep,q:Q,items:prepItems(i.prep).map(([n,f,x])=>({n,q:f*Q,...x}))};}
@@ -1208,7 +1214,7 @@ function renderSettings(){
   Object.keys(LV).forEach(k=>{const f=lvF(k);h+=`<tr><td>Levain de ${k.toLowerCase()}<small class="d">eau : ${fmtIn(1-f,100)} %</small></td><td class="q">${pin("lv",k,"",f,100,"%")}</td></tr>`;});
   h+=resetBtn("lv")+`</table></details>`;
   h+=`<h2>Préparations</h2>`;
-  Object.entries(PREPS).forEach(([pid,pp])=>{const its=prepItems(pid),tot=its.reduce((s,x)=>s+x[1],0);
+  Object.entries(PREPS).filter(([,pp])=>!pp.from).forEach(([pid,pp])=>{const its=prepItems(pid),tot=its.reduce((s,x)=>s+x[1],0);
     const users=Object.keys(R).filter(id=>R[id].items.some(i=>i.prep===pid)).map(id=>{const i=R[id].items.find(x=>x.prep===pid);return `${R[id].name} ${fmtIn(rqOf(id,"g:"+i.g,i.q),1000)} g`;}).join(", ");
     h+=`<details class="card"><summary><b>${pp.name}</b><span>composition</span></summary><table>`+its.map(([n,f])=>`<tr><td>${n}</td><td class="q">${pin("prep",pid,n,f,100,"%")}</td></tr>`).join("")
       +`<tr class="tot"><td>Total${Math.abs(tot-1)>.0005?' <span class="warn">doit faire 100 %</span>':""}</td><td class="q">${fmtIn(tot,100)} %</td></tr><tr><td colspan="2" class="d">Par pain : ${users}. La quantité par pain se règle dans Recettes.</td></tr>`+resetBtn("prep",pid)+`</table></details>`;});
@@ -1404,7 +1410,7 @@ function renderResults(){
     const rows=cardRows(id,itemsOf(id).map(i=>{
       if(i.g){const sub=i.items.reduce((s,x)=>s+x.q,0)*n;tot+=sub;
         const fl=flourOf(id),t=id+"::g:"+i.g;
-        return {key:"g:"+i.g,html:mv=>`<tr class="grp"><td>${i.g}${fl?ptag(t,i.q/fl,true):""}</td><td class="q">${fmt(sub)}${mv}</td></tr>`+prepSub(i.items.map(x=>({n:x.n,q:x.q*n})))+(editHyd===t?pctCtl(id,"g:"+i.g):"")+""};}
+        return {key:"g:"+i.g,html:mv=>`<tr class="grp"><td>${i.g}${fl?ptag(t,i.q/fl,true):""}</td><td class="q">${fmt(sub)}${mv}</td></tr>`+(PREPS[i.prep].from?"":prepSub(i.items.map(x=>({n:x.n,q:x.q*n}))))+(editHyd===t?pctCtl(id,"g:"+i.g):"")+""};}
       const fl=flourOf(id),key=i.n+"|"+(i.k||""),t=id+"::"+key,isF=i.k==="farine",multiF=itemsOf(id).filter(x=>!x.g&&x.k==="farine").length>1;
       tot+=i.q*n;return {key,html:mv=>`<tr class="${i.k||""}"><td>${i.n}${fl&&(!isF||multiF)?ptag(t,i.q/fl,!isF):""}${eurBtn(t,i)}</td><td class="q">${fmt(i.q*n)}${mv}</td></tr>`+priceRow(t,i,i.q*n)+(editHyd===t?pctCtl(id,key):"")};}));
     return `<details class="card" open data-ids="${id}"><summary><b>${r.name} × ${num(n)}</b><span>${fmt(tot)}${tmBtn(id,r.name)}<button class="totop" aria-label="Remonter au programme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M6 11l6-6l6 6"/></svg></button></span></summary><table>${rows}${orderRow(id,ptile(BATCH[id]?"par pièce":"par "+r.unit,fmt(BATCH[id]?tot/(n*batchSize(id)):tot/n),BATCH[id]?`${batchSize(id)} pièces par fournée`:r.split?`${r.split} × ${fmt(tot/n/r.split)}`:"",id))}</table></details>`;};
