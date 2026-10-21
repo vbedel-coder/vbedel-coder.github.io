@@ -1090,9 +1090,10 @@ function renderProd(){
     const from=o.from.map(([d,v,pv])=>`<span class="chip"><i>${d===pday?"Auj.":d+"."}</i>${fq(v)}</span>`+pv.map(([n,q])=>`<span class="chip pro">${n} ${fq(q)}</span>`).join("")).join("");
     const unit=r.unit==="plaque"?" plaques":o.batch?(o.q>1?" fournées":" fournée"):"";
     if(o.batch){const b=o.batch;row.innerHTML=`<div class="name"><b>${r.name}</b><div class="chips">${from}${b.used?`<span class="chip m">−${b.used} veille</span>`:""}${b.left?`<span class="chip m">reste ${b.left}</span>`:""}</div></div><div class="qty">${num(o.q)}<small style="font-size:14px;color:var(--muted)">${unit}</small></div>`;el.appendChild(row);return;}
-    if(RULE[id]&&o.from.length){row.innerHTML=`<div class="name"><b>${r.name}</b><div class="chips">${from}${o.extra?`<span class="chip"><i>+</i>${fq(o.extra)}</span>`:""}</div></div><div class="qty">${id==="focaccia"?plq(o.q*focKg()):num(o.q)}<small style="font-size:14px;color:var(--muted)">${unit}</small></div>`;}
+    const exStep=()=>stepper(o.extra||0,"Ajout "+r.name,x=>{const k=exKey(id);(extras[k]=extras[k]||{})[id]=x;save();renderResults();},1);
+    if(RULE[id]&&o.from.length){row.innerHTML=`<div class="name"><b>${r.name}</b><div class="chips">${from}</div></div><div class="qty">${id==="focaccia"?plq(o.q*focKg()):num(o.q)}<small style="font-size:14px;color:var(--muted)">${unit}</small></div>`;if(o.extra)row.appendChild(exStep());}
     else{row.innerHTML=`<div class="name"><b>${r.name}</b><small>${RULE[id]?"Ajout du jour":"Hors ventes"}</small></div>`;
-      row.appendChild(stepper(o.extra||0,"Ajout "+r.name,x=>{const k=exKey(id);(extras[k]=extras[k]||{})[id]=x;save();renderResults();},1));}
+      row.appendChild(exStep());}
     const nm=row.querySelector(".name");if(nm&&pr[id].q>0){nm.classList.add("golink");nm.querySelector("b").insertAdjacentHTML("beforeend",' <span class="go">›</span>');nm.onclick=()=>goRecipe(id);}
     el.appendChild(row);
   });
@@ -1101,7 +1102,7 @@ function renderProd(){
     const all=[...new Set([...dlist(),...pIds(),...Object.keys(R)])].sort(byDay);let k=0;
     dorder={...dorder,d:{...(dorder.d||{}),[pday]:all.map(id=>keys.includes(id)?keys[k++]:id)}};save();renderResults();});
   const sel=document.getElementById("extra");
-  sel.innerHTML=`<option value="">Ajouter un pain hors ventes…</option>`+Object.keys(R).filter(id=>!HIDDEN[id]&&!pr[id]&&!R[id].base).map(id=>`<option value="${id}">${R[id].name}</option>`).join("");
+  sel.innerHTML=`<option value="">Ajouter à la production…</option>`+Object.keys(R).filter(id=>!HIDDEN[id]&&!BATCH[id]&&!R[id].base&&!(pr[id]&&pr[id].extra)).map(id=>`<option value="${id}">${R[id].name}</option>`).join("");
   renderResults();
 }
 // Hydratation d'une recette = eau du pétrin ÷ farines de la pâte (hors levain et préparations)
