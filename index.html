@@ -181,7 +181,7 @@ body[data-tab]{--tint:var(--acc);--tint-fill:var(--acc);--tint-soft:color-mix(in
 .osheet .onote{font-size:16px!important}.bigtel{-webkit-touch-callout:default;font-size:30px;font-weight:700;letter-spacing:.02em;font-variant-numeric:tabular-nums;-webkit-user-select:all;user-select:all;padding:10px 0;color:var(--ink)}
 #viewP:not(.stockmode) #orderWrap{display:none}#viewP.stockmode>*:not(.ltools):not(#orderWrap){display:none!important}
 :focus-visible{outline-offset:2px;outline:3px solid var(--tint)}
-.ltools{gap:8px}#cmdBtn{position:relative}.badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--warn);color:#fff;font-size:11px;font-weight:700;line-height:18px;padding:0 4px}.cin{flex:1;min-width:0;font:inherit;font-size:17px;border:0;background:var(--fill2);border-radius:10px;padding:10px 12px;color:var(--ink)}.ost{flex-direction:column;align-items:center;gap:0}.ost input{width:60px}.ost em{font-size:12px;text-align:center}.oq{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;min-width:40px;text-align:right}.oq.z{color:var(--muted);font-weight:500}.sw{position:relative;display:inline-block;width:51px;height:31px;vertical-align:middle}.sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}.sw i{position:absolute;inset:0;border-radius:16px;background:var(--fill);transition:background .2s}.sw i::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .2s}.sw input:checked+i{background:var(--levain)}.sw input:checked+i::after{transform:translateX(20px)}tr.offr td{color:var(--muted)}td.q.d{font-size:15px;font-weight:500;color:var(--muted)}.days button.hol small::after{content:"";display:block;width:6px;height:6px;border-radius:50%;background:var(--warn);margin:3px auto 0}.days button.hol[aria-pressed="true"] small::after{background:#fff}.bil{display:flex;align-items:center;gap:6px}.bil .iconbtn.on{background:var(--warn);color:#fff}.row .name small.rup{color:var(--warn);font-weight:600}.adj{margin-left:6px;font-size:12px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--levain-soft);color:var(--levain);white-space:nowrap}.adj.dn{background:var(--flour-soft);color:var(--flour)}.nextw{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);padding:12px 16px;margin-top:12px}.nextw b{display:block;font-size:15px;margin-bottom:6px}
+.ltools{gap:8px}#cmdBtn{position:relative}#stockBtn{position:relative}#stockBtn.due::after{content:"";position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:5px;background:var(--warn);box-shadow:0 0 0 2px var(--bg)}.badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--warn);color:#fff;font-size:11px;font-weight:700;line-height:18px;padding:0 4px}.cin{flex:1;min-width:0;font:inherit;font-size:17px;border:0;background:var(--fill2);border-radius:10px;padding:10px 12px;color:var(--ink)}.ost{flex-direction:column;align-items:center;gap:0}.ost input{width:60px}.ost em{font-size:12px;text-align:center}.oq{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;min-width:40px;text-align:right}.oq.z{color:var(--muted);font-weight:500}.sw{position:relative;display:inline-block;width:51px;height:31px;vertical-align:middle}.sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}.sw i{position:absolute;inset:0;border-radius:16px;background:var(--fill);transition:background .2s}.sw i::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .2s}.sw input:checked+i{background:var(--levain)}.sw input:checked+i::after{transform:translateX(20px)}tr.offr td{color:var(--muted)}td.q.d{font-size:15px;font-weight:500;color:var(--muted)}.days button.hol small::after{content:"";display:block;width:6px;height:6px;border-radius:50%;background:var(--warn);margin:3px auto 0}.days button.hol[aria-pressed="true"] small::after{background:#fff}.bil{display:flex;align-items:center;gap:6px}.bil .iconbtn.on{background:var(--warn);color:#fff}.row .name small.rup{color:var(--warn);font-weight:600}.adj{margin-left:6px;font-size:12px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--levain-soft);color:var(--levain);white-space:nowrap}.adj.dn{background:var(--flour-soft);color:var(--flour)}.nextw{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);padding:12px 16px;margin-top:12px}.nextw b{display:block;font-size:15px;margin-bottom:6px}
 .head{position:sticky;top:0;z-index:20;background:var(--bg);margin:0 -16px 14px;padding:calc(env(safe-area-inset-top,0px) + 6px) 16px 6px}
 .head .tabs{position:static;box-shadow:none;margin:0 0 8px}
 .head #week{margin:0 0 8px}.head #week button{width:34px;height:34px;font-size:22px}.head #week span{font-size:16px}
@@ -590,6 +590,8 @@ let left=store.get("v17-left")||{};
 let stock=store.get("v18-stock")||{};
 // Date du comptage de chaque farine {farine: AAAA-MM-JJ} : le stock estimé = sacs comptés − farine utilisée par la production depuis
 let stockD=store.get("v21-stockD")||{};
+// Alerte de commande au moulin {d: date de l'alerte, at: ms, txt, last: date de la dernière commande copiée} : le serveur envoie la notification
+let ordA=store.get("v24-ordA")||{};
 // Commandes clients (SMS, comptoir) [{id,date (retrait),name,items:{pain:n},note,done}]
 let orders=store.get("v19-orders")||[];
 // Relevé des livraisons pro : poids réellement livré {client:{AAAA-MM-JJ:{pain:kg}}} ; BL0 = reprise de l'onglet « Pro » (La Panza)
@@ -602,7 +604,7 @@ let cday=store.get("v16-cday")||"Mar";
 let editLv=null, editCmd=false, draft=null, editBilan=false, editBreads=false, editCard=null, editProd=false, editHyd=null, editPrice=null;
 let localUpdated=store.get("v9-updated")||0;
 const saveUI=()=>{store.set("v23-wk",wk);store.set("v16-cday",cday);store.set("v3-tab",tab);store.set("v3-sday",sday);store.set("v3-pday",pday);store.set("v6-cid",cid);store.set("v5-oday",oday);};
-const DATA=()=>({sales,stype,clients,extras,porder,iorder,removed,dorder,params,ca,left,stock,stockD,orders,deliv,timers,tmDur});
+const DATA=()=>({sales,stype,clients,extras,porder,iorder,removed,dorder,params,ca,left,stock,stockD,orders,deliv,timers,tmDur,ordA});
 // Synchronisation par rubrique : chaque rubrique (ventes de chaque jour, clients, réglages…) porte sa propre date de modification.
 // Quand deux appareils modifient des choses différentes, rien n'est écrasé : on garde la version la plus récente de chaque rubrique.
 const SDAY_KEYS=["Mar","Mer","Jeu","Ven","Sam"];
@@ -615,7 +617,7 @@ migSales(sales,null);
 const FIXED={clients:{get:()=>clients,set:v=>{clients=(v||[]).map(c=>({...c,type:c.type||{},mod:c.mod||{}}));migrate();if(!clients.find(c=>c.id===cid))cid=clients[0]&&clients[0].id;}},
   stype:{get:()=>stype,set:v=>{stype=v||{};}},
   extras:{get:()=>extras,set:v=>{extras=v||{};}},porder:{get:()=>porder,set:v=>{porder=v||[];}},iorder:{get:()=>iorder,set:v=>{iorder=v||{};}},
-  removed:{get:()=>removed,set:v=>{removed=v||{};}},dorder:{get:()=>dorder,set:v=>{dorder=normD(v);}},params:{get:()=>params,set:v=>{params=v||{};migBrioche();applyNames();}},ca:{get:()=>ca,set:v=>{ca=v||{};}},left:{get:()=>left,set:v=>{left=v||{};}},stock:{get:()=>stock,set:v=>{stock=v||{};}},stockD:{get:()=>stockD,set:v=>{stockD=v||{};}},orders:{get:()=>orders,set:v=>{orders=Array.isArray(v)?v:[];}},deliv:{get:()=>deliv,set:v=>{deliv=v||{};}},
+  removed:{get:()=>removed,set:v=>{removed=v||{};}},dorder:{get:()=>dorder,set:v=>{dorder=normD(v);}},params:{get:()=>params,set:v=>{params=v||{};migBrioche();applyNames();}},ca:{get:()=>ca,set:v=>{ca=v||{};}},left:{get:()=>left,set:v=>{left=v||{};}},stock:{get:()=>stock,set:v=>{stock=v||{};}},stockD:{get:()=>stockD,set:v=>{stockD=v||{};}},orders:{get:()=>orders,set:v=>{orders=Array.isArray(v)?v:[];}},deliv:{get:()=>deliv,set:v=>{deliv=v||{};}},ordA:{get:()=>ordA,set:v=>{ordA=v||{};}},
   // Minuteurs en cours et durées choisies : enregistrés en ligne pour survivre à une fermeture de l'appli (et suivis sur les deux appareils)
   timers:{get:()=>timers,set:v=>{timers=Array.isArray(v)?v:[];try{localStorage.setItem("v22-timers",JSON.stringify(timers))}catch(e){}tmTick();}},tmDur:{get:()=>tmDur,set:v=>{tmDur=v||{};try{localStorage.setItem("v22-tdur",JSON.stringify(tmDur))}catch(e){}}}};
 const nz=v=>v&&Object.keys(v).length?v:null;
@@ -633,7 +635,7 @@ lastSec=Object.fromEntries(allKeys().map(k=>[k,secJ(k)]));
 const normR=d=>{if(!d)return d;const sl={...(d.sales||{})},t=d.ts?{...d.ts}:null;migSales(sl,t);return {...d,sales:sl,ts:t||undefined};};
 let lastData=JSON.stringify(DATA());
 const storeAll=()=>{store.set("v13-params",params);store.set("v12-dorder",dorder);store.set("v10-porder",porder);store.set("v10-iorder",iorder);store.set("v11-removed",removed);
-  store.set("v9-updated",localUpdated);store.set("v5-sales",sales);store.set("v8-clients",clients);store.set("v3-extras",extras);store.set("v14-ts",ts);store.set("v15-stype",stype);store.set("v16-ca",ca);store.set("v17-left",left);store.set("v18-stock",stock);store.set("v21-stockD",stockD);store.set("v19-orders",orders);store.set("v20-deliv",deliv);};
+  store.set("v9-updated",localUpdated);store.set("v5-sales",sales);store.set("v8-clients",clients);store.set("v3-extras",extras);store.set("v14-ts",ts);store.set("v15-stype",stype);store.set("v16-ca",ca);store.set("v17-left",left);store.set("v18-stock",stock);store.set("v21-stockD",stockD);store.set("v19-orders",orders);store.set("v20-deliv",deliv);store.set("v24-ordA",ordA);};
 const save=()=>{adjMemo={};saveUI();const d=JSON.stringify(DATA());if(d===lastData)return;lastData=d;const now=Date.now();
   allKeys().forEach(k=>{const j=secJ(k);if(j!==lastSec[k]){lastSec[k]=j;ts[k]=Math.max(now,(ts[k]||0)+1);}});
   localUpdated=Math.max(now,localUpdated+1);storeAll();queuePush();};
@@ -1166,10 +1168,10 @@ function onPeseesClick(e){const b=e.target.closest("button");if(!b)return;e.prev
     ids.forEach(id=>{if(R[id].items.some(i=>ikey(i)===k)){removed[id]=[...new Set([...(removed[id]||[]),k])];}});save();renderResults();});return;}
   if(b.dataset.restore){const k=b.dataset.restore;b.dataset.card.split("+").forEach(id=>{removed[id]=(removed[id]||[]).filter(x=>x!==k);});save();renderResults();return;}}
 // ---- Réglages : hypothèses chiffrées modifiables ----
-const DEF={resA:()=>5000,openDays:()=>217,sarlNet:()=>2000,tnsR:()=>0.45,loss:()=>0.20,obj:()=>150000,objM:()=>10,matr:()=>0.178,pay:()=>PAY0,act:(a)=>ACT0[a],fix:(a)=>FIX0[a],tva:()=>0.055,sale:(a)=>SALEP0[a],price:(a)=>PRICE0[a],batch:(a)=>BATCH[a],lv:(a)=>LV[a].f,prep:(a,b)=>PREPS[a].items.find(x=>x[0]===b)[1],rq:(a,b)=>R[a].items.find(i=>ikey(i)===b).q,w:(a)=>WAUTO(a),focKg:()=>2.6,adjM:()=>1,adjT:()=>0.5,adjH:()=>18,holR:()=>0.2,adjP1:()=>1,adjP2:()=>2,adjH2:()=>3,ordW:()=>5,bag:()=>25};
-const getP=(kind,a,b)=>["focKg","tva","matr","pay","obj","objM","loss","adjM","adjT","adjH","holR","adjP1","adjP2","adjH2","ordW","bag"].includes(kind)?params[kind]:["lv","w","batch","sale","price","act","fix"].includes(kind)?((params[kind]||{})[a]):(((params[kind]||{})[a]||{})[b]);
+const DEF={resA:()=>5000,openDays:()=>217,sarlNet:()=>2000,tnsR:()=>0.45,loss:()=>0.20,obj:()=>150000,objM:()=>10,matr:()=>0.178,pay:()=>PAY0,act:(a)=>ACT0[a],fix:(a)=>FIX0[a],tva:()=>0.055,sale:(a)=>SALEP0[a],price:(a)=>PRICE0[a],batch:(a)=>BATCH[a],lv:(a)=>LV[a].f,prep:(a,b)=>PREPS[a].items.find(x=>x[0]===b)[1],rq:(a,b)=>R[a].items.find(i=>ikey(i)===b).q,w:(a)=>WAUTO(a),focKg:()=>2.6,adjM:()=>1,adjT:()=>0.5,adjH:()=>18,holR:()=>0.2,adjP1:()=>1,adjP2:()=>2,adjH2:()=>3,ordW:()=>5,bag:()=>25,ordL:()=>10};
+const getP=(kind,a,b)=>["focKg","tva","matr","pay","obj","objM","loss","adjM","adjT","adjH","holR","adjP1","adjP2","adjH2","ordW","bag","ordL"].includes(kind)?params[kind]:["lv","w","batch","sale","price","act","fix"].includes(kind)?((params[kind]||{})[a]):(((params[kind]||{})[a]||{})[b]);
 function setP(kind,a,b,v){
-  if(["focKg","tva","matr","pay","obj","objM","loss","adjM","adjT","adjH","holR","adjP1","adjP2","adjH2","ordW","bag"].includes(kind)){if(Math.abs(v-DEF[kind]())<1e-9)delete params[kind];else params[kind]=v;return;}
+  if(["focKg","tva","matr","pay","obj","objM","loss","adjM","adjT","adjH","holR","adjP1","adjP2","adjH2","ordW","bag","ordL"].includes(kind)){if(Math.abs(v-DEF[kind]())<1e-9)delete params[kind];else params[kind]=v;return;}
   params[kind]=params[kind]||{};
   if(["lv","w","batch","sale","price","act","fix"].includes(kind)){if(DEF[kind](a)!=null&&Math.abs(v-DEF[kind](a))<1e-9)delete params[kind][a];else params[kind][a]=v;return;}
   params[kind][a]=params[kind][a]||{};
@@ -1231,6 +1233,7 @@ function renderSettings(){
     <tr><td>Objectif de CA annuel (TTC)</td><td class="q">${pin("obj","","",objCA(),1,"€")}</td></tr>
     <tr><td>Mois d'ouverture par an</td><td class="q">${pin("objM","","",objM(),1,"mois")}</td></tr>
     <tr><td>Commande farines : semaines à couvrir</td><td class="q">${pin("ordW","","",ordW(),1,"sem.")}</td></tr>
+    <tr><td>Alerte commande<small class="d">avant la première farine vide</small></td><td class="q">${pin("ordL","","",ordL(),1,"j")}</td></tr>
     <tr><td>Poids d'un sac de farine<small class="d">par défaut ; châtaigne 5 kg</small></td><td class="q">${pin("bag","","",bagKg(),1,"kg")}</td></tr>
     <tr><td>Canelés par fournée</td><td class="q">${pin("batch","canele","",batchSize("canele"),1,"pièces")}</td></tr>
     <tr class="grp"><td colspan="2">Poids vendu d'un pain (poids en caisse)</td></tr>`
@@ -1486,16 +1489,26 @@ function dayFlour(date){const wd=wdOf(date);if(!wd||!PDAYS.includes(wd))return {
 // Stock estimé aujourd'hui (kg) : comptage − production des jours suivant le comptage, jusqu'à aujourd'hui inclus
 function stockNow(f,today){const B=bagOf(f),st=(stock[f]||0)*B,d0=stockD[f];if(!d0)return st;let used=0;
   for(let d=addDays(d0,1);d<=today;d=addDays(d,1))used+=(dayFlour(d)[f]||0);return st-used;}
-function renderOrder(){const el=document.getElementById("order");if(!el)return;const N=Math.max(1,Math.round(ordW()));
-  const today=iso(new Date()),start=addDays(today,1),end=addDays(start,7*N-1);
+function orderRows(today){const N=Math.max(1,Math.round(ordW())),start=addDays(today,1),end=addDays(start,7*N-1);
   const days=[];for(let d=start;d<=addDays(start,7*8-1);d=addDays(d,1))days.push([d,dayFlour(d)]);
   const fl=new Set([...Object.keys(MILL),...(params.xflour||[]),...Object.keys(stock),...days.flatMap(([,x])=>Object.keys(x))]);
   const rows=[...fl].map(f=>{const B=bagOf(f),now=stockNow(f,today);let need=0,left=now,until=null;
     days.forEach(([d,x])=>{const u=x[f]||0;if(d<=end)need+=u;if(until===null&&u>0){left-=u;if(left<0)until=d;}});
     const q=Math.max(0,Math.ceil((need-Math.max(0,now))/B-1e-9));return {f,B,now,need,q,until,counted:stockD[f]};});
-  rows.sort((a,b)=>(b.q-a.q)||((a.until||"9")<(b.until||"9")?-1:1));
+  rows.sort((a,b)=>(b.q-a.q)||((a.until||"9")<(b.until||"9")?-1:1));return {rows,N,end};}
+const dfmt=d=>{const x=parse(d),w=["dim.","lun.","mar.","mer.","jeu.","ven.","sam."][x.getDay()];return w+" "+x.getDate()+" "+MOISC[x.getMonth()];};
+// Date de l'alerte : première farine vide − délai (livraison + marge) ; après une commande copiée, pas d'alerte avant 3 semaines (livraison et nouveau comptage)
+const ordL=()=>params.ordL??10;
+function ordCalc(){const today=iso(new Date()),{rows}=orderRows(today),r=rows.filter(x=>x.until).sort((a,b)=>a.until<b.until?-1:1)[0];
+  const o={...(ordA.last?{last:ordA.last}:{})};if(!r)return o;let d=addDays(r.until,-Math.round(ordL()));if(ordA.last&&addDays(ordA.last,21)>d)d=addDays(ordA.last,21);
+  // Date déjà passée : on garde l'alerte en cours (7 jours au plus), sinon elle part aujourd'hui
+  if(d<today)d=ordA.d&&ordA.d<=today&&ordA.d>=addDays(today,-6)?ordA.d:today;
+  const x=parse(d);o.d=d;o.at=new Date(x.getFullYear(),x.getMonth(),x.getDate(),8).getTime();o.txt=`${r.f} vide le ${dfmt(r.until)} : commande à passer`;return o;}
+let ordT=null;const ordUpdate=()=>{clearTimeout(ordT);ordT=setTimeout(()=>{try{const o=ordCalc();if(JSON.stringify(o)!==JSON.stringify(ordA)){ordA=o;save();}ordBadge();}catch(e){}},2500);};
+const ordBadge=()=>{const b=document.getElementById("stockBtn");if(b)b.classList.toggle("due",!!ordA.d&&ordA.d<=iso(new Date()));};
+function renderOrder(){const el=document.getElementById("order");if(!el)return;
+  const today=iso(new Date()),{rows,N,end}=orderRows(today);
   const cost=rows.reduce((s,r)=>{const p=ingPrice(r.f);return s+(p?r.q*r.B*p:0);},0),nb=rows.reduce((s,r)=>s+r.q,0);
-  const dfmt=d=>{const x=parse(d),w=["dim.","lun.","mar.","mer.","jeu.","ven.","sam."][x.getDay()];return w+" "+x.getDate()+" "+MOISC[x.getMonth()];};
   el.innerHTML=`<div class="list">`+rows.map(r=>`<div class="row"><div class="name"><b>${r.f}</b>${MILL[r.f]?`<small style="display:block;font-size:12px">${MILL[r.f][0]}</small>`:""}<small>${r.counted||stock[r.f]?`≈ <b style="display:inline;font-size:13px">${num(Math.max(0,r.now)/r.B)} sac${r.now/r.B>=2?"s":""}</b> aujourd'hui · `:""}${r.until?`<span class="${r.until<=end?"warn":""}">vide le ${dfmt(r.until)}</span>`:r.need>.05?"tient 8 sem. et +":"pas utilisée ces 5 sem."}<br>besoin ${num(r.need)} kg · <button class="linkbtn" style="font-size:13px;padding:0" data-bag="${r.f}">sac de ${num(r.B)} kg</button></small></div>
     <span class="pin ost"><input data-stock="${r.f}" inputmode="decimal" value="${fmtIn(stock[r.f]||0,1)}" aria-label="Sacs comptés ${r.f}"><em>${r.counted?"compté "+parse(r.counted).getDate()+"/"+(parse(r.counted).getMonth()+1):"compté"}</em></span>
     <div class="oq${r.q?"":" z"}">${r.q}</div></div>`).join("")
@@ -1508,12 +1521,15 @@ function renderOrder(){const el=document.getElementById("order");if(!el)return;c
   document.getElementById("addFlour").onclick=()=>{ask("Nom de la farine ou du produit","").then(n=>{n=(n||"").trim();if(!n)return;params.xflour=[...new Set([...(params.xflour||[]),n])];save();renderOrder();});};
   const txt="Bonjour, commande pour la Boulangerie Vivant (client 11930105, 34 rue Servan, Paris 11e) :\n"+rows.filter(r=>r.q).map(r=>{const m=MILL[r.f];return `- ${r.q} sac${r.q>1?"s":""} ${m?m[0]+" – réf. "+m[1]:r.f+(r.B!==25?` (${num(r.B)} kg)`:"")}`;}).join("\n")+"\nMerci !";
   document.getElementById("copyOrder").onclick=async()=>{let ok=false;try{await navigator.clipboard.writeText(txt);ok=true;}catch(e){}
-    const b=document.getElementById("copyOrder");if(ok){b.innerHTML=IC.check;setTimeout(renderOrder,1200);}else ask("Commande",txt);};}
+    const b=document.getElementById("copyOrder");if(ok){b.innerHTML=IC.check;setTimeout(renderOrder,1200);}else ask("Commande",txt);
+    ordA={...ordA,last:today};save();ordUpdate();};}
 let stockMode=!!store.get("v23-stockm");
+// Ouverture depuis la notification de commande : page Stock de farine
+if(/[?&]stock\b/.test(location.search)){tab="P";stockMode=true;try{history.replaceState(null,"",location.pathname);}catch(e){}}
 function renderStockMode(){const v=document.getElementById("viewP");v.classList.toggle("stockmode",stockMode);const b=document.getElementById("stockBtn");b.classList.toggle("on",stockMode);
   document.getElementById("prodOrderBtn").hidden=stockMode||document.getElementById("prodOrderBtn").hidden;document.getElementById("days").hidden=stockMode;document.getElementById("week").hidden=stockMode;
   if(stockMode)renderOrder();}
-function render(){adjMemo={};saveUI();store.set("v23-stockm",stockMode);renderHead();if(tab==="C")renderCA();else if(tab==="V")renderSales();else if(tab==="O")renderPro();else if(tab==="S")renderSettings();else if(tab==="R")renderProfit();else{renderProd();renderStockMode();}}
+function render(){adjMemo={};saveUI();store.set("v23-stockm",stockMode);renderHead();if(tab==="C")renderCA();else if(tab==="V")renderSales();else if(tab==="O")renderPro();else if(tab==="S")renderSettings();else if(tab==="R")renderProfit();else{renderProd();renderStockMode();}ordBadge();ordUpdate();}
 document.getElementById("tabV").onclick=()=>{tab="V";save();render();};
 document.getElementById("tabO").onclick=()=>{tab="O";save();render();};
 const closeNew=()=>{document.getElementById("newc").hidden=true;};
