@@ -697,7 +697,9 @@ const shopType=(d,id)=>id==="focaccia"?snapF(shopType0(d,id)):shopType0(d,id);
 const shop=(d,id)=>blocked(d,id)?0:shop1(d,id);
 const shop1=(d,id)=>shopAt1(dateOf(d),id);
 const shopAt=(date,id)=>blocked(wdOf(date),id)?0:shopAt1(date,id);
-const isClosed=date=>!!((typeof ca!=="undefined"&&ca[date])||{}).closed;
+// Fermetures annoncées par Vincent (boutique et production à 0, comme un jour « Magasin fermé »)
+const CLOSE=[["2026-12-25","2027-01-04"]];
+const isClosed=date=>!!((typeof ca!=="undefined"&&ca[date])||{}).closed||CLOSE.some(([a,z])=>date>=a&&date<=z);
 const shopAt1=(date,id)=>{if(isClosed(date))return 0;const v=rawAt(date,id);return id==="focaccia"?snapF(v):v;};
 // ---- À partir de la semaine du 20/10/2026 : chaque jour reprend la quantité prévue le même jour de la semaine d'avant (jour fermé : on remonte d'une semaine).
 // Les règles (bilans, ruptures, vacances, fériés) ne changent plus rien : elles donnent seulement une recommandation affichée à côté du chiffre.
