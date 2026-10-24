@@ -679,8 +679,8 @@ async function initSync(){
   stateRef.onSnapshot(sn=>{if(sn.exists&&!sn.metadata.hasPendingWrites){if(applyRemote(sn.data()))render();if(!pushing&&!dirty&&!sn.metadata.fromCache&&localNewer(sn.data()))queuePush();}if(!sn.metadata.fromCache&&syncState==="ok")setSync("ok");},()=>setSync("err"));
 }
 // ---- Click and collect (appli installée) : carte publiée pour la page commande.html ; les commandes reçues rejoignent les commandes du jour ----
-// params.cc = {open, h (heure limite la veille de la production), off:{pain:1}, qonto}
-const CC_DAYS=21,ccP=()=>params.cc||{},ccH=()=>ccP().h??18;
+// params.cc = {open, h (heure limite la veille de la production), w (semaines ouvertes à la commande), off:{pain:1}, qonto}
+const ccP=()=>params.cc||{},ccH=()=>ccP().h??18,ccW=()=>ccP().w??12;
 const ccOff=id=>!!(ccP().off||{})[id];
 const ccStep=id=>SALE_STEP[id]||1, ccMax=id=>id==="focaccia"?FOC*4:id==="canele"?48:10;
 // Poids indicatif (≈) : le pain est vendu à la pièce
@@ -690,7 +690,7 @@ const ccPrice=id=>Math.round(((id==="focaccia"||id==="canele")?(salePrice(id)||0
 const ccUntil=(date,id)=>{const wd=wdOf(date),pd=prodDay(RULE[id],wd),x=parse(addDays(date,OFF[pd]-OFF[wd]-1));x.setHours(ccH(),0,0,0);return x;};
 function ccData(){const now=new Date(),today=iso(now),days={},products={};
   const ids=pIds().filter(id=>!ccOff(id)&&ccPrice(id)>0);
-  for(let i=0;i<=CC_DAYS;i++){const d=addDays(today,i),wd=wdOf(d);if(!wd||isClosed(d))continue;const it={};
+  for(let i=0;i<=ccW()*7;i++){const d=addDays(today,i),wd=wdOf(d);if(!wd||isClosed(d))continue;const it={};
     ids.forEach(id=>{if(blocked(wd,id)||!(shopAt(d,id)>0))return;const u=ccUntil(d,id);if(u>now)it[id]=u.toISOString();});
     if(Object.keys(it).length)days[d]={items:it};}
   ids.forEach(id=>{products[id]={name:R[id].name,price:ccPrice(id),step:ccStep(id),max:ccMax(id),label:ccLabel(id)};});
@@ -1288,6 +1288,7 @@ function renderSettings(){
   h+=`<h2>Click and collect</h2><details class="card"><summary><b>Commande en ligne</b><span>${cc.open?"ouverte":"fermée"}</span></summary><table>
     <tr class="${cc.open?"":"offr"}"><td>Ouvert</td><td class="q"><label class="sw"><input type="checkbox" data-cc="open" ${cc.open?"checked":""} aria-label="Ouvrir la commande en ligne"><i></i></label></td></tr>
     <tr><td>Heure limite<small class="d">veille de la production</small></td><td class="q"><span class="pin"><input inputmode="decimal" value="${ccH()}" data-cc="h"><em>h</em></span></td></tr>
+    <tr><td>Commandes jusqu'à</td><td class="q"><span class="pin"><input inputmode="decimal" value="${ccW()}" data-cc="w"><em>sem.</em></span></td></tr>
     <tr class="grp"><td colspan="2">Produits</td></tr>`
     +pIds().map(id=>`<tr class="${ccOff(id)?"offr":""}"><td>${R[id].name}<small class="d">${ccLabel(id)}${ccLabel(id)?" · ":""}${eur(ccPrice(id))}</small></td><td class="q"><label class="sw"><input type="checkbox" data-ccp="${id}" ${ccOff(id)?"":"checked"} aria-label="Proposer ${R[id].name}"><i></i></label></td></tr>`).join("")
     +`<tr><td style="word-break:break-all"><a href="${url}" target="_blank" rel="noopener">${url.replace(/^https?:\/\//,"")}</a></td><td class="q"><button class="iconbtn" data-cclink="${url}" aria-label="Copier le lien"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button></td></tr></table></details>`;}
@@ -1302,6 +1303,7 @@ function onSettingsChange(e){const t=e.target;
     if(t.dataset.ccp){if(t.checked)delete cc.off[t.dataset.ccp];else cc.off[t.dataset.ccp]=1;}
     else if(t.dataset.cc==="open"){if(t.checked)cc.open=true;else delete cc.open;}
     else if(t.dataset.cc==="h"){const v=Math.round(+String(t.value).replace(",","."));if(isFinite(v)&&v>=0&&v<=23){if(v===18)delete cc.h;else cc.h=v;}}
+    else if(t.dataset.cc==="w"){const v=Math.round(+String(t.value).replace(",","."));if(isFinite(v)&&v>=1&&v<=52){if(v===12)delete cc.w;else cc.w=v;}}
     if(!Object.keys(cc.off).length)delete cc.off;if(Object.keys(cc).length)params.cc=cc;else delete params.cc;save();renderSettings();return;}if(t.dataset&&t.dataset.clk){if(t.checked)params.clock=1;else delete params.clock;save();return;}if(t.dataset&&t.dataset.tog){params.rules=params.rules||{};if(t.checked)delete params.rules[t.dataset.tog];else params.rules[t.dataset.tog]=false;if(!Object.keys(params.rules).length)delete params.rules;save();renderSettings();return;}if(!t.dataset||!t.dataset.kind)return;
   const v=+String(t.value).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<0){renderSettings();return;}
   let val=v/(+t.dataset.scale);if(t.dataset.kind==="rq"&&R[t.dataset.a]&&R[t.dataset.a].target&&!(R[t.dataset.a].items.find(i=>ikey(i)===t.dataset.b)||{}).keep)val=val/scaleOf(t.dataset.a);
