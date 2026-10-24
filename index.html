@@ -816,7 +816,8 @@ const ctype=(c,date,id)=>date<c.start?0:(((c.type[wdOf(date)]||{})[id])||0);
 const cq0=(c,date,id)=>{const m=c.mod[date]||{};return id in m?m[id]:ctype(c,date,id);};
 const cq=(c,date,id)=>blocked(wdOf(date),id)?0:cq1(c,date,id);
 const cq1=(c,date,id)=>id==="focaccia"?snapF(cq0(c,date,id)):cq0(c,date,id);
-const ordersQ=(date,id)=>blocked(wdOf(date),id)?0:orders.filter(o=>o.date===date).reduce((s,o)=>s+((o.items||{})[id]||0),0);
+// Les commandes en ligne (o.web) sont seulement affichées en Boutique : le client serait venu quand même, la production ne change pas
+const ordersQ=(date,id)=>blocked(wdOf(date),id)?0:orders.filter(o=>o.date===date&&!o.web).reduce((s,o)=>s+((o.items||{})[id]||0),0);
 const proBy=(date,id)=>[...clients.map(c=>[c.name,cq(c,date,id)]),["Commandes",ordersQ(date,id)]].filter(x=>x[1]>0);
 const proQ=(date,id)=>proBy(date,id).reduce((s,x)=>s+x[1],0);
 const focKg=()=>params.focKg||2.6;
