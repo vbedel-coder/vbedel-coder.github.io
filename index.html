@@ -157,6 +157,7 @@ tr.hyd.on td{color:var(--ink);background:var(--tint-soft)}
 .ctop{display:flex;align-items:flex-start;gap:8px;margin-bottom:12px}.ctop .clients{flex:1;min-width:0;margin-bottom:0}.cact{display:flex;gap:6px;flex:0 0 auto;padding-top:2px}.iconbtn{display:inline-flex;align-items:center;justify-content:center;padding:0}.iconbtn.del{color:var(--warn)}.iconbtn.big{width:44px;height:44px;border-radius:22px;flex:0 0 auto}.newc .iconbtn{padding:0;background:var(--surface);color:var(--muted);box-shadow:var(--shadow)}.newc .iconbtn.ok{background:var(--tint-fill);color:#fff}
 .totop{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;margin-left:10px;border:0;border-radius:15px;background:var(--fill);color:var(--tint);cursor:pointer;vertical-align:middle;padding:0}
 .add .iconbtn{padding:0;width:44px;height:44px;border-radius:22px;flex:0 0 auto;background:var(--tint-soft);color:var(--tint);box-shadow:none}td .iconbtn{margin-left:6px}
+.chip.web{background:var(--tint-soft);color:var(--tint)}.chip.web.paid{background:var(--levain-soft);color:var(--levain)}.chip.web svg{vertical-align:-2px;margin-right:4px}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}.chip{font-size:14px;font-weight:600;background:var(--fill2);color:var(--ink);border-radius:7px;padding:2px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}.chip i{font-style:normal;color:var(--muted);font-weight:500;margin-right:4px}.chip.pro{background:var(--tint-soft);color:var(--tint)}.chip.m{background:none;color:var(--muted);font-weight:500;padding:2px 2px}
 .lvr{padding:10px 16px;border-top:.5px solid var(--line)}.lvr:first-child{border-top:0}.lvr.lvsum+.lvr{border-top:0}.lvh{display:flex;justify-content:space-between;align-items:center;gap:10px}.lvh b{font-size:17px;font-weight:600}.lvh span{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}.lvs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}.lvs em{display:block;font-style:normal;font-size:13px;color:var(--muted)}.lvs b{display:block;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}.lve{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--tint-soft);font-size:15px}
 tr.ptn td{padding:8px 16px;border-top:.5px solid var(--line)}.pts{display:flex;flex-direction:column;gap:2px}.pt{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;font-size:14px;color:var(--muted)}.pt em{font-style:normal}.pt em::before{content:"Pâton "}.pt b{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}.pt small,.pt span{font-size:13px}
@@ -638,7 +639,7 @@ const storeAll=()=>{store.set("v13-params",params);store.set("v12-dorder",dorder
   store.set("v9-updated",localUpdated);store.set("v5-sales",sales);store.set("v8-clients",clients);store.set("v3-extras",extras);store.set("v14-ts",ts);store.set("v15-stype",stype);store.set("v16-ca",ca);store.set("v17-left",left);store.set("v18-stock",stock);store.set("v21-stockD",stockD);store.set("v19-orders",orders);store.set("v20-deliv",deliv);store.set("v24-ordA",ordA);};
 const save=()=>{adjMemo={};saveUI();const d=JSON.stringify(DATA());if(d===lastData)return;lastData=d;const now=Date.now();
   allKeys().forEach(k=>{const j=secJ(k);if(j!==lastSec[k]){lastSec[k]=j;ts[k]=Math.max(now,(ts[k]||0)+1);}});
-  localUpdated=Math.max(now,localUpdated+1);storeAll();queuePush();};
+  localUpdated=Math.max(now,localUpdated+1);storeAll();queuePush();ccQueue();};
 
 // ---- Synchronisation en ligne (données liées au compte Claude, partagées entre téléphone et iPad) ----
 let stateRef=null,pushTimer=null,syncState="local",pushing=false,dirty=false;
@@ -674,8 +675,43 @@ async function initSync(){
     if(snap.exists&&applyRemote(snap.data()))render();
     if(dirty||localNewer(snap.exists?snap.data():null)){if(!localUpdated)localUpdated=Date.now();await push();}else setSync("ok");
   }catch(e){setSync("err");pushTimer=setTimeout(push,5000);}
+  ccInit();
   stateRef.onSnapshot(sn=>{if(sn.exists&&!sn.metadata.hasPendingWrites){if(applyRemote(sn.data()))render();if(!pushing&&!dirty&&!sn.metadata.fromCache&&localNewer(sn.data()))queuePush();}if(!sn.metadata.fromCache&&syncState==="ok")setSync("ok");},()=>setSync("err"));
 }
+// ---- Click and collect (appli installée) : carte publiée pour la page commande.html ; les commandes reçues rejoignent les commandes du jour ----
+// params.cc = {open, h (heure limite la veille de la production), w (semaines ouvertes à la commande), off:{pain:1}, qonto}
+const ccP=()=>params.cc||{},ccH=()=>ccP().h??18,ccW=()=>ccP().w??12;
+const ccOff=id=>!!(ccP().off||{})[id];
+const ccStep=id=>SALE_STEP[id]||1, ccMax=id=>id==="focaccia"?FOC*4:id==="canele"?48:10;
+// Poids indicatif (≈) : le pain est vendu à la pièce
+const ccLabel=id=>id==="focaccia"?"½ plaque · ≈ 1,3 kg":id==="canele"?"6 pièces":Wv(id)>=.995?`≈ ${num(Wv(id))} kg`:`≈ ${Math.round(Wv(id)*100)*10} g`;
+const ccPrice=id=>Math.round(((id==="focaccia"||id==="canele")?(salePrice(id)||0)*ccStep(id):unitTTC(id))*100)/100;
+// Heure limite d'un produit : la veille de son jour de production, à l'heure choisie
+const ccUntil=(date,id)=>{const wd=wdOf(date),pd=prodDay(RULE[id],wd),x=parse(addDays(date,OFF[pd]-OFF[wd]-1));x.setHours(ccH(),0,0,0);return x;};
+function ccData(){const now=new Date(),today=iso(now),days={},products={};
+  const ids=pIds().filter(id=>!ccOff(id)&&ccPrice(id)>0);
+  for(let i=0;i<=ccW()*7;i++){const d=addDays(today,i),wd=wdOf(d);if(!wd||isClosed(d))continue;const it={};
+    ids.forEach(id=>{if(blocked(wd,id)||!(shopAt(d,id)>0))return;const u=ccUntil(d,id);if(u>now)it[id]=u.toISOString();});
+    if(Object.keys(it).length)days[d]={items:it};}
+  ids.forEach(id=>{products[id]={name:R[id].name,price:ccPrice(id),step:ccStep(id),max:ccMax(id),label:ccLabel(id)};});
+  return {open:!!ccP().open,qonto:!!ccP().qonto,order:ids,products,days};}
+let ccLast=null,ccTimer=null,ccChan=null;
+const ccQueue=()=>{clearTimeout(ccTimer);ccTimer=setTimeout(ccPublish,1500);};
+async function ccPublish(){const sb=window.vivantSB;if(!sb||!stateRef)return;const data=ccData(),j=JSON.stringify(data);if(j===ccLast)return;
+  try{const {error}=await sb.from("shop").upsert({id:1,data,updated_at:new Date().toISOString()});if(!error)ccLast=j;}catch(e){}}
+// Commandes reçues (ou mises à jour, ex. payées) : ajoutées aux commandes du jour de retrait, puis marquées comme reprises
+async function ccImport(){const sb=window.vivantSB;if(!sb||!stateRef)return;
+  try{const {data,error}=await sb.from("web_orders").select("*").eq("imported",false);if(error||!data||!data.length)return;
+    data.forEach(w=>{const id="w"+w.id,web={pay:w.pay,paid:!!w.paid,total:+w.total},old=orders.find(x=>x.id===id);
+      orders=[...orders.filter(x=>x.id!==id),old?{...old,web}:{id,date:w.pickup,name:w.name,items:w.items||{},phone:w.phone||"",note:w.note||"",done:false,web}];});
+    save();render();await sb.from("web_orders").update({imported:true}).in("id",data.map(w=>w.id));}catch(e){}}
+function ccInit(){const sb=window.vivantSB;if(!sb||!stateRef)return;ccPublish();ccImport();
+  if(!ccChan)ccChan=sb.channel("web-orders").on("postgres_changes",{event:"*",schema:"public",table:"web_orders"},()=>ccImport()).subscribe();
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){ccImport();ccPublish();}});
+  setInterval(ccPublish,3600000);}
+const GLOBE=`<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>`;
+const webChip=o=>o.web?`<span class="chip web${o.web.paid?" paid":""}">${GLOBE}${eur(o.web.total)}${o.web.paid?" ✓":""}</span>`:"";
+
 // ---- Export (sauvegarde complète) ----
 let dl=null;
 async function initDownloads(){if(!window.claude||!window.claude.use)return;dl=await window.claude.use("downloads");
@@ -781,7 +817,8 @@ const ctype=(c,date,id)=>date<c.start?0:(((c.type[wdOf(date)]||{})[id])||0);
 const cq0=(c,date,id)=>{const m=c.mod[date]||{};return id in m?m[id]:ctype(c,date,id);};
 const cq=(c,date,id)=>blocked(wdOf(date),id)?0:cq1(c,date,id);
 const cq1=(c,date,id)=>id==="focaccia"?snapF(cq0(c,date,id)):cq0(c,date,id);
-const ordersQ=(date,id)=>blocked(wdOf(date),id)?0:orders.filter(o=>o.date===date).reduce((s,o)=>s+((o.items||{})[id]||0),0);
+// Les commandes en ligne (o.web) sont seulement affichées en Boutique : le client serait venu quand même, la production ne change pas
+const ordersQ=(date,id)=>blocked(wdOf(date),id)?0:orders.filter(o=>o.date===date&&!o.web).reduce((s,o)=>s+((o.items||{})[id]||0),0);
 const proBy=(date,id)=>[...clients.map(c=>[c.name,cq(c,date,id)]),["Commandes",ordersQ(date,id)]].filter(x=>x[1]>0);
 const proQ=(date,id)=>proBy(date,id).reduce((s,x)=>s+x[1],0);
 const focKg=()=>params.focKg||2.6;
@@ -948,7 +985,7 @@ function showOrder(ord){const {tel,note}=telOf(ord),n=tel.replace(/[^+\d]/g,""),
   const o=document.createElement("div");o.className="askbg";
   o.innerHTML=`<div class="ask osheet" role="dialog" aria-modal="true"><p style="margin-bottom:2px">${esc(ord.name)}</p><small class="d" style="color:var(--muted)">${wd?DAYNAMES[wd][0].toUpperCase()+DAYNAMES[wd].slice(1):""} ${x.getDate()} ${MONTHS[x.getMonth()]}${ord.done?" · retirée":""}</small>
     ${tel?`<div class="bigtel">${fmtTel(tel)}</div>`:`<div class="d" style="margin:12px 0;color:var(--muted)">Pas de téléphone</div>`}
-    <div class="chips big" style="margin:8px 0">${itemsTxt(ord.items)}</div>
+    <div class="chips big" style="margin:8px 0">${itemsTxt(ord.items)}${webChip(ord)}</div>
     <div class="onote" style="margin:8px 0 0">${note?esc(note):`<span style="color:var(--muted)">Pas de note</span>`}</div>
     <small id="telHint" style="display:block;margin-top:10px;color:var(--muted);font-size:13px">${tel?"Pour appeler : appui long sur le numéro, ou copie-le et colle-le dans Téléphone.":""}</small>
     <div class="askb" style="justify-content:space-between"><button class="iconbtn big" data-a="close" aria-label="Fermer">${IC.x}</button><span style="display:flex;gap:10px"><button class="iconbtn big del" data-a="del" aria-label="Supprimer la commande"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg></button><button class="iconbtn big" data-a="edit" aria-label="Modifier">${IC.pen}</button>${tel?`<button class="iconbtn big" data-a="copy" aria-label="Copier le numéro"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8m0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2z"/><path d="M16 8v-2a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button><button class="iconbtn big ok" data-a="call" aria-label="Appeler">${PHONE}</button>`:""}</span></div></div>`;
@@ -975,13 +1012,13 @@ function renderCmd(el){const dt=dateOf(sday),list=orders.filter(o=>o.date===dt);
     document.getElementById("dCancel").onclick=()=>{draft=null;renderSales();};
     document.getElementById("dOk").onclick=()=>{keep();const items=Object.fromEntries(Object.entries(it).filter(e=>e[1]>0));const name=(draft.name||"").trim();
       if(!name&&!Object.keys(items).length){draft=null;renderSales();return;}
-      const o={id:draft.id||"o"+Date.now(),date:dt,name:name||"Client",items,phone:(draft.phone||"").trim(),note:(draft.note||"").trim(),done:!!draft.done};
+      const o={id:draft.id||"o"+Date.now(),date:dt,name:name||"Client",items,phone:(draft.phone||"").trim(),note:(draft.note||"").trim(),done:!!draft.done};if(draft.web)o.web=draft.web;
       orders=[...orders.filter(x=>x.id!==o.id),o];draft=null;save();renderSales();};
     if(!draft.name)setTimeout(()=>{const i=document.getElementById("dName");if(i)i.focus();},50);return;}
   if(!list.length)el.innerHTML=`<div class="row"><div class="name"><b>Aucune commande</b></div></div>`;
   list.forEach(o=>{const row=document.createElement("div");row.className="row"+(o.done?" off":"");row.dataset.oid=o.id;
     const {tel,note}=telOf(o);
-    row.innerHTML=`<div class="name golink"><b>${o.name.replace(/</g,"&lt;")}</b>${tel?`<span class="tel">${PHONE}<span class="telnum">${fmtTel(tel)}</span></span>`:""}<div class="chips big">${itemsTxt(o.items)}</div>${note?`<small class="onote">${note.replace(/</g,"&lt;")}</small>`:""}</div>
+    row.innerHTML=`<div class="name golink"><b>${o.name.replace(/</g,"&lt;")}</b>${tel?`<span class="tel">${PHONE}<span class="telnum">${fmtTel(tel)}</span></span>`:""}<div class="chips big">${itemsTxt(o.items)}${webChip(o)}</div>${note?`<small class="onote">${note.replace(/</g,"&lt;")}</small>`:""}</div>
       <button class="iconbtn${o.done?" on":""}" data-done="${o.id}" aria-label="${o.done?"Pas encore retirée":"Retirée"}">${IC.check}</button><button class="iconbtn" data-edit="${o.id}" aria-label="Modifier">${IC.pen}</button>`;el.appendChild(row);});
   el.querySelectorAll("[data-oid] .name").forEach(nm=>nm.onclick=()=>{const o=orders.find(x=>x.id===nm.parentNode.dataset.oid);if(o)showOrder(o);});
   el.querySelectorAll("[data-done]").forEach(b=>b.onclick=()=>{const o=orders.find(x=>x.id===b.dataset.done);o.done=!o.done;save();renderSales();});
@@ -1246,16 +1283,33 @@ function renderSettings(){
     +pIds().filter(id=>id!=="focaccia").map(id=>`<tr><td>${R[id].name}</td><td class="q">${pin("w",id,"",Wv(id),1000,"g")}</td></tr>`).join("")
     +`<tr><td colspan="2" style="text-align:right"><button class="iconbtn" data-reset="misc" aria-label="Valeurs d'origine">${IC.undo}</button></td></tr></table></details>`;
 
+  // Click and collect : ouverture, heure limite, produits proposés, lien de la page
+  {const cc=ccP(),url=location.origin+location.pathname.replace(/[^/]*$/,"")+"commande.html";
+  h+=`<h2>Click and collect</h2><details class="card"><summary><b>Commande en ligne</b><span>${cc.open?"ouverte":"fermée"}</span></summary><table>
+    <tr class="${cc.open?"":"offr"}"><td>Ouvert</td><td class="q"><label class="sw"><input type="checkbox" data-cc="open" ${cc.open?"checked":""} aria-label="Ouvrir la commande en ligne"><i></i></label></td></tr>
+    <tr><td>Heure limite<small class="d">veille de la production</small></td><td class="q"><span class="pin"><input inputmode="decimal" value="${ccH()}" data-cc="h"><em>h</em></span></td></tr>
+    <tr><td>Commandes jusqu'à</td><td class="q"><span class="pin"><input inputmode="decimal" value="${ccW()}" data-cc="w"><em>sem.</em></span></td></tr>
+    <tr class="grp"><td colspan="2">Produits</td></tr>`
+    +pIds().map(id=>`<tr class="${ccOff(id)?"offr":""}"><td>${R[id].name}<small class="d">${ccLabel(id)}${ccLabel(id)?" · ":""}${eur(ccPrice(id))}</small></td><td class="q"><label class="sw"><input type="checkbox" data-ccp="${id}" ${ccOff(id)?"":"checked"} aria-label="Proposer ${R[id].name}"><i></i></label></td></tr>`).join("")
+    +`<tr><td style="word-break:break-all"><a href="${url}" target="_blank" rel="noopener">${url.replace(/^https?:\/\//,"")}</a></td><td class="q"><button class="iconbtn" data-cclink="${url}" aria-label="Copier le lien"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button></td></tr></table></details>`;}
+
   // Sauvegarde complète : exporter un fichier, ou reprendre un fichier (passage vers l'appli installée)
   h+=`<h2>Sauvegarde</h2><div class="ltools" style="justify-content:flex-start">${dl?`<button class="iconbtn big" data-bk="out" aria-label="Exporter les données"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 11l5 5l5-5"/><path d="M12 4v12"/></svg></button>`:""}<button class="iconbtn big" data-bk="in" aria-label="Reprendre une sauvegarde"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 9l5-5l5 5"/><path d="M12 4v12"/></svg></button></div>`;
   const el=document.getElementById("settings");const open=[...el.querySelectorAll("details")].map(d=>d.open);
   el.innerHTML=h;el.querySelectorAll("details").forEach((d,i)=>{if(open[i]!==undefined)d.open=open[i];});
 }
-function onSettingsChange(e){const t=e.target;if(t.dataset&&t.dataset.clk){if(t.checked)params.clock=1;else delete params.clock;save();return;}if(t.dataset&&t.dataset.tog){params.rules=params.rules||{};if(t.checked)delete params.rules[t.dataset.tog];else params.rules[t.dataset.tog]=false;if(!Object.keys(params.rules).length)delete params.rules;save();renderSettings();return;}if(!t.dataset||!t.dataset.kind)return;
+function onSettingsChange(e){const t=e.target;
+  if(t.dataset&&(t.dataset.cc||t.dataset.ccp)){const cc={...ccP(),off:{...(ccP().off||{})}};
+    if(t.dataset.ccp){if(t.checked)delete cc.off[t.dataset.ccp];else cc.off[t.dataset.ccp]=1;}
+    else if(t.dataset.cc==="open"){if(t.checked)cc.open=true;else delete cc.open;}
+    else if(t.dataset.cc==="h"){const v=Math.round(+String(t.value).replace(",","."));if(isFinite(v)&&v>=0&&v<=23){if(v===18)delete cc.h;else cc.h=v;}}
+    else if(t.dataset.cc==="w"){const v=Math.round(+String(t.value).replace(",","."));if(isFinite(v)&&v>=1&&v<=52){if(v===12)delete cc.w;else cc.w=v;}}
+    if(!Object.keys(cc.off).length)delete cc.off;if(Object.keys(cc).length)params.cc=cc;else delete params.cc;save();renderSettings();return;}if(t.dataset&&t.dataset.clk){if(t.checked)params.clock=1;else delete params.clock;save();return;}if(t.dataset&&t.dataset.tog){params.rules=params.rules||{};if(t.checked)delete params.rules[t.dataset.tog];else params.rules[t.dataset.tog]=false;if(!Object.keys(params.rules).length)delete params.rules;save();renderSettings();return;}if(!t.dataset||!t.dataset.kind)return;
   const v=+String(t.value).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<0){renderSettings();return;}
   let val=v/(+t.dataset.scale);if(t.dataset.kind==="rq"&&R[t.dataset.a]&&R[t.dataset.a].target&&!(R[t.dataset.a].items.find(i=>ikey(i)===t.dataset.b)||{}).keep)val=val/scaleOf(t.dataset.a);
   setP(t.dataset.kind,t.dataset.a,t.dataset.b,val);save();tab==="R"?renderProfit():tab==="P"?renderResults():renderSettings();}
-function onSettingsClick(e){const bk=e.target.closest("button[data-bk]");if(bk){if(bk.dataset.bk==="out")exportAll();else importAll();return;}
+function onSettingsClick(e){const cl=e.target.closest("button[data-cclink]");if(cl){try{navigator.clipboard.writeText(cl.dataset.cclink).then(()=>{cl.classList.add("on");setTimeout(()=>cl.classList.remove("on"),1200);});}catch(x){}return;}
+  const bk=e.target.closest("button[data-bk]");if(bk){if(bk.dataset.bk==="out")exportAll();else importAll();return;}
   const b=e.target.closest("button[data-reset]");if(!b)return;e.preventDefault();const k=b.dataset.reset,a=b.dataset.a;ask(k==="act"?"Remettre les encaissements Qonto d'origine ?":"Revenir aux valeurs d'origine ?").then(ok=>{if(!ok)return;
   if(k==="lv")delete params.lv;else if(k==="misc"){delete params.w;delete params.focKg;delete params.batch;delete params.obj;delete params.objM;delete params.loss;delete params.ordW;delete params.bag;delete params.bagF;}else if(k==="sale"){delete params.sale;delete params.tva;}else if(k==="price")delete params.price;else if(k==="act")delete params.act;else if(k==="adj"){delete params.adjM;delete params.adjT;delete params.adjH;delete params.holR;delete params.adjP1;delete params.adjP2;delete params.adjH2;delete params.rules;}else if(k==="fix"){delete params.fix;delete params.pay;delete params.matr;}
   else if(params[k])delete params[k][a];
@@ -1538,6 +1592,7 @@ function renderOrder(){const el=document.getElementById("order");if(!el)return;
     ordA={...ordA,last:today};save();ordUpdate();};}
 let stockMode=!!store.get("v23-stockm");
 // Ouverture depuis la notification de commande : page Stock de farine
+{const m=location.search.match(/[?&]cmd=(\d{4}-\d{2}-\d{2})/);if(m&&WD[parse(m[1]).getDay()]){tab="V";wk=tuesdayOf(parse(m[1]));sday=WD[parse(m[1]).getDay()];editCmd=true;try{history.replaceState(null,"",location.pathname);}catch(e){}}}
 if(/[?&]stock\b/.test(location.search)){tab="P";stockMode=true;try{history.replaceState(null,"",location.pathname);}catch(e){}}
 function renderStockMode(){const v=document.getElementById("viewP");v.classList.toggle("stockmode",stockMode);const b=document.getElementById("stockBtn");b.classList.toggle("on",stockMode);
   document.getElementById("prodOrderBtn").hidden=stockMode||document.getElementById("prodOrderBtn").hidden;document.getElementById("days").hidden=stockMode;document.getElementById("week").hidden=stockMode;
