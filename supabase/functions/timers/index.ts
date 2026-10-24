@@ -1,4 +1,5 @@
 // Appelé toutes les 15 s : envoie une notification (avec sonnerie) à chaque minuteur terminé, puis la répète chaque minute pendant 5 min tant qu'il n'est pas arrêté.
+// Nouvelles commandes en ligne : une notification chacune.
 // Alerte de commande au moulin (calculée par l'appli, rubrique ordA) : une notification à 8 h le jour du mail (une semaine avant la livraison du mardi), répétée chaque matin pendant 7 jours tant que la commande n'est pas copiée.
 import webpush from "npm:web-push@3.6.7";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -36,6 +37,18 @@ Deno.serve(async () => {
       const { data: ins } = await sb.from("push_sent").upsert({ user_id: row.id, k: t.k, end_ms: t.end, n }, { onConflict: "user_id,k,end_ms,n", ignoreDuplicates: true }).select();
       if (!ins?.length) continue;
       await send(row.id, { title: t.n, body: n ? "Minuteur terminé depuis " + n + " min" : "Minuteur terminé", tag: "tm-" + t.k }, 300);
+    }
+  }
+  // Commandes en ligne (click and collect) : une notification par nouvelle commande, qui ouvre les commandes du jour de retrait
+  const { data: news } = await sb.from("web_orders").select("id, name, pickup, total, pay, paid").eq("notified", false);
+  if (news?.length) {
+    const { data: owner } = await sb.rpc("vivant_owner");
+    for (const o of news) {
+      const { data: upd } = await sb.from("web_orders").update({ notified: true }).eq("id", o.id).eq("notified", false).select("id");
+      if (!upd?.length || !owner) continue;
+      const day = new Date(o.pickup + "T12:00:00Z").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Paris" });
+      const eur = Number(o.total).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+      await send(owner as string, { title: "Nouvelle commande", body: `${o.name} · ${day} · ${eur}${o.paid ? " payée" : ""}`, tag: "cmd-" + o.id, url: "./?cmd=" + o.pickup }, 86400);
     }
   }
   await sb.from("push_sent").delete().lt("at", new Date(now - 8 * 86400000).toISOString());

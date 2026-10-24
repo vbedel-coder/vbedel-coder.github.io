@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vivant · Commander</title>
+<meta name="description" content="Boulangerie Vivant, 34 rue Servan, Paris 11e : réservez votre pain et retirez-le en boutique.">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#F2F2F7">
+<style>
+:root{--bg:#F2F2F7;--surface:#FFFFFF;--ink:#000000;--muted:#6C6C70;--line:rgba(60,60,67,.18);--acc:#B5651D;--acc-soft:rgba(181,101,29,.12);--ok:#248A3D;--ok-soft:rgba(52,199,89,.14);--warn:#D70015;--fill:rgba(118,118,128,.12);--shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.04)}
+@media (prefers-color-scheme:dark){:root{--bg:#000000;--surface:#1C1C1E;--ink:#FFFFFF;--muted:#98989F;--line:rgba(84,84,88,.6);--acc:#E0A060;--acc-soft:rgba(224,160,96,.16);--ok:#30D158;--ok-soft:rgba(48,209,88,.16);--warn:#FF6961;--fill:rgba(118,118,128,.24);--shadow:none}}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.01em;font-size:17px;line-height:1.45;-webkit-text-size-adjust:100%}
+.wrap{max-width:560px;margin:0 auto;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(120px + env(safe-area-inset-bottom,0px))}
+header{display:flex;align-items:center;gap:12px;margin:8px 0 24px}
+header img{width:52px;height:52px;border-radius:12px;box-shadow:var(--shadow)}
+header h1{font-size:28px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.02em}
+header small{display:block;color:var(--muted);font-size:15px}
+h2{font-size:20px;margin:28px 0 10px;font-weight:700}
+.days{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;margin:0 -2px;scrollbar-width:none}
+.days::-webkit-scrollbar{display:none}
+.days button{flex:0 0 auto;min-width:64px;font:inherit;cursor:pointer;border:0;background:var(--surface);border-radius:14px;font-weight:600;font-size:14px;color:var(--ink);box-shadow:var(--shadow);padding:10px 8px;text-transform:capitalize}
+.days button b{display:block;font-size:22px;line-height:1.2}
+.days button small{display:block;font-size:12px;font-weight:500;opacity:.75}
+.days button[aria-pressed="true"]{background:var(--acc);color:#fff}
+.list{background:var(--surface);border-radius:16px;border:1px solid var(--line);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line);min-height:56px}
+.row:first-child{border-top:0}
+.row .name{flex:1;min-width:0}
+.row .name b{font-weight:600;display:block}
+.row .name small{color:var(--muted);font-size:14px}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:36px;height:36px;border-radius:18px;border:0;background:var(--fill);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;font-weight:500}
+.stepper button:disabled{opacity:.35}
+.stepper output{min-width:28px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
+.row.on .stepper output{color:var(--acc)}
+input,textarea{font:inherit;color:inherit;background:transparent;border:0;width:100%;outline:none;padding:0}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+textarea{resize:none;min-height:24px}
+.seg{display:flex;background:var(--fill);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;font:inherit;font-size:15px;font-weight:600;border:0;border-radius:9px;padding:10px 6px;background:transparent;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 85%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.bar .in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.bar .tot{flex:1}
+.bar .tot b{font-size:22px;font-variant-numeric:tabular-nums}
+.bar .tot small{display:block;color:var(--muted);font-size:13px}
+.go{font:inherit;font-weight:600;font-size:17px;border:0;border-radius:14px;padding:14px 22px;background:var(--acc);color:#fff;cursor:pointer}
+.go:disabled{opacity:.4}
+.err{color:var(--warn);font-size:15px;margin:10px 4px 0;min-height:1em}
+.empty{color:var(--muted);text-align:center;padding:48px 16px}
+.done{text-align:center;padding-top:32px}
+.done .ok{width:72px;height:72px;border-radius:36px;background:var(--ok-soft);color:var(--ok);display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px}
+.done h1{font-size:26px;margin:0 0 6px}
+.done p{color:var(--muted);margin:0 0 24px}
+.done .list{text-align:left}
+.done .row b.q{font-variant-numeric:tabular-nums}
+.foot{color:var(--muted);font-size:13px;text-align:center;margin-top:28px}
+.foot a{color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="empty">…</div></div>
+<div class="bar" id="bar" hidden><div class="in"><div class="tot"><b id="tot">0,00 €</b><small id="totS"></small></div><button class="go" id="go" disabled>Commander</button></div></div>
+<script src="config.js"></script>
+<script src="vendor/supabase.js"></script>
+<script>
+// Page publique de commande (click and collect) : lit la carte publiée par l'appli Vivant, envoie la commande à place_order (tout y est revérifié)
+(()=>{
+const C=window.VIVANT_CONFIG||{},app=document.getElementById("app"),bar=document.getElementById("bar");
+const sb=window.supabase&&C.SB_URL?window.supabase.createClient(C.SB_URL,C.SB_KEY,{auth:{persistSession:false}}):null;
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const eur=v=>(Math.round(v*100)/100).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+const parse=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);};
+const dayName=d=>parse(d).toLocaleDateString("fr-FR",{weekday:"long"});
+const dayLong=d=>parse(d).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+const MSG={ferme:"La commande en ligne est fermée pour le moment.",jour:"Ce jour n'est plus disponible.",tard:"Trop tard pour ce jour : choisissez un autre jour.",produit:"Un produit n'est plus disponible ce jour-là.",quantite:"Quantité non disponible.",contact:"Indiquez votre nom et un numéro de téléphone.",vide:"Choisissez au moins un produit.",limite:"Vous avez déjà commandé pour ce jour : appelez-nous pour modifier.",paiement:"Ce moyen de paiement n'est pas disponible."};
+const HEAD=`<header><img src="icon-180.png" alt=""><div><h1>Vivant</h1><small>Boulangerie · 34 rue Servan, Paris 11e</small></div></header>`;
+const CHECK=`<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>`;
+const CARD=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>`;
+const SHOP=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg>`;
+let shop=null,day=null,cart={},pay="place",me=store.get("vivant-client")||{},sending=false;
+
+// Jours encore ouverts (au moins un produit avant son heure limite)
+const openItems=d=>{const now=Date.now(),it=(shop.days[d]||{}).items||{};return shop.order.filter(id=>it[id]&&Date.parse(it[id])>now&&shop.products[id]);};
+const openDays=()=>Object.keys(shop.days||{}).sort().filter(d=>openItems(d).length);
+const total=()=>Object.entries(cart).reduce((s,[id,q])=>s+(shop.products[id]?q/shop.products[id].step*shop.products[id].price:0),0);
+// Focaccia par demi-plaque : ½, 1, 1½…
+const qtyTxt=(id,q)=>{if(id!=="focaccia")return String(q);const h=Math.round(q/shop.products[id].step),w=Math.floor(h/2);return (w||"")+(h%2?"½":"");};
+
+async function load(){
+  if(!sb){app.innerHTML=HEAD+`<div class="empty">Service indisponible.</div>`;return;}
+  const {data,error}=await sb.from("shop").select("data").eq("id",1).maybeSingle();
+  shop=data&&data.data;
+  if(error||!shop||!shop.open||!openDays().length){app.innerHTML=HEAD+`<div class="empty">La commande en ligne est fermée pour le moment.<br>À bientôt en boutique !</div>`;bar.hidden=true;return;}
+  const ds=openDays();if(!ds.includes(day))day=ds[0];render();}
+
+function render(){
+  const ds=openDays(),ids=openItems(day);
+  Object.keys(cart).forEach(id=>{if(!ids.includes(id))delete cart[id];});
+  let h=HEAD+`<h2>Jour de retrait</h2><div class="days">`+ds.map(d=>{const x=parse(d);return `<button data-day="${d}" aria-pressed="${d===day}">${dayName(d).slice(0,3)}.<b>${x.getDate()}</b><small>${x.toLocaleDateString("fr-FR",{month:"short"})}</small></button>`;}).join("")+`</div>`;
+  h+=`<h2>Produits</h2><div class="list">`+ids.map(id=>{const p=shop.products[id],q=cart[id]||0;
+    return `<div class="row${q?" on":""}"><div class="name"><b>${esc(p.name)}</b><small>${esc(p.label)}${p.label?" · ":""}${eur(p.price)}</small></div><div class="stepper"><button data-dec="${id}" aria-label="Retirer" ${q?"":"disabled"}>−</button><output>${q?qtyTxt(id,q):0}</output><button data-inc="${id}" aria-label="Ajouter" ${q+p.step>p.max+1e-9?"disabled":""}>+</button></div></div>`;}).join("")+`</div>`;
+  h+=`<h2>Vos coordonnées</h2><div class="list"><div class="row"><input id="nm" placeholder="Nom" autocomplete="name" value="${esc(me.name||"")}"></div><div class="row"><input id="ph" type="tel" inputmode="tel" placeholder="Téléphone" autocomplete="tel" value="${esc(me.phone||"")}"></div><div class="row"><input id="nt" placeholder="Note (tranché, heure de passage…)" maxlength="200" value="${esc(me.note||"")}"></div></div>`;
+  if(shop.qonto)h+=`<h2>Paiement</h2><div class="seg"><button data-pay="place" aria-pressed="${pay==="place"}">${SHOP}Sur place</button><button data-pay="qonto" aria-pressed="${pay==="qonto"}">${CARD}En ligne</button></div>`;
+  h+=`<div class="err" id="err"></div><div class="foot">Retrait en boutique, 34 rue Servan, Paris 11e</div>`;
+  app.innerHTML=h;bar.hidden=false;upd();}
+
+function upd(){const t=total(),n=Object.keys(cart).length;
+  document.getElementById("tot").textContent=eur(t);
+  document.getElementById("totS").textContent=day?`Retrait ${dayLong(day)}`:"";
+  document.getElementById("go").disabled=!n||sending;
+  document.getElementById("go").textContent=shop.qonto&&pay==="qonto"?"Payer":"Commander";}
+
+app.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.day){keep();day=b.dataset.day;render();return;}
+  if(b.dataset.pay){keep();pay=b.dataset.pay;render();return;}
+  const id=b.dataset.inc||b.dataset.dec;if(!id)return;const p=shop.products[id];keep();
+  const q=Math.round(((cart[id]||0)+(b.dataset.inc?p.step:-p.step))*1000)/1000;
+  if(q<=0)delete cart[id];else if(q<=p.max+1e-9)cart[id]=q;render();});
+app.addEventListener("input",()=>keep());
+function keep(){const g=i=>{const el=document.getElementById(i);return el?el.value:undefined;};if(g("nm")!==undefined)me={name:g("nm"),phone:g("ph"),note:g("nt")};}
+
+document.getElementById("go").onclick=async()=>{keep();const err=document.getElementById("err");err.textContent="";
+  const name=(me.name||"").trim(),phone=(me.phone||"").trim();
+  if(name.length<2||phone.replace(/\D/g,"").length<9){err.textContent=MSG.contact;return;}
+  sending=true;upd();
+  const {data,error}=await sb.rpc("place_order",{p_pickup:day,p_name:name,p_phone:phone,p_note:(me.note||"").trim(),p_items:cart,p_pay:shop.qonto?pay:"place"});
+  sending=false;
+  if(error){const k=Object.keys(MSG).find(k=>(error.message||"").includes(k));err.textContent=k?MSG[k]:"Envoi impossible, réessayez.";upd();if(k==="tard"||k==="jour"||k==="produit")load();return;}
+  store.set("vivant-client",{name,phone});
+  const items=Object.entries(cart),d=day;cart={};me.note="";
+  bar.hidden=true;window.scrollTo(0,0);
+  app.innerHTML=HEAD+`<div class="done"><div class="ok">${CHECK}</div><h1>Commande enregistrée</h1><p>À retirer ${dayLong(d)}<br>34 rue Servan, Paris 11e</p>
+    <div class="list">${items.map(([id,q])=>`<div class="row"><div class="name"><b>${esc(shop.products[id].name)}</b></div><b class="q">${qtyTxt(id,q)}${id==="focaccia"?" plaque":""}</b></div>`).join("")}
+    <div class="row"><div class="name"><b>Total</b><small>${shop.qonto&&pay==="qonto"?"payé en ligne":"à régler sur place"}</small></div><b class="q">${eur(data&&data.total!=null?+data.total:0)}</b></div></div>
+    <p style="margin-top:24px"><button class="go" id="again">Nouvelle commande</button></p></div>`;
+  document.getElementById("again").onclick=()=>load();};
+
+load();
+})();
+</script>
+</body>
+</html>
