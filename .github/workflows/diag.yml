@@ -1,0 +1,24 @@
+# Diagnostic ponctuel du click and collect (lecture seule, sans données personnelles), autorisé par Vincent le 24/10/2026
+name: Diagnostic click and collect
+on:
+  push:
+    branches: [claude/diag-cc]
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      API: https://api.supabase.com/v1
+    steps:
+      - name: État
+        run: |
+          REF=$(curl -fsS -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" $API/projects | jq -r '[.[]|select(.name|ascii_downcase|startswith("vivant"))][0].id')
+          q() { echo "== $1"; jq -n --arg s "$1" '{query:$s}' | curl -sS -X POST -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @- $API/projects/$REF/database/query | jq -c .; }
+          q "select count(*) as comptes, count(*) filter (where id=public.vivant_owner()) as proprio from auth.users"
+          q "select (id=public.vivant_owner()) as state_proprio, updated_at, data->'params'->'cc' as cc, jsonb_array_length(coalesce(data->'orders','[]'::jsonb)) as nb_orders, (select count(*) from jsonb_array_elements(coalesce(data->'orders','[]'::jsonb)) e where e ? 'web') as web_dans_appli from public.state"
+          q "select data->>'open' as ouvert, (select count(*) from jsonb_object_keys(data->'days')) as jours, updated_at from public.shop"
+          q "select pickup, pay, paid, imported, notified, created_at from public.web_orders order by created_at desc limit 10"
+          q "select tablename from pg_publication_tables where pubname='supabase_realtime'"
+          q "select grantee, privilege_type from information_schema.role_table_grants where table_name in ('web_orders','shop') and grantee in ('anon','authenticated') order by 1,2"
+          q "select k, n, at from public.push_sent order by at desc limit 5"
+          q "select status_code, left(content,200) as content, created from net._http_response order by created desc limit 2"
