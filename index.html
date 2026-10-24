@@ -702,7 +702,11 @@ const shopAt1=(date,id)=>{if(isClosed(date))return 0;const v=rawAt(date,id);retu
 // ---- À partir de la semaine du 20/10/2026 : chaque jour reprend la quantité prévue le même jour de la semaine d'avant (jour fermé : on remonte d'une semaine).
 // Les règles (bilans, ruptures, vacances, fériés) ne changent plus rien : elles donnent seulement une recommandation affichée à côté du chiffre.
 const NEW0="2026-10-20";
-const rawAt=(date,id)=>{const m=sales[date]||{};return id in m?m[id]:date<NEW0?autoQ(date,id):baseQ(date,id).q;};
+// Prévision de farine (stock et commande au moulin) : les semaines pas encore saisies suivent la recommandation (vacances −20 %, fin des vacances…)
+let fcMode=false,fcMemo={};
+// Calcul en mode prévision, avec son propre cache (vidé à chaque calcul de commande)
+const withFc=fn=>{if(fcMode)return fn();const sv=adjMemo;fcMode=true;adjMemo=fcMemo;try{return fn();}finally{fcMemo=adjMemo;adjMemo=sv;fcMode=false;}};
+const rawAt=(date,id)=>{const m=sales[date]||{};if(id in m)return m[id];if(date<NEW0)return autoQ(date,id);if(fcMode){const r=reco(date,id);if(r)return r.q;}return baseQ(date,id).q;};
 const offDay=d=>{if(isClosed(d))return true;const m=sales[d];if(!m)return false;const v=Object.values(m);return v.length>=3&&v.every(x=>!x);};
 function baseSrc(date,id){let p=addDays(date,-7),n=0;while(n<8&&offDay(p)){p=addDays(p,-7);n++;}return p;}
 function baseQ(date,id){const k="b|"+date+"|"+id;if(k in adjMemo)return adjMemo[k];const src=baseSrc(date,id);
@@ -1474,14 +1478,16 @@ const MILL={"Froment T80":["Perle de meule bio crème FR (25)","30608025"],"From
   "Petit épeautre T130":["Bio One petit épeautre BLA (25)","30928025"],"Sarrasin T130":["Farine de sarrasin bio (25)","30930025"],"Seigle T130":["Farine seigle T170 bio (25)","30967025"],
   "Riz":["Pain au riz complet bio (25 kg)","30014225"],"Khorasan T80":["Bio One Khorasan blanc meul (25)","30656525"],"Châtaigne":["Farine de châtaignes bio (5)","39091605"]};
 const ordW=()=>params.ordW??5, bagKg=()=>params.bag??25, bagOf=f=>((params.bagF||{})[f])??BAG0[f]??bagKg();
-function weekFlour(w){const sv=wk;wk=w;const fl={};
+function weekFlour(w){return withFc(()=>weekFlour0(w));}
+function weekFlour0(w){const sv=wk;wk=w;const fl={};
   try{PDAYS.forEach(pd=>{const pr=production(pd);Object.keys(pr).forEach(id=>{if(!(pr[id].q>0)||!R[id])return;
     flat(itemsOf(id)).forEach(i=>{const t=i.q*pr[id].q;if(i.k==="farine")fl[i.f]=(fl[i.f]||0)+t;
       if(i.k==="levain"&&LVFLOUR[i.l]){const f=LVFLOUR[i.l];fl[f]=(fl[f]||0)+t*(lvF(i.l)??.5);}});});});}
   finally{wk=sv;}return fl;}
 // Farine utilisée par la production d'un jour donné (pâtes + préparations + levains)
 const dayFlourMemo={};
-function dayFlour(date){const wd=wdOf(date);if(!wd||!PDAYS.includes(wd))return {};const sv=wk;wk=tuesdayOf(parse(date));const fl={};
+function dayFlour(date){return withFc(()=>dayFlour0(date));}
+function dayFlour0(date){const wd=wdOf(date);if(!wd||!PDAYS.includes(wd))return {};const sv=wk;wk=tuesdayOf(parse(date));const fl={};
   try{const pr=production(wd);Object.keys(pr).forEach(id=>{if(!(pr[id].q>0)||!R[id])return;
     flat(itemsOf(id)).forEach(i=>{const t=i.q*pr[id].q;if(i.k==="farine")fl[i.f]=(fl[i.f]||0)+t;
       if(i.k==="levain"&&LVFLOUR[i.l]){const f=LVFLOUR[i.l];fl[f]=(fl[f]||0)+t*(lvF(i.l)??.5);}});});}
@@ -1491,7 +1497,7 @@ function stockNow(f,today){const B=bagOf(f),st=(stock[f]||0)*B,d0=stockD[f];if(!
   for(let d=addDays(d0,1);d<=today;d=addDays(d,1))used+=(dayFlour(d)[f]||0);return st-used;}
 // Farines vitales : sacs gardés en réserve (la date « vide » et la quantité à commander en tiennent compte)
 const ORD_VITAL={"Froment T80":1};
-function orderRows(today){const N=Math.max(1,Math.round(ordW())),start=addDays(today,1),end=addDays(start,7*N-1);
+function orderRows(today){fcMemo={};const N=Math.max(1,Math.round(ordW())),start=addDays(today,1),end=addDays(start,7*N-1);
   const days=[];for(let d=start;d<=addDays(start,7*8-1);d=addDays(d,1))days.push([d,dayFlour(d)]);
   const fl=new Set([...Object.keys(MILL),...(params.xflour||[]),...Object.keys(stock),...days.flatMap(([,x])=>Object.keys(x))]);
   const rows=[...fl].map(f=>{const B=bagOf(f),now=stockNow(f,today),res=(ORD_VITAL[f]||0)*B;let need=0,left=now-res,until=null;
