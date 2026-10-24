@@ -1168,7 +1168,7 @@ function onPeseesClick(e){const b=e.target.closest("button");if(!b)return;e.prev
     ids.forEach(id=>{if(R[id].items.some(i=>ikey(i)===k)){removed[id]=[...new Set([...(removed[id]||[]),k])];}});save();renderResults();});return;}
   if(b.dataset.restore){const k=b.dataset.restore;b.dataset.card.split("+").forEach(id=>{removed[id]=(removed[id]||[]).filter(x=>x!==k);});save();renderResults();return;}}
 // ---- Réglages : hypothèses chiffrées modifiables ----
-const DEF={resA:()=>5000,openDays:()=>217,sarlNet:()=>2000,tnsR:()=>0.45,loss:()=>0.20,obj:()=>150000,objM:()=>10,matr:()=>0.178,pay:()=>PAY0,act:(a)=>ACT0[a],fix:(a)=>FIX0[a],tva:()=>0.055,sale:(a)=>SALEP0[a],price:(a)=>PRICE0[a],batch:(a)=>BATCH[a],lv:(a)=>LV[a].f,prep:(a,b)=>PREPS[a].items.find(x=>x[0]===b)[1],rq:(a,b)=>R[a].items.find(i=>ikey(i)===b).q,w:(a)=>WAUTO(a),focKg:()=>2.6,adjM:()=>1,adjT:()=>0.5,adjH:()=>18,holR:()=>0.2,adjP1:()=>1,adjP2:()=>2,adjH2:()=>3,ordW:()=>5,bag:()=>25,ordL:()=>10};
+const DEF={resA:()=>5000,openDays:()=>217,sarlNet:()=>2000,tnsR:()=>0.45,loss:()=>0.20,obj:()=>150000,objM:()=>10,matr:()=>0.178,pay:()=>PAY0,act:(a)=>ACT0[a],fix:(a)=>FIX0[a],tva:()=>0.055,sale:(a)=>SALEP0[a],price:(a)=>PRICE0[a],batch:(a)=>BATCH[a],lv:(a)=>LV[a].f,prep:(a,b)=>PREPS[a].items.find(x=>x[0]===b)[1],rq:(a,b)=>R[a].items.find(i=>ikey(i)===b).q,w:(a)=>WAUTO(a),focKg:()=>2.6,adjM:()=>1,adjT:()=>0.5,adjH:()=>18,holR:()=>0.2,adjP1:()=>1,adjP2:()=>2,adjH2:()=>3,ordW:()=>5,bag:()=>25,ordL:()=>7};
 const getP=(kind,a,b)=>["focKg","tva","matr","pay","obj","objM","loss","adjM","adjT","adjH","holR","adjP1","adjP2","adjH2","ordW","bag","ordL"].includes(kind)?params[kind]:["lv","w","batch","sale","price","act","fix"].includes(kind)?((params[kind]||{})[a]):(((params[kind]||{})[a]||{})[b]);
 function setP(kind,a,b,v){
   if(["focKg","tva","matr","pay","obj","objM","loss","adjM","adjT","adjH","holR","adjP1","adjP2","adjH2","ordW","bag","ordL"].includes(kind)){if(Math.abs(v-DEF[kind]())<1e-9)delete params[kind];else params[kind]=v;return;}
@@ -1233,7 +1233,7 @@ function renderSettings(){
     <tr><td>Objectif de CA annuel (TTC)</td><td class="q">${pin("obj","","",objCA(),1,"€")}</td></tr>
     <tr><td>Mois d'ouverture par an</td><td class="q">${pin("objM","","",objM(),1,"mois")}</td></tr>
     <tr><td>Commande farines : semaines à couvrir</td><td class="q">${pin("ordW","","",ordW(),1,"sem.")}</td></tr>
-    <tr><td>Alerte commande<small class="d">avant la première farine vide</small></td><td class="q">${pin("ordL","","",ordL(),1,"j")}</td></tr>
+    <tr><td>Commande farines : délai de livraison<small class="d">livraison le mardi</small></td><td class="q">${pin("ordL","","",ordL(),1,"j")}</td></tr>
     <tr><td>Poids d'un sac de farine<small class="d">par défaut ; châtaigne 5 kg</small></td><td class="q">${pin("bag","","",bagKg(),1,"kg")}</td></tr>
     <tr><td>Canelés par fournée</td><td class="q">${pin("batch","canele","",batchSize("canele"),1,"pièces")}</td></tr>
     <tr class="grp"><td colspan="2">Poids vendu d'un pain (poids en caisse)</td></tr>`
@@ -1489,27 +1489,32 @@ function dayFlour(date){const wd=wdOf(date);if(!wd||!PDAYS.includes(wd))return {
 // Stock estimé aujourd'hui (kg) : comptage − production des jours suivant le comptage, jusqu'à aujourd'hui inclus
 function stockNow(f,today){const B=bagOf(f),st=(stock[f]||0)*B,d0=stockD[f];if(!d0)return st;let used=0;
   for(let d=addDays(d0,1);d<=today;d=addDays(d,1))used+=(dayFlour(d)[f]||0);return st-used;}
+// Farines vitales : sacs gardés en réserve (la date « vide » et la quantité à commander en tiennent compte)
+const ORD_VITAL={"Froment T80":1};
 function orderRows(today){const N=Math.max(1,Math.round(ordW())),start=addDays(today,1),end=addDays(start,7*N-1);
   const days=[];for(let d=start;d<=addDays(start,7*8-1);d=addDays(d,1))days.push([d,dayFlour(d)]);
   const fl=new Set([...Object.keys(MILL),...(params.xflour||[]),...Object.keys(stock),...days.flatMap(([,x])=>Object.keys(x))]);
-  const rows=[...fl].map(f=>{const B=bagOf(f),now=stockNow(f,today);let need=0,left=now,until=null;
+  const rows=[...fl].map(f=>{const B=bagOf(f),now=stockNow(f,today),res=(ORD_VITAL[f]||0)*B;let need=0,left=now-res,until=null;
     days.forEach(([d,x])=>{const u=x[f]||0;if(d<=end)need+=u;if(until===null&&u>0){left-=u;if(left<0)until=d;}});
-    const q=Math.max(0,Math.ceil((need-Math.max(0,now))/B-1e-9));return {f,B,now,need,q,until,counted:stockD[f]};});
+    const q=Math.max(0,Math.ceil((need+res-Math.max(0,now))/B-1e-9));return {f,B,now,need,q,until,counted:stockD[f]};});
   rows.sort((a,b)=>(b.q-a.q)||((a.until||"9")<(b.until||"9")?-1:1));return {rows,N,end};}
 const dfmt=d=>{const x=parse(d),w=["dim.","lun.","mar.","mer.","jeu.","ven.","sam."][x.getDay()];return w+" "+x.getDate()+" "+MOISC[x.getMonth()];};
-// Date de l'alerte : première farine vide − délai (livraison + marge) ; après une commande copiée, pas d'alerte avant 3 semaines (livraison et nouveau comptage)
-const ordL=()=>params.ordL??10;
-function ordCalc(){const today=iso(new Date()),{rows}=orderRows(today),r=rows.filter(x=>x.until).sort((a,b)=>a.until<b.until?-1:1)[0];
-  const o={...(ordA.last?{last:ordA.last}:{})};if(!r)return o;let d=addDays(r.until,-Math.round(ordL()));if(ordA.last&&addDays(ordA.last,21)>d)d=addDays(ordA.last,21);
+// Livraison le mardi précédant la première rupture ; alerte (mail au moulin) une semaine avant ce mardi ; après une commande copiée, pas d'alerte avant 3 semaines (livraison et nouveau comptage)
+// Farines dont la rupture est acceptable (remplacée par le khorasan) : pas d'alerte
+const ORD_SKIP=["Froment T80 ancien"];
+const ordL=()=>params.ordL??7;
+function ordCalc(){const today=iso(new Date()),{rows}=orderRows(today);
+  const r=rows.filter(x=>x.until&&!ORD_SKIP.includes(x.f)).map(x=>{const g=parse(x.until).getDay(),liv=addDays(x.until,-(((g-2+7)%7)||7));return {...x,liv,due:addDays(liv,-Math.round(ordL()))};}).sort((a,b)=>a.due<b.due?-1:1)[0];
+  const o={...(ordA.last?{last:ordA.last}:{})};if(!r)return o;let d=r.due;if(ordA.last&&addDays(ordA.last,21)>d)d=addDays(ordA.last,21);
   // Date déjà passée : on garde l'alerte en cours (7 jours au plus), sinon elle part aujourd'hui
   if(d<today)d=ordA.d&&ordA.d<=today&&ordA.d>=addDays(today,-6)?ordA.d:today;
-  const x=parse(d);o.d=d;o.at=new Date(x.getFullYear(),x.getMonth(),x.getDate(),8).getTime();o.txt=`${r.f} vide le ${dfmt(r.until)} : commande à passer`;return o;}
+  const x=parse(d);o.d=d;o.at=new Date(x.getFullYear(),x.getMonth(),x.getDate(),8).getTime();o.txt=`Mail au moulin pour une livraison le ${dfmt(r.liv)} (${r.f} ${ORD_VITAL[r.f]?"réserve entamée":"vide"} le ${dfmt(r.until)})`;return o;}
 let ordT=null;const ordUpdate=()=>{clearTimeout(ordT);ordT=setTimeout(()=>{try{const o=ordCalc();if(JSON.stringify(o)!==JSON.stringify(ordA)){ordA=o;save();}ordBadge();}catch(e){}},2500);};
 const ordBadge=()=>{const b=document.getElementById("stockBtn");if(b)b.classList.toggle("due",!!ordA.d&&ordA.d<=iso(new Date()));};
 function renderOrder(){const el=document.getElementById("order");if(!el)return;
   const today=iso(new Date()),{rows,N,end}=orderRows(today);
   const cost=rows.reduce((s,r)=>{const p=ingPrice(r.f);return s+(p?r.q*r.B*p:0);},0),nb=rows.reduce((s,r)=>s+r.q,0);
-  el.innerHTML=`<div class="list">`+rows.map(r=>`<div class="row"><div class="name"><b>${r.f}</b>${MILL[r.f]?`<small style="display:block;font-size:12px">${MILL[r.f][0]}</small>`:""}<small>${r.counted||stock[r.f]?`≈ <b style="display:inline;font-size:13px">${num(Math.max(0,r.now)/r.B)} sac${r.now/r.B>=2?"s":""}</b> aujourd'hui · `:""}${r.until?`<span class="${r.until<=end?"warn":""}">vide le ${dfmt(r.until)}</span>`:r.need>.05?"tient 8 sem. et +":"pas utilisée ces 5 sem."}<br>besoin ${num(r.need)} kg · <button class="linkbtn" style="font-size:13px;padding:0" data-bag="${r.f}">sac de ${num(r.B)} kg</button></small></div>
+  el.innerHTML=`<div class="list">`+rows.map(r=>`<div class="row"><div class="name"><b>${r.f}</b>${MILL[r.f]?`<small style="display:block;font-size:12px">${MILL[r.f][0]}</small>`:""}<small>${r.counted||stock[r.f]?`≈ <b style="display:inline;font-size:13px">${num(Math.max(0,r.now)/r.B)} sac${r.now/r.B>=2?"s":""}</b> aujourd'hui · `:""}${r.until?`<span class="${r.until<=end?"warn":""}">${ORD_VITAL[r.f]?"réserve entamée":"vide"} le ${dfmt(r.until)}</span>`:r.need>.05?"tient 8 sem. et +":"pas utilisée ces 5 sem."}<br>besoin ${num(r.need)} kg · <button class="linkbtn" style="font-size:13px;padding:0" data-bag="${r.f}">sac de ${num(r.B)} kg</button></small></div>
     <span class="pin ost"><input data-stock="${r.f}" inputmode="decimal" value="${fmtIn(stock[r.f]||0,1)}" aria-label="Sacs comptés ${r.f}"><em>${r.counted?"compté "+parse(r.counted).getDate()+"/"+(parse(r.counted).getMonth()+1):"compté"}</em></span>
     <div class="oq${r.q?"":" z"}">${r.q}</div></div>`).join("")
     +`<div class="row catot"><div class="name"><b>À commander</b><small>pour ${N} semaine${N>1?"s":""} à partir de demain · ${eur0(cost)} HT environ</small></div><div class="oq">${nb}<small style="font-size:14px;color:var(--muted);font-weight:500"> sacs</small></div></div></div>
