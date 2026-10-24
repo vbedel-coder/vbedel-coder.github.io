@@ -1,5 +1,5 @@
 // Appelé toutes les 15 s : envoie une notification (avec sonnerie) à chaque minuteur terminé, puis la répète chaque minute pendant 5 min tant qu'il n'est pas arrêté.
-// Alerte de commande au moulin (calculée par l'appli, rubrique ordA) : une notification à 8 h le jour dit, répétée chaque matin pendant 7 jours tant que la commande n'est pas copiée.
+// Alerte de commande au moulin (calculée par l'appli, rubrique ordA) : une notification à 8 h le jour du mail (une semaine avant la livraison du mardi), répétée chaque matin pendant 7 jours tant que la commande n'est pas copiée.
 import webpush from "npm:web-push@3.6.7";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
