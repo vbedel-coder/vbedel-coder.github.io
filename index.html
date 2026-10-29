@@ -854,7 +854,13 @@ const doughW=id=>flat(itemsOf(id)).reduce((s,i)=>s+i.q,0);
 const WAUTO=id=>W[id];
 const Wv=id=>{id=bid(id);return ((params.w||{})[id])??WAUTO(id);};
 const lvF=k=>((params.lv||{})[k])??(LV[k]?LV[k].f:null);
-const prepItems=pid=>{const pp=PREPS[pid];if(pp.from){const its=recipeRaw(pp.from).filter(i=>!i.g&&i.n!==pp.minus),T=tsum(its);return its.map(i=>[i.n,T?i.q/T:0,{k:i.k,f:i.f,l:i.l}]);}const o=(params.prep||{})[pid]||{};return PREPS[pid].items.map(([n,f,x])=>[n,o[n]??f,x||{}]);};
+const prepItems=pid=>{const pp=PREPS[pid];if(pp.from){const its=recipeRaw(pp.from).filter(i=>!i.g&&i.n!==pp.minus),T=tsum(its);return its.map(i=>[i.n,T?i.q/T:0,{k:i.k,f:i.f,l:i.l}]);}const o=(params.prep||{})[pid]||{};const its=PREPS[pid].items.map(([n,f,x])=>[n,o[n]??f,x||{}]);
+  // Hydratation de la bouillie réglée à part (eau ÷ farine) : seule l'eau de la bouillie change ; sa farine et la pâte du pain restent identiques
+  const h=prepHOf(pid);if(h==null)return its;const fl=its.find(x=>x[2].k==="farine");return its.map(x=>x[0]==="Eau"?[x[0],fl[1]*h,x[2]]:x);};
+// Bouillies à une seule farine + eau : hydratation réglable séparément
+const prepHable=pid=>{const pp=PREPS[pid];if(!pp||pp.from)return false;const it=pp.items;return it.length===2&&it.some(x=>x[2]&&x[2].k==="farine")&&it.some(x=>x[0]==="Eau");};
+const prepHOf=pid=>prepHable(pid)?((params.prepH||{})[pid]??null):null;
+const prepHNow=pid=>{const its=prepItems(pid),fl=its.find(x=>x[2].k==="farine"),w=its.find(x=>x[0]==="Eau");return fl&&fl[1]?w[1]/fl[1]:0;};
 const rqOf=(id,key,def)=>(((params.rq||{})[id]||{})[key])??def;
 const recipeRaw=id=>R[id].items.map(i=>{
   if(i.prep){const Q=rqOf(id,"g:"+i.g,i.q);return {g:i.g,prep:i.prep,q:Q,items:prepItems(i.prep).map(([n,f,x])=>({n,q:f*Q,...x}))};}
@@ -1203,6 +1209,7 @@ function onPeseesClick(e){const b=e.target.closest("button");if(!b)return;e.prev
   if(b.dataset.hydedit&&/ \(direct\)\|levain$/.test(b.dataset.hydedit)){const d=b.dataset.hydedit.split("::")[0].split("+").find(x=>R[x]&&R[x].base);if(!d)return;const base=R[d].base;
     ask(`Levain direct ${R[base].name} (% de la farine)`,fmtIn(levRatio(d),100)).then(n=>{if(n==null)return;const v=+String(n).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<=0||v>=100)return;params.dlv=params.dlv||{};if(Math.abs(v/100-dlvDef(base))<.0005)delete params.dlv[base];else params.dlv[base]=v/100;save();renderResults();});return;}
   if(b.dataset.hydedit){editHyd=editHyd===b.dataset.hydedit?null:b.dataset.hydedit;renderResults();return;}
+  if(b.dataset.preph){const pid=b.dataset.preph,v=Math.max(0,Math.round((prepHNow(pid)*20+(+b.dataset.d)))/20);params.prepH={...(params.prepH||{}),[pid]:v};save();renderResults();return;}
   if(b.dataset.pid){const id=b.dataset.pid,key=b.dataset.pkey,pi=pctOfKey(id,key);if(!pi)return;const st=pctStep(pi.p);
     const np=Math.max(0,Math.round((pi.p+st*(+b.dataset.d))/st)*st);
     if(R[id].base){if(!np)return;const base=R[id].base,v=levRatio(id)*np/pi.p;params.dlv=params.dlv||{};if(Math.abs(v-dlvDef(base))<.0005)delete params.dlv[base];else params.dlv[base]=v;save();renderResults();return;}
@@ -1312,7 +1319,7 @@ function onSettingsClick(e){const cl=e.target.closest("button[data-cclink]");if(
   const bk=e.target.closest("button[data-bk]");if(bk){if(bk.dataset.bk==="out")exportAll();else importAll();return;}
   const b=e.target.closest("button[data-reset]");if(!b)return;e.preventDefault();const k=b.dataset.reset,a=b.dataset.a;ask(k==="act"?"Remettre les encaissements Qonto d'origine ?":"Revenir aux valeurs d'origine ?").then(ok=>{if(!ok)return;
   if(k==="lv")delete params.lv;else if(k==="misc"){delete params.w;delete params.focKg;delete params.batch;delete params.obj;delete params.objM;delete params.loss;delete params.ordW;delete params.bag;delete params.bagF;}else if(k==="sale"){delete params.sale;delete params.tva;}else if(k==="price")delete params.price;else if(k==="act")delete params.act;else if(k==="adj"){delete params.adjM;delete params.adjT;delete params.adjH;delete params.holR;delete params.adjP1;delete params.adjP2;delete params.adjH2;delete params.rules;}else if(k==="fix"){delete params.fix;delete params.pay;delete params.matr;}
-  else if(params[k])delete params[k][a];
+  else if(params[k])delete params[k][a];if(k==="prep"&&params.prepH){delete params.prepH[a];if(!Object.keys(params.prepH).length)delete params.prepH;}
   save();tab==="R"?renderProfit():renderSettings();});}
 // ---- Rentabilité ----
 function costOf(id){let c=0;const miss=new Set();
@@ -1435,7 +1442,10 @@ function renderWeekly(){
       +items.map(x=>`<tr class="${x.k||""}"><td>${x.n}</td><td class="q">${fmt(x.q)}</td></tr>`).join("")
       +`<tr class="tot"><td>Total</td><td class="q">${fmt(tot)}</td></tr></table></details>`;}).join("");
 }
-const prepSub=its=>{const T=its.reduce((a,b)=>a+b.q,0);if(!T)return "";return `<tr class="psub"><td colspan="2"><div class="lvs">${its.map(x=>`<div><em>${x.n} ${Math.round(x.q/T*100)} %</em><b>${fmt(x.q)}</b></div>`).join("")}</div></td></tr>`;};
+const prepSub=(its,pid)=>{const T=its.reduce((a,b)=>a+b.q,0);if(!T)return "";const hb=pid&&prepHable(pid),fq=hb?(its.find(x=>x.k==="farine")||{}).q:0,ed=editHyd==="prepH:"+pid;
+  const lab=x=>hb&&x.n==="Eau"&&fq?`Eau ${Math.round(x.q/fq*100)} %<button class="gear" data-hydedit="prepH:${pid}" aria-label="Hydratation de la bouillie">${ed?"✓":"⚙︎"}</button>`:`${x.n} ${Math.round(x.q/T*100)} %`;
+  return `<tr class="psub"><td colspan="2"><div class="lvs">${its.map(x=>`<div><em>${lab(x)}</em><b>${fmt(x.q)}</b></div>`).join("")}</div></td></tr>`
+    +(ed?`<tr class="hyd on"><td colspan="2"><div class="hyrow"><span>Hydratation de la bouillie</span><span class="hy"><button data-preph="${pid}" data-d="-1" aria-label="Moins">−</button><b>${Math.round(prepHNow(pid)*100)} %</b><button data-preph="${pid}" data-d="1" aria-label="Plus">+</button></span></div></td></tr>`:"");};
 function renderResults(){
   renderWeekly();
   const pr=production(pday);const active=Object.keys(pr).filter(id=>pr[id].q>0);
@@ -1467,7 +1477,7 @@ function renderResults(){
     const rows=cardRows(card,[...items.map(i=>{const key=i.n+"|"+(i.k||""),t=card+"::"+key,isF=i.k==="farine";
       const own=null;
       return {key,html:mv=>`<tr class="${i.k||""}"><td>${i.n}${gFl&&(!isF||nF>1)?ptag(t,own??i.q/gFl,!isF):""}${eurBtn(t,i)}</td><td class="q">${fmt(i.q)}${mv}</td></tr>`+priceRow(t,i,i.q)+(editHyd===t?g.filter(id=>itemsOf(id).some(x=>ikey(x)===key)).map(id=>pctCtl(id,key,R[id].name)).join(""):"")};}),
-      ...subs.map(x=>({key:"g:"+x.g,html:mv=>`<tr class="grp"><td>${x.g}${gFl?ptag(card+"::g:"+x.g,x.items.reduce((a,b)=>a+b.q,0)/gFl,true):""}</td><td class="q">${fmt(x.items.reduce((a,b)=>a+b.q,0))}${mv}</td></tr>`+prepSub(x.items)+(editHyd===card+"::g:"+x.g?g.filter(id=>itemsOf(id).some(z=>ikey(z)==="g:"+x.g)).map(id=>pctCtl(id,"g:"+x.g,R[id].name)).join(""):"")+""}))]);
+      ...subs.map(x=>({key:"g:"+x.g,html:mv=>`<tr class="grp"><td>${x.g}${gFl?ptag(card+"::g:"+x.g,x.items.reduce((a,b)=>a+b.q,0)/gFl,true):""}</td><td class="q">${fmt(x.items.reduce((a,b)=>a+b.q,0))}${mv}</td></tr>`+prepSub(x.items,Object.keys(PREPS).find(k=>PREPS[k].name===x.g))+(editHyd===card+"::g:"+x.g?g.filter(id=>itemsOf(id).some(z=>ikey(z)==="g:"+x.g)).map(id=>pctCtl(id,"g:"+x.g,R[id].name)).join(""):"")+""}))]);
     const split=g.map(id=>{const t=flat(itemsOf(id)).reduce((s,i)=>s+i.q,0)*pr[id].q;return `<tr class="sub"><td>${R[id].name} × ${num(pr[id].q)}</td><td class="q">${fmt(t)}</td></tr>`;}).join("");
     return `<details class="card" open data-ids="${g.join(" ")}"><summary><b>${g.map(id=>R[id].name+" × "+num(pr[id].q)).join(" + ")}</b><span>${fmt(tot)}${tmBtn(g.join("+"),g.map(id=>R[id].name).join(" + "))}<button class="totop" aria-label="Remonter au programme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M6 11l6-6l6 6"/></svg></button></span></summary><table>${rows}${orderRow(card,g.map(id=>ptile(R[id].name,fmt(doughW(id)),"",id)).join(""))}</table></details>`;};
   const singleCard=id=>{const h=singleCard0(id);return R[id].base?h.replace(/<button class="(gear|iconbtn)[^"]*" data-(hydedit|pedit|edit)="([^"]*)"[^>]*>[\s\S]*?<\/button>/g,(m,c,k,v)=>k==="hydedit"&&/\|levain$/.test(v)?m:""):h;};
@@ -1478,7 +1488,7 @@ function renderResults(){
     const rows=cardRows(id,itemsOf(id).map(i=>{
       if(i.g){const sub=i.items.reduce((s,x)=>s+x.q,0)*n;tot+=sub;
         const fl=flourOf(id),t=id+"::g:"+i.g;
-        return {key:"g:"+i.g,html:mv=>`<tr class="grp"><td>${i.g}${fl?ptag(t,i.q/fl,true):""}</td><td class="q">${fmt(sub)}${mv}</td></tr>`+(PREPS[i.prep].from&&pepN?"":prepSub(i.items.map(x=>({n:x.n,q:x.q*n}))))+(editHyd===t?pctCtl(id,"g:"+i.g):"")+""};}
+        return {key:"g:"+i.g,html:mv=>`<tr class="grp"><td>${i.g}${fl?ptag(t,i.q/fl,true):""}</td><td class="q">${fmt(sub)}${mv}</td></tr>`+(PREPS[i.prep].from&&pepN?"":prepSub(i.items.map(x=>({n:x.n,q:x.q*n,k:x.k})),i.prep))+(editHyd===t?pctCtl(id,"g:"+i.g):"")+""};}
       const fl=flourOf(id),key=i.n+"|"+(i.k||""),t=id+"::"+key,isF=i.k==="farine",multiF=itemsOf(id).filter(x=>!x.g&&x.k==="farine").length>1;
       const ad=id==="brioche"?(pepAdd[key]||0):0;tot+=i.q*n;xt+=ad;return {key,html:mv=>`<tr class="${i.k||""}"><td>${i.n}${fl&&(!isF||multiF)?ptag(t,i.q/fl,!isF):""}${eurBtn(t,i)}</td><td class="q">${fmt(i.q*n+ad)}${mv}</td></tr>`+priceRow(t,i,i.q*n)+(editHyd===t?pctCtl(id,key):"")};}));
     return `<details class="card" open data-ids="${id}"><summary><b>${r.name} × ${num(n)}</b><span>${fmt(tot+xt)}${tmBtn(id,r.name)}<button class="totop" aria-label="Remonter au programme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M6 11l6-6l6 6"/></svg></button></span></summary><table>${rows}${xt?`<tr class="grp"><td>Pâte pour ${R.brioPep.name} × ${num(pepN)}</td><td class="q">${fmt(xt)}</td></tr>`:""}${orderRow(id,ptile(BATCH[id]?"par pièce":"par "+r.unit,fmt(BATCH[id]?tot/(n*batchSize(id)):tot/n),BATCH[id]?`${batchSize(id)} pièces par fournée`:r.split?`${r.split} × ${fmt(tot/n/r.split)}`:"",id))}</table></details>`;};
