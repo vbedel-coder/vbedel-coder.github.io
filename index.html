@@ -868,7 +868,9 @@ const recipeRaw=id=>R[id].items.map(i=>{
 const ikey=i=>i.g?"g:"+i.g:i.n+"|"+(i.k||"");
 // Recette à poids fixe (ex. focaccia : plaque de 3 kg) : on garde les proportions et on ajuste tout, sauf les ingrédients « keep » (olives)
 const tsum=list=>list.reduce((s,i)=>s+i.q,0);
-const scaleF=(id,list)=>{const T=R[id].target;if(!T)return 1;const keep=tsum(list.filter(i=>i.keep)),rest=tsum(list)-keep;return rest>0?(T-keep)/rest:1;};
+// Poids réel d'une ligne : une préparation pèse la somme de ses ingrédients (ex. bouillie plus hydratée = plus lourde)
+const wOf=i=>i.g&&i.items?tsum(i.items):i.q;
+const scaleF=(id,list)=>{const T=R[id].target;if(!T)return 1;const keep=list.filter(i=>i.keep).reduce((s,i)=>s+wOf(i),0),rest=list.reduce((s,i)=>s+wOf(i),0)-keep;return rest>0?(T-keep)/rest:1;};
 const applyScale=(list,f)=>f===1?list:list.map(i=>i.keep?i:(i.g?{...i,q:i.q*f,items:i.items.map(x=>({...x,q:x.q*f}))}:{...i,q:i.q*f}));
 const itemsRawOf=id=>{if(R[id].base)return directOf(itemsRawOf(R[id].base),R[id].base);const rm=removed[id]||[];return recipeRaw(id).filter(i=>!rm.includes(ikey(i)));};
 // Levain/farine (farines de la pâte + des préparations) × 1,25 ; le reste baisse d'autant pour garder le même pâton
