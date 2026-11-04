@@ -1070,10 +1070,13 @@ function renderSalesHint(){
 // ---- Relevé des livraisons pro (poids livrés, pour moi) ----
 const blOf=(c,dt)=>((deliv[c.id]||{})[dt])??((BL0[c.id]||{})[dt])??null;
 const blPlan=(c,dt)=>{const wd=wdOf(dt);if(!wd)return {};const o={};Object.keys(R).forEach(id=>{if(!RULE[id]||R[id].base)return;const q=cq(c,dt,id);if(q>0)o[id]=q;});return o;};
+// Livraison passée sans relevé : on reprend ce qui a été produit (pains × poids d'un pain, focaccia en kg), corrigé ensuite à la main
+const blEst=(c,dt)=>{const o={};Object.entries(blPlan(c,dt)).forEach(([id,q])=>{o[id]=Math.round((id==="focaccia"?q:q*Wv(id))*1000)/1000;});return o;};
 const kgIn=v=>v==null||v===""?"":String(Math.round(v*1000)/1000).replace(".",",");
 function renderBL(c){const el=document.getElementById("blView");
   const today=iso(new Date());if(!blMonth)blMonth=today.slice(0,7);
   const [y,m]=blMonth.split("-").map(Number),first=blMonth+"-01",last=iso(new Date(y,m,0));
+  {let ch=false;for(let d=first;d<=last&&d<=today;d=addDays(d,1)){if(blOf(c,d)||isClosed(d))continue;const est=blEst(c,d);if(Object.keys(est).length){(deliv[c.id]=deliv[c.id]||{})[d]=est;ch=true;}}if(ch)save();}
   const days=[];for(let d=first;d<=last;d=addDays(d,1)){const rec=blOf(c,d),pl=d<=addDays(today,7)?blPlan(c,d):{};if(rec||Object.keys(pl).length)days.push([d,rec||{},pl]);}
   const tot={};days.forEach(([,rec])=>Object.entries(rec).forEach(([id,v])=>{if(v)tot[id]=(tot[id]||0)+v;}));
   const prod=id=>R[id]?R[id].name:id.startsWith("x:")?id.slice(2):id;
