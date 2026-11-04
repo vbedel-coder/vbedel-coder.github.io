@@ -83,3 +83,15 @@ begin
 end $$;
 revoke all on function public.place_order(date,text,text,text,jsonb,text) from public;
 grant execute on function public.place_order(date,text,text,text,jsonb,text) to anon, authenticated;
+
+-- ---- Relevé des livraisons pro pour la facture mensuelle (tâche automatique Claude) ----
+-- Lecture seule, protégée par un jeton dont seule l'empreinte SHA-256 est ici ; le jeton est gardé dans la tâche automatique.
+create or replace function public.releve_pro(p_token text) returns jsonb language sql stable security definer set search_path=public as $$
+  select case when encode(sha256(convert_to(coalesce(p_token,''),'UTF8')),'hex')='931f95d7eb20415837b1133feab767c496eff1ac3cfb852eb908eba7a79e4edb' then
+    (select jsonb_build_object('deliv',coalesce(s.data->'deliv','{}'::jsonb),'clients',coalesce(s.data->'clients','[]'::jsonb),'w',coalesce(s.data->'params'->'w','{}'::jsonb),
+      'closed',coalesce((select jsonb_agg(k) from jsonb_each(coalesce(s.data->'ca','{}'::jsonb)) e(k,v) where (v->>'closed')::boolean),'[]'::jsonb),'updated_at',s.updated_at)
+     from public.state s where s.id=public.vivant_owner())
+  else null end
+$$;
+revoke all on function public.releve_pro(text) from public;
+grant execute on function public.releve_pro(text) to anon, authenticated, service_role;
