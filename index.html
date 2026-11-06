@@ -394,7 +394,7 @@ const R = {
     {n:"Eau",q:0.3486},{n:"Sel",q:0.0113},
     {n:"Levain de seigle",q:0.113,k:"levain",l:"Seigle"},
     {g:"Bouillie de sarrasin",prep:"bouillieSarrasin",q:0.2179}]},
-  focaccia:{name:"Focaccia",unit:"plaque",target:3,days:["Mar","Mer","Jeu","Ven","Sam"],items:[
+  focaccia:{name:"Focaccia",unit:"plaque",target:3.75,days:["Mar","Mer","Jeu","Ven","Sam"],items:[
     {n:"Froment T80",q:.755,k:"farine",f:"Froment T80"},
     {n:"Froment T65",q:.755,k:"farine",f:"Froment T65"},
     {n:"Eau",q:1.0815},{n:"Sel",q:.0302},
@@ -514,12 +514,16 @@ const DIRECT={froment:1,graine:1,blesAnciens:1,fss:1}, LV_DIRECT=1.25;
 const HIDDEN={campagne:1,campagneGraines:1};
 Object.keys(DIRECT).forEach(b=>{const d=b+"D";R[d]={unit:R[b].unit,items:R[b].items,base:b};Object.defineProperty(R[d],"name",{get(){return R[b].name+" (direct)";},set(){},enumerable:true});RULE[d]="J0";});
 const bid=id=>(R[id]&&R[id].base)||id;
-// Focaccia vendue au kg, par demi-plaque : 1,3 kg = ½ plaque, 2,6 kg = 1 plaque
-const FOC=1.3, snapF=v=>Math.round(Math.round(v/FOC)*FOC*10)/10;
+// Focaccia vendue au kg, par demi-plaque. Plaque +25 % à partir du 10/11/2026 : 1,625 kg = ½ plaque, 3,25 kg = 1 plaque (avant : 1,3 et 2,6).
+// Les quantités saisies avant cette date restent en ancien kg ; reprises après, elles sont converties (même nombre de plaques).
+const FOC_D="2026-11-10",FOC_R=1.25,FOC=1.625;
+const focH=date=>date&&date<FOC_D?FOC/FOC_R:FOC;
+const focConv=(id,v,from,to)=>id==="focaccia"&&from<FOC_D&&!(to<FOC_D)?v*FOC_R:v;
+const snapF=(v,date)=>{const h=focH(date);return Math.round(Math.round(v/h)*h*1000)/1000;};
 const SALE_UNIT={focaccia:"kg"}, SALE_STEP={focaccia:FOC,canele:6};
 // Produits faits par fournées entières (canelé : 1 fournée = 1 litre de lait). La pâte restante sert le surlendemain.
 const BATCH={canele:48};
-const TO_PROD={focaccia:v=>v/focKg()};   // focaccia : kg vendus ÷ kg par plaque = plaques
+const TO_PROD={focaccia:(v,date)=>v/focKg(date)};   // focaccia : kg vendus ÷ kg par plaque = plaques
 const SALES0={
   Mar:{froment:10,graine:8,epeautre:8,riz:2,blesAnciens:8,fss:8,focaccia:2.6,mie:8,canele:30},
   Mer:{epeautre:6,riz:2,blesAnciens:8,fss:8,froment:10,graine:8,focaccia:2.6,mie:6,brioche:4,canele:30},
@@ -581,7 +585,7 @@ let removed=store.get("v11-removed")||{}; // ingrédients retirés par recette {
 const normD=d=>{if(!d||typeof d!=="object")return {};const o={};const best=Array.isArray(d.all)?d.all:Object.values(d).filter(Array.isArray).sort((a,b)=>b.length-a.length)[0];if(best)o.all=best;
   if(d.d&&typeof d.d==="object"){const x=Object.fromEntries(Object.entries(d.d).filter(e=>Array.isArray(e[1])));if(Object.keys(x).length)o.d=x;}return o;};
 let dorder=normD(store.get("v12-dorder"));
-let params=store.get("v13-params")||{};const NAME0=Object.fromEntries(Object.entries(R).map(([k,v])=>[k,v.name]));const migBrioche=()=>{if(params.sale&&params.sale.brioche!=null&&params.sale.brioche<15)delete params.sale.brioche;const sq=(params.rq||{}).seigle;if(sq&&sq["Eau|"]===0.3816)delete sq["Eau|"];};migBrioche();const applyNames=()=>{Object.keys(R).filter(k=>!R[k].base).forEach(k=>{R[k].name=((params.names||{})[k])||NAME0[k];});};applyNames(); // hypothèses modifiées {lv:{type:frac}, prep:{id:{ingr:frac}}, rq:{recette:{clé:kg}}, w:{pain:kg}, focKg}
+let params=store.get("v13-params")||{};const NAME0=Object.fromEntries(Object.entries(R).map(([k,v])=>[k,v.name]));const migBrioche=()=>{if(params.focKg===2.6)delete params.focKg;if(params.sale&&params.sale.brioche!=null&&params.sale.brioche<15)delete params.sale.brioche;const sq=(params.rq||{}).seigle;if(sq&&sq["Eau|"]===0.3816)delete sq["Eau|"];};migBrioche();const applyNames=()=>{Object.keys(R).filter(k=>!R[k].base).forEach(k=>{R[k].name=((params.names||{})[k])||NAME0[k];});};applyNames(); // hypothèses modifiées {lv:{type:frac}, prep:{id:{ingr:frac}}, rq:{recette:{clé:kg}}, w:{pain:kg}, focKg}
 // Chiffre d'affaires saisi par jour {AAAA-MM-JJ:{cb,esp,x (autre caisse),z (ticket Z)}} ; CA0 = reprise de l'onglet « CA 2026 »
 const CA0={"2026-01-02":{"cb":314.67,"z":317.63,"x":45.0},"2026-01-03":{"cb":199.18,"esp":20.0,"z":219.37,"x":35.0},"2026-01-06":{"cb":333.19,"esp":50.0,"z":383.49,"x":55.0},"2026-01-07":{"cb":462.0,"z":460.0,"x":45.0},"2026-01-08":{"cb":338.72,"z":317.86,"x":5.0},"2026-01-09":{"cb":449.59,"z":444.05,"x":40.0},"2026-01-10":{"cb":384.43,"esp":10.0,"z":393.6,"x":25.0},"2026-01-13":{"cb":418.74,"esp":35.0,"z":454.11,"x":10.0},"2026-01-14":{"cb":429.62,"z":421.76,"x":20.0},"2026-01-15":{"cb":348.0,"z":348.33,"x":55.0},"2026-01-16":{"cb":390.31,"esp":20.0,"z":410.65,"x":40.0},"2026-01-17":{"cb":247.02,"esp":20.0,"z":265.48,"x":30.0},"2026-01-20":{"cb":413.72,"z":413.43,"x":50.0},"2026-01-21":{"cb":373.65,"z":371.59,"x":60.0},"2026-01-22":{"cb":340.37,"esp":10.0,"z":348.14,"x":50.0},"2026-01-23":{"cb":391.84,"esp":25.0,"z":418.26,"x":40.0},"2026-01-24":{"cb":393.74,"z":386.56,"x":60.0},"2026-01-27":{"cb":423.19,"z":422.33,"x":45.0},"2026-01-28":{"cb":406.64,"esp":10.0,"z":415.81,"x":40.0},"2026-01-29":{"cb":359.64,"z":361.64,"x":20.0},"2026-01-30":{"cb":422.88,"esp":10.0,"z":432.79,"x":60.0},"2026-01-31":{"cb":396.74,"z":396.77,"x":15.0},"2026-02-03":{"cb":362.81,"z":362.94,"x":60.0},"2026-02-04":{"cb":378.71,"z":352.15,"x":20.0},"2026-02-05":{"cb":385.52,"z":385.42,"x":20.0},"2026-02-06":{"cb":351.26,"z":357.09,"x":50.0},"2026-02-07":{"cb":431.03,"z":413.97,"x":40.0},"2026-02-10":{"cb":379.75,"z":379.74,"x":90.0},"2026-02-11":{"cb":352.18,"esp":30.0,"z":379.36,"x":20.0},"2026-02-12":{"cb":381.09,"esp":5.0,"z":387.09,"x":15.0},"2026-02-13":{"cb":502.49,"z":490.8,"x":75.0},"2026-02-14":{"cb":367.83,"esp":20.0,"z":387.37,"x":20.0},"2026-02-17":{"cb":292.05,"x":30.0},"2026-02-18":{"cb":429.26,"esp":10.0,"z":438.99,"x":35.0},"2026-02-19":{"cb":328.16,"esp":5.0,"z":332.04,"x":10.0},"2026-02-20":{"cb":508.7,"z":510.93,"x":40.0},"2026-02-21":{"cb":394.38,"esp":30.0,"z":422.81,"x":40.0},"2026-02-24":{"cb":293.1,"esp":40.0,"z":335.57,"x":40.0},"2026-02-25":{"cb":257.21,"z":252.01,"x":45.0},"2026-02-26":{"cb":420.73,"esp":30.0,"z":451.67,"x":40.0},"2026-02-27":{"cb":345.74,"z":345.49,"x":40.0},"2026-02-28":{"cb":380.16,"esp":10.0,"z":373.33},"2026-03-03":{"cb":294.57,"z":291,"x":60.0},"2026-03-04":{"cb":313.88,"esp":10.0,"z":326.75,"x":35.0},"2026-03-05":{"cb":365.79,"z":365.85,"x":35.0},"2026-03-06":{"cb":379.66,"esp":5.0,"z":385.6,"x":60.0},"2026-03-07":{"cb":374.42,"esp":10.0,"z":386.22,"x":55.0},"2026-03-10":{"cb":400.7,"esp":55.0,"z":458.09,"x":20.0},"2026-03-11":{"cb":475.99,"esp":60.0,"z":534.54,"x":30.0},"2026-03-12":{"cb":448.9,"esp":60.0,"z":508.17,"x":15.0},"2026-03-13":{"cb":500.0,"esp":70.0,"z":572.43,"x":20.0},"2026-03-14":{"cb":448.96,"esp":15.0,"z":462.95,"x":40.0},"2026-03-17":{"cb":408.95,"z":404.39,"x":20.0},"2026-03-18":{"cb":462.38,"esp":10.0,"z":475.45},"2026-03-19":{"cb":480.1,"esp":40.0},"2026-03-20":{"cb":505.35,"esp":10.0,"z":515.16,"x":20.0},"2026-03-21":{"cb":409.35,"esp":30.0,"z":439.12,"x":40.0},"2026-03-24":{"cb":400.77,"esp":5.0,"z":404.35,"x":45.0},"2026-03-25":{"cb":492.11,"esp":30.0,"z":521.56},"2026-03-26":{"cb":507.07,"esp":15.0,"z":521.37,"x":40.0},"2026-03-27":{"cb":539.73,"esp":55.0,"z":595.11,"x":40.0},"2026-03-28":{"cb":503.0,"esp":25.0,"z":530.13},"2026-03-31":{"cb":432.27,"esp":30.0,"z":460.14},"2026-04-01":{"cb":443.69,"z":428.91},"2026-04-02":{"cb":417.72,"esp":10.0,"z":427.01,"x":15.0},"2026-04-03":{"cb":551.99,"esp":5.0,"z":556.04,"x":40.0},"2026-04-04":{"cb":363.57,"esp":10.0,"z":373.02},"2026-04-07":{"cb":413.96,"z":414.33,"x":65.0},"2026-04-08":{"cb":451.65,"z":439.63,"x":40.0},"2026-04-09":{"cb":404.64,"z":397.12,"x":40.0},"2026-04-10":{"cb":511.03,"z":497.28,"x":30.0},"2026-04-11":{"cb":388.08,"z":384.58,"x":50.0},"2026-04-14":{"cb":386.64,"z":377.93,"x":30.0},"2026-04-15":{"cb":437.63,"esp":10.0,"z":444.93},"2026-04-16":{"cb":361.51,"z":359.37,"x":40.0},"2026-04-17":{"cb":361.77,"esp":15.0,"z":376.6,"x":60.0},"2026-04-18":{"cb":368.29,"esp":20.0,"z":389.64,"x":40.0},"2026-04-21":{"cb":338.28,"esp":30.0,"z":369.66},"2026-04-22":{"cb":301.64,"esp":30.0,"z":328.99},"2026-04-23":{"cb":280.0,"z":284.74,"x":5.0},"2026-04-24":{"cb":347.02,"esp":10.0,"z":358.15,"x":50.0},"2026-04-25":{"cb":248.39,"z":243.0,"x":60.0},"2026-04-28":{"cb":272.27,"esp":25.0,"z":299.31},"2026-04-29":{"cb":256.2,"z":235.06,"x":5.0},"2026-04-30":{"cb":446.39,"z":449.67,"x":80.0},"2026-05-05":{"cb":443.41,"z":443.28,"x":55.0},"2026-05-06":{"cb":507.31,"z":507.0,"x":60.0},"2026-05-07":{"cb":488.19,"z":470.71,"x":5.0},"2026-05-08":{"cb":387.2,"z":379.14,"x":30.0},"2026-05-09":{"cb":252.44,"z":250.56,"x":45.0},"2026-05-12":{"cb":469.68,"z":469.32,"x":20.0},"2026-05-13":{"cb":303.09,"x":80.0},"2026-05-19":{"cb":448.18,"z":429.08,"x":30.0},"2026-05-20":{"cb":518.68,"esp":95.0,"z":612.84},"2026-05-21":{"cb":372.29,"z":371.22,"x":15.0},"2026-05-22":{"cb":409.3,"esp":60.0,"z":471.45,"x":30.0},"2026-05-23":{"cb":335.84,"esp":20.0,"z":353.93},"2026-05-26":{"cb":510.28,"z":510.32},"2026-05-27":{"cb":414.98,"esp":20.0,"z":437.89,"x":60.0},"2026-05-28":{"cb":408.36,"esp":15.0,"z":422.51,"x":10.0},"2026-05-29":{"cb":464.31,"z":464.46},"2026-05-30":{"cb":380.5,"esp":10.0,"z":385.31},"2026-06-02":{"cb":495.11,"z":478.3,"x":40.0},"2026-06-03":{"cb":375.99,"esp":30.0,"z":407.43,"x":10.0},"2026-06-04":{"cb":394.48,"esp":20.0,"z":423.04},"2026-06-05":{"cb":380.17,"z":379.34,"x":90.0},"2026-06-06":{"cb":454.89,"z":453.14,"x":20.0},"2026-06-09":{"cb":510.71,"z":510.54},"2026-06-10":{"cb":554.51,"z":554.84,"x":40.0},"2026-06-11":{"cb":454.98,"z":453.08,"x":30.0},"2026-06-12":{"cb":512.4,"z":513.9,"x":50.0},"2026-06-13":{"cb":382.77,"esp":20.0,"z":399.1},"2026-06-16":{"cb":491.48,"z":490.87,"x":40.0},"2026-06-17":{"cb":545.59,"z":526.91,"x":35.0},"2026-06-18":{"cb":316.59,"z":316.59,"x":40.0},"2026-06-19":{"cb":529.55,"esp":10.0,"z":541.33,"x":25.0},"2026-06-20":{"cb":431.59,"z":431.59,"x":35.0},"2026-06-23":{"cb":369.86,"z":370.19,"x":30.0},"2026-06-24":{"cb":326.44,"z":326.44,"x":70.0},"2026-06-25":{"cb":203.34,"z":201.93},"2026-06-26":{"cb":289.93,"z":285.12,"x":50.0},"2026-06-27":{"cb":371.14,"esp":15.0,"z":386.01,"x":20.0},"2026-06-30":{"cb":448.92,"z":452.58,"x":20.0},"2026-07-01":{"cb":418.03,"z":417.74,"x":25.0},"2026-07-02":{"cb":401.32,"esp":20.0,"z":421.39},"2026-07-03":{"cb":346.48,"esp":20.0,"z":369.78,"x":30.0},"2026-07-04":{"cb":420.91,"z":420.45},"2026-07-07":{"cb":454.42,"z":451.65,"x":25.0},"2026-07-08":{"cb":232.69,"z":227.23,"x":30.0},"2026-07-09":{"cb":357.51,"z":351.46,"x":20.0},"2026-07-10":{"cb":362.33,"z":355.71,"x":10.0},"2026-07-11":{"cb":217.34,"esp":20.0,"z":241.51,"x":30.0},"2026-07-15":{"cb":367.5,"z":370.98,"x":10.0},"2026-07-16":{"cb":314.18,"z":318.51,"x":45.0},"2026-07-17":{"cb":253.84,"esp":15.0,"z":268.76,"x":20.0},"2026-07-18":{"cb":326.57,"esp":30.0,"z":296.8,"x":15.0},"2026-07-21":{"cb":369.25,"z":370.0,"x":60.0},"2026-07-22":{"cb":303.24,"z":303.0,"x":40.0},"2026-07-23":{"cb":305.4,"z":293.33,"x":30.0},"2026-07-24":{"cb":329.01,"z":320.97,"x":10.0},"2026-07-25":{"cb":271.57,"z":279.13,"x":50.0},"2026-07-28":{"cb":226.37,"z":219.42,"x":25.0},"2026-07-29":{"cb":297.9,"z":299.92,"x":35.0},"2026-07-30":{"cb":295.82,"z":280.65},"2026-07-31":{"cb":291.26,"z":290.71,"x":60.0},"2026-08-01":{"cb":318.73,"z":316.19,"x":50.0},"2026-08-25":{"cb":308.02,"z":282.57,"x":20.0},"2026-08-26":{"cb":268.48,"z":268.28,"x":20.0},"2026-08-27":{"cb":260.02,"z":264.71,"x":50.0},"2026-08-28":{"cb":372.69,"z":372.14,"x":45.0},"2026-08-29":{"cb":436.55,"z":420.46,"x":20.0},"2026-09-01":{"cb":487.94,"z":487.25,"x":50.0},"2026-09-02":{"cb":456.47,"z":456.16,"x":50.0},"2026-09-03":{"cb":413.8,"esp":20.0,"z":437.66,"x":30.0},"2026-09-04":{"cb":410.16,"z":413.94,"x":60.0},"2026-09-05":{"cb":525.0,"z":494.49,"x":30.0},"2026-09-08":{"cb":467.14,"z":467.0,"x":35.0},"2026-09-09":{"cb":470.95,"z":470.95,"x":50.0},"2026-09-10":{"cb":402.46,"z":340.02,"x":65.0},"2026-09-11":{"cb":596.67,"z":596.7,"x":20.0},"2026-09-12":{"cb":397.77,"z":397.84,"x":60.0},"2026-09-15":{"cb":438.02,"z":438.88,"x":35.0},"2026-09-16":{"cb":540.1,"z":524.77,"x":45.0},"2026-09-17":{"cb":441.7,"z":417.27,"x":20.0},"2026-09-18":{"cb":472.68,"z":457.22,"x":20.0},"2026-09-19":{"cb":432.15,"z":432.15,"x":10.0},"2026-09-22":{"cb":455.08,"z":437.87,"x":65.0},"2026-09-23":{"cb":445.97,"esp":15.0,"z":461.79,"x":65.0},"2026-09-24":{"cb":408.59,"z":407.76,"x":35.0},"2026-09-25":{"cb":551.24,"z":547.16,"x":40.0},"2026-09-26":{"cb":486.06,"z":486.18,"x":10.0},"2026-09-29":{"cb":527.61,"z":530.84,"x":40.0},"2026-09-30":{"cb":520.99,"z":512.87,"x":50.0},"2026-10-01":{"cb":464.38,"z":464.38,"x":40.0},"2026-10-02":{"cb":547.18,"z":547.18,"x":30.0},"2026-10-03":{"cb":495.59,"esp":5.0,"z":504.08},"2026-10-06":{"cb":364.85,"z":364.62,"x":30.0},"2026-10-08":{"cb":390.7,"z":389.36,"x":40.0},"2026-10-09":{"cb":595.7,"esp":10.0,"z":609.74,"x":20.0},"2026-10-10":{"cb":521.27,"z":521.91,"x":25.0}};
 let ca=store.get("v16-ca")||{};
@@ -684,7 +688,7 @@ const ccP=()=>params.cc||{},ccW=()=>ccP().w??12;
 const ccOff=id=>!!(ccP().off||{})[id];
 const ccStep=id=>SALE_STEP[id]||1, ccMax=id=>id==="focaccia"?FOC*4:id==="canele"?48:10;
 // Poids indicatif (≈) : le pain est vendu à la pièce
-const ccLabel=id=>id==="focaccia"?"½ plaque · ≈ 1,3 kg":id==="canele"?"6 pièces":Wv(id)>=.995?`≈ ${num(Wv(id))} kg`:`≈ ${Math.round(Wv(id)*100)*10} g`;
+const ccLabel=id=>id==="focaccia"?`½ plaque · ≈ ${num(FOC)} kg`:id==="canele"?"6 pièces":Wv(id)>=.995?`≈ ${num(Wv(id))} kg`:`≈ ${Math.round(Wv(id)*100)*10} g`;
 const ccPrice=id=>Math.round(((id==="focaccia"||id==="canele")?(salePrice(id)||0)*ccStep(id):unitTTC(id))*100)/100;
 // Commande possible jusqu'au jour du retrait à midi (pas d'heure limite liée à la production : la commande ne change pas la production)
 const ccUntil=date=>{const x=parse(date);x.setHours(12,0,0,0);return x;};
@@ -729,14 +733,14 @@ const num=v=>(Math.round(v*10)/10).toLocaleString("fr-FR");
 const flat=items=>items.flatMap(i=>i.g?i.items:[i]);
 // Vente boutique d'un jour de la semaine affichée : saisie du jour, sinon vente type du jour de semaine, sinon cadencier
 const shopType0=(d,id)=>{const t=stype[d]||{};return id in t?t[id]:((SALES0[d]||{})[id]||0);};
-const shopType=(d,id)=>id==="focaccia"?snapF(shopType0(d,id)):shopType0(d,id);
+const shopType=(d,id,date)=>id==="focaccia"?snapF(focConv(id,shopType0(d,id),"",date||""),date||"2000"):shopType0(d,id);
 const shop=(d,id)=>blocked(d,id)?0:shop1(d,id);
 const shop1=(d,id)=>shopAt1(dateOf(d),id);
 const shopAt=(date,id)=>blocked(wdOf(date),id)?0:shopAt1(date,id);
 // Fermetures annoncées par Vincent (boutique et production à 0, comme un jour « Magasin fermé »)
 const CLOSE=[["2026-12-25","2027-01-04"]];
 const isClosed=date=>!!((typeof ca!=="undefined"&&ca[date])||{}).closed||CLOSE.some(([a,z])=>date>=a&&date<=z);
-const shopAt1=(date,id)=>{if(isClosed(date))return 0;const v=rawAt(date,id);return id==="focaccia"?snapF(v):v;};
+const shopAt1=(date,id)=>{if(isClosed(date))return 0;const v=rawAt(date,id);return id==="focaccia"?snapF(v,date):v;};
 // ---- À partir de la semaine du 20/10/2026 : chaque jour reprend la quantité prévue le même jour de la semaine d'avant (jour fermé : on remonte d'une semaine).
 // Les règles (bilans, ruptures, vacances, fériés) ne changent plus rien : elles donnent seulement une recommandation affichée à côté du chiffre.
 const NEW0="2026-10-20";
@@ -748,15 +752,15 @@ const rawAt=(date,id)=>{const m=sales[date]||{};if(id in m)return m[id];if(date<
 const offDay=d=>{if(isClosed(d))return true;const m=sales[d];if(!m)return false;const v=Object.values(m);return v.length>=3&&v.every(x=>!x);};
 function baseSrc(date,id){let p=addDays(date,-7),n=0;while(n<8&&offDay(p)){p=addDays(p,-7);n++;}return p;}
 function baseQ(date,id){const k="b|"+date+"|"+id;if(k in adjMemo)return adjMemo[k];const src=baseSrc(date,id);
-  adjMemo[k]={q:0,src};return adjMemo[k]={q:rawAt(src,id),src};}
+  adjMemo[k]={q:0,src};return adjMemo[k]={q:focConv(id,rawAt(src,id),src,date),src};}
 function reco(date,id,any){if(date<NEW0||blocked(wdOf(date),id)||isClosed(date)||(!any&&id in (sales[date]||{})))return null;
   const {q:b,src}=baseQ(date,id);let r=b;const why=[];
   if(id!=="focaccia"&&b){
     if(ruleOn("week")&&(left[src]||{})[id]&&!blocked(wdOf(src),id)){const d=dayDelta(src,id);if(d){r+=d;why.push(d>0?"rupture":"invendus");}}
     const sh=shortS(date,id);if(sh){r+=sh;why.push(sh>0?"rupture":"invendus");}}
   const hd=isHol(date),hs=isHol(src);
-  if(hd&&!hs){if(id==="focaccia"){if(ruleOn("focHalf")&&r>FOC){r=FOC;why.push("vacances");}}else if(r){r=Math.round(r*(1-holR()));why.push(ferie(date)||isPont(date)?"férié":"vacances");}}
-  else if(!hd&&hs){let p=src,n=0;while(n<12&&(isHol(p)||offDay(p))){p=addDays(p,-7);n++;}const ref=n<12?rawAt(p,id):shopType(wdOf(date),id);if(Math.abs(ref-r)>.001){r=ref;why.push("fin des vacances");}}
+  if(hd&&!hs){if(id==="focaccia"){if(ruleOn("focHalf")&&r>focH(date)){r=focH(date);why.push("vacances");}}else if(r){r=Math.round(r*(1-holR()));why.push(ferie(date)||isPont(date)?"férié":"vacances");}}
+  else if(!hd&&hs){let p=src,n=0;while(n<12&&(isHol(p)||offDay(p))){p=addDays(p,-7);n++;}const ref=n<12?focConv(id,rawAt(p,id),p,date):shopType(wdOf(date),id,date);if(Math.abs(ref-r)>.001){r=ref;why.push("fin des vacances");}}
   if(id!=="focaccia"&&b)r=Math.max(AU(id),r);if(id==="canele")r=Math.round(r/6)*6;
   if(Math.abs(r-b)<.001)return null;return {q:r,why:[...new Set(why)].join(" · ")};}
 // ---- Ajustement automatique par les invendus et ruptures ----
@@ -799,7 +803,7 @@ const pontDays=F=>(PONT[parse(F).getDay()]||[]).map(o=>addDays(F,o));
 const isPont=date=>{if(!ruleOn("ponts"))return false;for(let n=-3;n<=3;n++){const F=addDays(date,n);if(ferie(F)&&pontDays(F).includes(date))return true;}return false;};
 const isHol=date=>ruleOn("hol")&&(ferie(date)||isPont(date)||HOL.some(([a,z])=>date>=a&&date<=z&&!(date===a&&!ruleOn("depSat")&&wdOf(a)==="Sam")));
 const holR=()=>params.holR??0.2;
-const autoQ=(date,id)=>{const q=autoQ0(date,id);if(!q||!isHol(date))return q;if(id==="focaccia")return ruleOn("focHalf")?Math.min(q,FOC):q;return Math.max(1,Math.round(q*(1-holR())));};
+const autoQ=(date,id)=>{const q=autoQ0(date,id);if(!q||!isHol(date))return q;if(id==="focaccia")return ruleOn("focHalf")?Math.min(q,focH(date)):q;return Math.max(1,Math.round(q*(1-holR())));};
 function dayDelta(date,id){const e=(left[date]||{})[id];if(!e)return 0;const U=AU(id);
   if(e.h!=null){const early=adjH()-e.h;return early>0?U*(early>=adjH2()?adjP2():adjP1()):0;}
   const r=(e.r||0)/U-adjM();return r>0?-U*Math.round(r*adjT()):0;}
@@ -816,13 +820,13 @@ const wdOf=date=>WD[parse(date).getDay()];
 const ctype=(c,date,id)=>date<c.start?0:(((c.type[wdOf(date)]||{})[id])||0);
 const cq0=(c,date,id)=>{const m=c.mod[date]||{};return id in m?m[id]:ctype(c,date,id);};
 const cq=(c,date,id)=>blocked(wdOf(date),id)?0:cq1(c,date,id);
-const cq1=(c,date,id)=>id==="focaccia"?snapF(cq0(c,date,id)):cq0(c,date,id);
+const cq1=(c,date,id)=>id==="focaccia"?snapF(cq0(c,date,id),date):cq0(c,date,id);
 // Les commandes en ligne (o.web) sont seulement affichées en Boutique : le client serait venu quand même, la production ne change pas
 const ordersQ=(date,id)=>blocked(wdOf(date),id)?0:orders.filter(o=>o.date===date&&!o.web).reduce((s,o)=>s+((o.items||{})[id]||0),0);
 const proBy=(date,id)=>[...clients.map(c=>[c.name,cq(c,date,id)]),["Commandes",ordersQ(date,id)]].filter(x=>x[1]>0);
 const proQ=(date,id)=>proBy(date,id).reduce((s,x)=>s+x[1],0);
-const focKg=()=>params.focKg||2.6;
-const plq=v=>{const h=Math.round(v/focKg()*2),w=Math.floor(h/2);return (w?w:"")+(h%2?"½":"")||"0";};
+const focKg=date=>params.focKg||2*focH(date);
+const plq=(v,date)=>{const h=Math.round(v/focKg(date)*2),w=Math.floor(h/2);return (w?w:"")+(h%2?"½":"")||"0";};
 const tva=()=>params.tva??0.055;
 const matr=()=>params.matr??0.145;
 const objCA=()=>params.obj??150000, objM=()=>params.objM??10;
@@ -897,7 +901,7 @@ const sale=(sd,id)=>shop(sd,id)+proQ(dateOf(sd),id);
 function production(pd){
   const out={};
   P.filter(([id])=>!BATCH[id]).forEach(([id,rule])=>SDAYS.forEach(sd=>{const v=sale(sd,id);
-    if(v&&prodDay(rule,sd)===pd){const q=(TO_PROD[id]||(x=>x))(v),o=DIRECT[id]&&pd===sd?id+"D":id;(out[o]=out[o]||{q:0,from:[]});out[o].q+=q;out[o].from.push([sd,v,proBy(dateOf(sd),id)]);}}));
+    if(v&&prodDay(rule,sd)===pd){const q=(TO_PROD[id]||(x=>x))(v,dateOf(sd)),o=DIRECT[id]&&pd===sd?id+"D":id;(out[o]=out[o]||{q:0,from:[]});out[o].q+=q;out[o].from.push([sd,v,proBy(dateOf(sd),id)]);}}));
   Object.keys(BATCH).forEach(id=>{const b=batchPlan(id)[pd];if(b.need>0||b.q>0)out[id]={q:b.q,from:b.from,batch:b};});
   // Ajouts : par jour de semaine (pains hors ventes, chaque semaine) ou à la date (pain vendu fait un autre jour, une seule fois)
   [extras[pd],extras[dateOf(pd)]].forEach(x=>Object.entries(x||{}).forEach(([id,v])=>{if(v)(out[id]=out[id]||{q:0,from:[]}).q+=v,out[id].extra=v;}));
@@ -908,7 +912,7 @@ function stepper(value,label,onSet,step){
   const w=document.createElement("div");w.className="stepper";
   w.innerHTML=`<button aria-label="Moins">−</button><input type="text" inputmode="decimal" value="${num(value)}" aria-label="${label}"><button aria-label="Plus">+</button>`;
   const [m,i,p]=w.children;let cur=value;
-  const set=(v,typing)=>{v=Math.max(0,Math.round((+String(v).replace(",",".")||0)*10)/10);if(step===FOC&&!typing)v=snapF(v);cur=v;onSet(v);if(!typing)i.value=num(v);};
+  const set=(v,typing)=>{v=Math.max(0,Math.round((+String(v).replace(",",".")||0)*10)/10);if((step===FOC||step===FOC/FOC_R)&&!typing)v=snapF(v,step===FOC?"":"2000");cur=v;onSet(v);if(!typing)i.value=num(v);};
   m.onclick=()=>set(cur-step);p.onclick=()=>set(cur+step);
   i.oninput=()=>set(i.value,true);i.onblur=()=>set(cur);i.onfocus=()=>i.select();
   return w;
@@ -943,11 +947,11 @@ function renderSales(){
     el.querySelectorAll("[data-rename]").forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.rename;ask("Nom du pain",R[id].name).then(n=>{if(n==null)return;const v=n.trim();params.names=params.names||{};if(!v||v===NAME0[id])delete params.names[id];else params.names[id]=v;applyNames();save();renderSales();});});
     el.querySelectorAll("[data-price]").forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.price;ask(`Prix ${R[id].name} (${PUNIT(id)})`,fmtIn(salePrice(id)??0,1)).then(n=>{if(n==null)return;const v=+String(n).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<0)return;setP("sale",id,"",v);save();renderSales();});});return;}
   pIds().map(id=>[id,RULE[id]]).forEach(([id,rule])=>{
-    const v=shop(sday,id),pd=prodDay(rule,sday),tv=shopType(sday,id);
+    const v=shop(sday,id),pd=prodDay(rule,sday),tv=shopType(sday,id,dateOf(sday));
     const row=document.createElement("div");row.className="row"+(v?"":" off");
     const when=pd===sday?"produit le jour même":"produit "+DAYNAMES[pd];
     const caTxt=x=>x&&unitTTC(id)?` · <b>${Math.round(x*unitTTC(id))} €</b>`:"";
-    const plq=x=>id==="focaccia"?` (${num(x/focKg())} plaque${x/focKg()>1?"s":""})`:"";
+    const plq=x=>{const k=focKg(dateOf(sday));return id==="focaccia"?` (${num(x/k)} plaque${x/k>1?"s":""})`:"";};
     if(blocked(sday,id)){row.className="row off";row.innerHTML=`<div class="name"><b>${R[id].name}</b><small>pas le mardi</small></div>`;el.appendChild(row);return;}
     const rc=dateOf(sday)>=NEW0?reco(dateOf(sday),id):(()=>{const a=!(id in (sales[dateOf(sday)]||{}))&&AUTO_OK(id)?v-tv:0;return null;})();
     const adjTag=rc&&Math.abs(rc.q-v)>.001?`<button class="reco${rc.q<v?" dn":""}" data-reco="${id}" data-q="${rc.q}" aria-label="Appliquer la recommandation">${rc.q>v?"↑":"↓"} ${num(rc.q)}${rc.why?`<i>${rc.why}</i>`:""}</button>`:"";
@@ -1115,7 +1119,7 @@ function renderPro(){
     const row=document.createElement("div");row.className="row"+(v?"":" off");
     if(blocked(oday,id)){row.className="row off";row.innerHTML=`<div class="name"><b>${R[id].name}</b><small>pas le mardi</small></div>`;el.appendChild(row);return;}
     row.innerHTML=`<div class="name"><b>${R[id].name}</b><small>${foc?"en kg · ":""}${v?"produit "+(pd===oday?"le jour même":DAYNAMES[pd]):"pas livré"}</small></div>`;
-    row.appendChild(stepper(v,"Quantité "+R[id].name,x=>{(c.mod[date]=c.mod[date]||{})[id]=x;save();renderPro();},foc?SALE_STEP.focaccia:1));
+    row.appendChild(stepper(v,"Quantité "+R[id].name,x=>{(c.mod[date]=c.mod[date]||{})[id]=x;save();renderPro();},foc?focH(date):1));
     el.appendChild(row);
   });
   const sel=document.getElementById("proAdd");
@@ -1142,8 +1146,8 @@ function renderProd(){
   ids.forEach((id,idx)=>{
     const o=pr[id],r=R[id];const row=document.createElement("div");row.className="row prod";
     if(editProd){row.dataset.k=id;row.innerHTML=`${HANDLE}<div class="name"><b>${r.name}</b></div>`;el.appendChild(row);return;}
-    const fq=v=>id==="focaccia"?plq(v):num(v);
-    const from=o.from.map(([d,v,pv])=>`<span class="chip"><i>${d===pday?"Auj.":d+"."}</i>${fq(v)}</span>`+pv.map(([n,q])=>`<span class="chip pro">${n} ${fq(q)}</span>`).join("")).join("");
+    const fq=(v,d)=>id==="focaccia"?plq(v,dateOf(d)):num(v);
+    const from=o.from.map(([d,v,pv])=>`<span class="chip"><i>${d===pday?"Auj.":d+"."}</i>${fq(v,d)}</span>`+pv.map(([n,q])=>`<span class="chip pro">${n} ${fq(q,d)}</span>`).join("")).join("");
     const unit=r.unit==="plaque"?" plaques":o.batch?(o.q>1?" fournées":" fournée"):"";
     if(o.batch){const b=o.batch;row.innerHTML=`<div class="name"><b>${r.name}</b><div class="chips">${from}${b.used?`<span class="chip m">−${b.used} veille</span>`:""}${b.left?`<span class="chip m">reste ${b.left}</span>`:""}</div></div><div class="qty">${num(o.q)}<small style="font-size:14px;color:var(--muted)">${unit}</small></div>`;el.appendChild(row);return;}
     // Focaccia : ajout par demi-plaque ; le total de plaques se met à jour tout de suite
@@ -1225,7 +1229,7 @@ function onPeseesClick(e){const b=e.target.closest("button");if(!b)return;e.prev
     ids.forEach(id=>{if(R[id].items.some(i=>ikey(i)===k)){removed[id]=[...new Set([...(removed[id]||[]),k])];}});save();renderResults();});return;}
   if(b.dataset.restore){const k=b.dataset.restore;b.dataset.card.split("+").forEach(id=>{removed[id]=(removed[id]||[]).filter(x=>x!==k);});save();renderResults();return;}}
 // ---- Réglages : hypothèses chiffrées modifiables ----
-const DEF={resA:()=>5000,openDays:()=>217,sarlNet:()=>2000,tnsR:()=>0.45,loss:()=>0.20,obj:()=>150000,objM:()=>10,matr:()=>0.145,pay:()=>PAY0,act:(a)=>ACT0[a],fix:(a)=>FIX0[a],tva:()=>0.055,sale:(a)=>SALEP0[a],price:(a)=>PRICE0[a],batch:(a)=>BATCH[a],lv:(a)=>LV[a].f,prep:(a,b)=>PREPS[a].items.find(x=>x[0]===b)[1],rq:(a,b)=>R[a].items.find(i=>ikey(i)===b).q,w:(a)=>WAUTO(a),focKg:()=>2.6,adjM:()=>1,adjT:()=>0.5,adjH:()=>18,holR:()=>0.2,adjP1:()=>1,adjP2:()=>2,adjH2:()=>3,ordW:()=>5,bag:()=>25,ordL:()=>7};
+const DEF={resA:()=>5000,openDays:()=>217,sarlNet:()=>2000,tnsR:()=>0.45,loss:()=>0.20,obj:()=>150000,objM:()=>10,matr:()=>0.145,pay:()=>PAY0,act:(a)=>ACT0[a],fix:(a)=>FIX0[a],tva:()=>0.055,sale:(a)=>SALEP0[a],price:(a)=>PRICE0[a],batch:(a)=>BATCH[a],lv:(a)=>LV[a].f,prep:(a,b)=>PREPS[a].items.find(x=>x[0]===b)[1],rq:(a,b)=>R[a].items.find(i=>ikey(i)===b).q,w:(a)=>WAUTO(a),focKg:()=>2*FOC,adjM:()=>1,adjT:()=>0.5,adjH:()=>18,holR:()=>0.2,adjP1:()=>1,adjP2:()=>2,adjH2:()=>3,ordW:()=>5,bag:()=>25,ordL:()=>7};
 const getP=(kind,a,b)=>["focKg","tva","matr","pay","obj","objM","loss","adjM","adjT","adjH","holR","adjP1","adjP2","adjH2","ordW","bag","ordL"].includes(kind)?params[kind]:["lv","w","batch","sale","price","act","fix"].includes(kind)?((params[kind]||{})[a]):(((params[kind]||{})[a]||{})[b]);
 function setP(kind,a,b,v){
   if(["focKg","tva","matr","pay","obj","objM","loss","adjM","adjT","adjH","holR","adjP1","adjP2","adjH2","ordW","bag","ordL"].includes(kind)){if(Math.abs(v-DEF[kind]())<1e-9)delete params[kind];else params[kind]=v;return;}
