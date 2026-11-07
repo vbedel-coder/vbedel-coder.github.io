@@ -1452,7 +1452,7 @@ function renderWeekly(){
       +items.map(x=>`<tr class="${x.k||""}"><td>${x.n}</td><td class="q">${fmt(x.q)}</td></tr>`).join("")
       +`<tr class="tot"><td>Total</td><td class="q">${fmt(tot)}</td></tr></table></details>`;}).join("");
 }
-const prepSub=(its,pid)=>{const T=its.reduce((a,b)=>a+b.q,0);if(!T)return "";const hb=pid&&prepHable(pid),fq=hb?(its.find(x=>x.k==="farine")||{}).q:0,ed=editHyd==="prepH:"+pid;
+const prepSub=(its,pid)=>{const T=its.reduce((a,b)=>a+b.q,0);if(!T||(pid&&COLLAPSE.includes(PREPS[pid].name)))return "";const hb=pid&&prepHable(pid),fq=hb?(its.find(x=>x.k==="farine")||{}).q:0,ed=editHyd==="prepH:"+pid;
   const lab=x=>hb&&x.n==="Eau"&&fq?`Eau ${Math.round(x.q/fq*100)} %<button class="gear" data-hydedit="prepH:${pid}" aria-label="Hydratation de la bouillie">${ed?"✓":"⚙︎"}</button>`:`${x.n} ${Math.round(x.q/T*100)} %`;
   return `<tr class="psub"><td colspan="2"><div class="lvs">${its.map(x=>`<div><em>${lab(x)}</em><b>${fmt(x.q)}</b></div>`).join("")}</div></td></tr>`
     +(ed?`<tr class="hyd on"><td colspan="2"><div class="hyrow"><span>Hydratation de la bouillie</span><span class="hy"><button data-preph="${pid}" data-d="-1" aria-label="Moins">−</button><b>${Math.round(prepHNow(pid)*100)} %</b><button data-preph="${pid}" data-d="1" aria-label="Plus">+</button></span></div></td></tr>`:"");};
