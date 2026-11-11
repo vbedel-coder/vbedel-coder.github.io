@@ -50,7 +50,7 @@ jobs:
             q "insert into public.config(k,v) values('vapid_public','$PUB') on conflict(k) do update set v=excluded.v" > /dev/null
           fi
       - name: Sonnerie des minuteurs
-        run: supabase functions deploy timers --project-ref $REF --no-verify-jwt --use-api
+        run: supabase functions deploy timers --project-ref $REF --no-verify-jwt --use-api --yes
       - name: Adresse et clé publique pour l'appli
         run: |
           KEY=$(curl -fsS -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" "$API/projects/$REF/api-keys" | jq -r '([.[]|select(.name=="anon")][0].api_key) // ([.[]|select(.type=="publishable")][0].api_key)')
