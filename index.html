@@ -1573,11 +1573,14 @@ const dayFlourMemo={};
 function dayFlour(date){return withFc(()=>dayFlour0(date));}
 function dayFlour0(date){const wd=wdOf(date);if(!wd||!PDAYS.includes(wd))return {};const sv=wk;wk=tuesdayOf(parse(date));const fl={};
   try{const pr=production(wd);Object.keys(pr).forEach(id=>{if(!(pr[id].q>0)||!R[id])return;
-    flat(itemsOf(id)).forEach(i=>{const t=i.q*pr[id].q;if(i.k==="farine")fl[i.f]=(fl[i.f]||0)+t;
+    flat(itemsOf(id)).forEach(i=>{const t=i.q*pr[id].q;if(i.k==="farine")fl[i.f]=(fl[i.f]||0)+t;if(i.n==="Sel")fl.Sel=(fl.Sel||0)+t;
       if(i.k==="levain"&&LVFLOUR[i.l]){const f=LVFLOUR[i.l];fl[f]=(fl[f]||0)+t*(lvF(i.l)??.5);}});});}
   finally{wk=sv;}return fl;}
 // Stock estimé aujourd'hui (kg) : comptage − production des jours suivant le comptage, jusqu'à aujourd'hui inclus
-function stockNow(f,today){const B=bagOf(f),st=(stock[f]||0)*B,d0=stockD[f];if(!d0)return st;let used=0;
+// Sel : suivi comme les farines (sacs de 25 kg, saisi en kg) ; comptage de départ 14,6 kg le 11/11/2026 tant qu'aucun comptage n'est saisi
+const STK_KG={"Sel":1}, STK_SEED={"Sel":[14.6/25,"2026-11-11"]};
+const stkQ=f=>stockD[f]||stock[f]!=null||!STK_SEED[f]?(stock[f]||0):STK_SEED[f][0], stkD=f=>stockD[f]||stock[f]!=null||!STK_SEED[f]?stockD[f]:STK_SEED[f][1];
+function stockNow(f,today){const B=bagOf(f),st=stkQ(f)*B,d0=stkD(f);if(!d0)return st;let used=0;
   for(let d=addDays(d0,1);d<=today;d=addDays(d,1))used+=(dayFlour(d)[f]||0);return st-used;}
 // Farines vitales : sacs gardés en réserve (la date « vide » et la quantité à commander en tiennent compte)
 const ORD_VITAL={"Froment T80":1};
@@ -1586,7 +1589,7 @@ function orderRows(today){fcMemo={};const N=Math.max(1,Math.round(ordW())),start
   const fl=new Set([...Object.keys(MILL),...(params.xflour||[]),...Object.keys(stock),...days.flatMap(([,x])=>Object.keys(x))]);
   const rows=[...fl].map(f=>{const B=bagOf(f),now=stockNow(f,today),res=(ORD_VITAL[f]||0)*B;let need=0,left=now-res,until=null;
     days.forEach(([d,x])=>{const u=x[f]||0;if(d<=end)need+=u;if(until===null&&u>0){left-=u;if(left<0)until=d;}});
-    const q=Math.max(0,Math.ceil((need+res-Math.max(0,now))/B-1e-9));return {f,B,now,need,q,until,counted:stockD[f]};});
+    const q=Math.max(0,Math.ceil((need+res-Math.max(0,now))/B-1e-9));return {f,B,now,need,q,until,counted:stkD(f)};});
   rows.sort((a,b)=>(b.q-a.q)||((a.until||"9")<(b.until||"9")?-1:1));return {rows,N,end};}
 const dfmt=d=>{const x=parse(d),w=["dim.","lun.","mar.","mer.","jeu.","ven.","sam."][x.getDay()];return w+" "+x.getDate()+" "+MOISC[x.getMonth()];};
 // Livraison le mardi précédant la première rupture ; alerte (mail au moulin) une semaine avant ce mardi ; après une commande copiée, pas d'alerte avant 3 semaines (livraison et nouveau comptage)
@@ -1604,13 +1607,13 @@ const ordBadge=()=>{const b=document.getElementById("stockBtn");if(b)b.classList
 function renderOrder(){const el=document.getElementById("order");if(!el)return;
   const today=iso(new Date()),{rows,N,end}=orderRows(today);
   const cost=rows.reduce((s,r)=>{const p=ingPrice(r.f);return s+(p?r.q*r.B*p:0);},0),nb=rows.reduce((s,r)=>s+r.q,0);
-  el.innerHTML=`<div class="list">`+rows.map(r=>`<div class="row"><div class="name"><b>${r.f}</b>${MILL[r.f]?`<small style="display:block;font-size:12px">${MILL[r.f][0]}</small>`:""}<small>${r.counted||stock[r.f]?`≈ <b style="display:inline;font-size:13px">${num(Math.max(0,r.now)/r.B)} sac${r.now/r.B>=2?"s":""}</b> aujourd'hui · `:""}${r.until?`<span class="${r.until<=end?"warn":""}">${ORD_VITAL[r.f]?"réserve entamée":"vide"} le ${dfmt(r.until)}</span>`:r.need>.05?"tient 8 sem. et +":"pas utilisée ces 5 sem."}<br>besoin ${num(r.need)} kg · <button class="linkbtn" style="font-size:13px;padding:0" data-bag="${r.f}">sac de ${num(r.B)} kg</button></small></div>
-    <span class="pin ost"><input data-stock="${r.f}" inputmode="decimal" value="${fmtIn(stock[r.f]||0,1)}" aria-label="Sacs comptés ${r.f}"><em>${r.counted?"compté "+parse(r.counted).getDate()+"/"+(parse(r.counted).getMonth()+1):"compté"}</em></span>
+  el.innerHTML=`<div class="list">`+rows.map(r=>`<div class="row"><div class="name"><b>${r.f}</b>${MILL[r.f]?`<small style="display:block;font-size:12px">${MILL[r.f][0]}</small>`:""}<small>${r.counted||stock[r.f]?`≈ <b style="display:inline;font-size:13px">${STK_KG[r.f]?num(Math.max(0,r.now))+" kg":num(Math.max(0,r.now)/r.B)+" sac"+(r.now/r.B>=2?"s":"")}</b> aujourd'hui · `:""}${r.until?`<span class="${r.until<=end?"warn":""}">${ORD_VITAL[r.f]?"réserve entamée":"vide"} le ${dfmt(r.until)}</span>`:r.need>.05?"tient 8 sem. et +":"pas utilisée ces 5 sem."}<br>besoin ${num(r.need)} kg · <button class="linkbtn" style="font-size:13px;padding:0" data-bag="${r.f}">sac de ${num(r.B)} kg</button></small></div>
+    <span class="pin ost"><input data-stock="${r.f}" inputmode="decimal" value="${STK_KG[r.f]?fmtIn(stkQ(r.f)*r.B,1):fmtIn(stock[r.f]||0,1)}" aria-label="${STK_KG[r.f]?"Kg comptés":"Sacs comptés"} ${r.f}"><em>${STK_KG[r.f]?"kg · ":""}${r.counted?"compté "+parse(r.counted).getDate()+"/"+(parse(r.counted).getMonth()+1):"compté"}</em></span>
     <div class="oq${r.q?"":" z"}">${r.q}</div></div>`).join("")
     +`<div class="row catot"><div class="name"><b>À commander</b><small>pour ${N} semaine${N>1?"s":""} à partir de demain · ${eur0(cost)} HT environ</small></div><div class="oq">${nb}<small style="font-size:14px;color:var(--muted);font-weight:500"> sacs</small></div></div></div>
     <div class="foot" style="justify-content:flex-end"><button class="iconbtn big" id="addFlour" aria-label="Ajouter une farine">${IC.plus}</button><button class="iconbtn big" id="copyOrder" aria-label="Copier la commande"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8m0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2z"/><path d="M16 8v-2a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button></div>`;
   el.querySelectorAll("input[data-stock]").forEach(i=>{i.onfocus=()=>i.select();i.onchange=()=>{const v=+String(i.value).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<0){renderOrder();return;}
-    const f=i.dataset.stock;if(v)stock[f]=Math.round(v*10)/10;else delete stock[f];stockD[f]=today;save();renderOrder();};});
+    const f=i.dataset.stock;if(STK_KG[f])stock[f]=Math.round(v*10)/10/bagOf(f);else if(v)stock[f]=Math.round(v*10)/10;else delete stock[f];stockD[f]=today;save();renderOrder();};});
   el.querySelectorAll("[data-bag]").forEach(b=>b.onclick=()=>{const f=b.dataset.bag;ask(`Poids d'un sac de ${f} (kg)`,fmtIn(bagOf(f),1)).then(n=>{if(n==null)return;const v=+String(n).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<=0)return;
     params.bagF=params.bagF||{};if(Math.abs(v-(BAG0[f]??bagKg()))<1e-9)delete params.bagF[f];else params.bagF[f]=v;if(!Object.keys(params.bagF).length)delete params.bagF;save();renderOrder();});});
   document.getElementById("addFlour").onclick=()=>{ask("Nom de la farine ou du produit","").then(n=>{n=(n||"").trim();if(!n)return;params.xflour=[...new Set([...(params.xflour||[]),n])];save();renderOrder();});};
