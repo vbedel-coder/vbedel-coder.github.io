@@ -38,6 +38,7 @@ tr.grp td:first-child{font-weight:400}
 .flours{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .flours td small{color:var(--muted);display:block;font-size:14px}
 .note{color:var(--muted);font-size:14px;margin-top:28px}
+.row.n11 b{color:var(--levain)}
 .foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:12px}
 .prod .qty{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;min-width:56px;text-align:right}
 .row .name small.for{color:var(--levain)}
@@ -764,7 +765,10 @@ function reco(date,id,any){if(date<NEW0||blocked(wdOf(date),id)||isClosed(date)|
     if(ruleOn("week")&&(left[src]||{})[id]&&!blocked(wdOf(src),id)){const d=dayDelta(src,id);if(d){r+=d;why.push(d>0?"rupture":"invendus");}}
     const sh=shortS(date,id);if(sh){r+=sh;why.push(sh>0?"rupture":"invendus");}}
   const hd=isHol(date),hs=isHol(src);
-  if(hd&&!hs){if(id==="focaccia"){if(ruleOn("focHalf")&&r>focH(date)){r=focH(date);why.push("vacances");}}else if(r){r=Math.round(r*(1-holR()));why.push(ferie(date)||isPont(date)?"férié":"vacances");}}
+  // 11 novembre : jamais de baisse (2026 réduit à tort) ; on part de la dernière semaine normale, +10 % sur les pains.
+  if(date.slice(5)==="11-11"){let p=src,n=0;while(n<12&&(isHol(p)||offDay(p))){p=addDays(p,-7);n++;}const ref=n<12?focConv(id,rawAt(p,id),p,date):shopType(wdOf(date),id,date);
+    const t=id==="focaccia"?ref:ref?Math.ceil(ref*1.1):0;if(t>r){r=t;why.push("11/11");}}
+  else if(hd&&!hs){if(id==="focaccia"){if(ruleOn("focHalf")&&r>focH(date)){r=focH(date);why.push("vacances");}}else if(r){r=Math.round(r*(1-holR()));why.push(ferie(date)||isPont(date)?"férié":"vacances");}}
   else if(!hd&&hs){let p=src,n=0;while(n<12&&(isHol(p)||offDay(p))){p=addDays(p,-7);n++;}const ref=n<12?focConv(id,rawAt(p,id),p,date):shopType(wdOf(date),id,date);if(Math.abs(ref-r)>.001){r=ref;why.push("fin des vacances");}}
   if(id!=="focaccia"&&b)r=Math.max(AU(id),r);if(id==="canele")r=Math.round(r/6)*6;
   if(Math.abs(r-b)<.001)return null;return {q:r,why:[...new Set(why)].join(" · ")};}
@@ -951,6 +955,7 @@ function renderSales(){
     el.appendChild(row);});makeSortable(el,".row",keys=>{porder=keys;save();});
     el.querySelectorAll("[data-rename]").forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.rename;ask("Nom du pain",R[id].name).then(n=>{if(n==null)return;const v=n.trim();params.names=params.names||{};if(!v||v===NAME0[id])delete params.names[id];else params.names[id]=v;applyNames();save();renderSales();});});
     el.querySelectorAll("[data-price]").forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.price;ask(`Prix ${R[id].name} (${PUNIT(id)})`,fmtIn(salePrice(id)??0,1)).then(n=>{if(n==null)return;const v=+String(n).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<0)return;setP("sale",id,"",v);save();renderSales();});});return;}
+  if(dateOf(sday).slice(5)==="11-11")el.insertAdjacentHTML("beforeend",`<div class="row n11"><div class="name"><b>↑ 11 novembre</b><small>ne pas réduire · plus de pain qu'en 2026</small></div></div>`);
   pIds().map(id=>[id,RULE[id]]).forEach(([id,rule])=>{
     const v=shop(sday,id),pd=prodDay(rule,sday),tv=shopType(sday,id,dateOf(sday));
     const row=document.createElement("div");row.className="row"+(v?"":" off");
