@@ -1,0 +1,33 @@
+# Ajoute une commande client dans l'appli (utilisé par Claude pour « Commande Vivant »). Lancé à la main ou par Claude avec gh workflow run.
+name: Commande
+on:
+  workflow_dispatch:
+    inputs:
+      date: {description: "Jour de retrait (AAAA-MM-JJ)", required: true}
+      name: {description: "Client", required: true}
+      items: {description: "Pains en JSON, ex. {\"froment\":1,\"brioche\":1}", required: true}
+      phone: {description: "Téléphone", required: false, default: ""}
+      note: {description: "Note", required: false, default: ""}
+      id: {description: "Identifiant (laisser vide)", required: false, default: ""}
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      API: https://api.supabase.com/v1
+      I_DATE: ${{ inputs.date }}
+      I_NAME: ${{ inputs.name }}
+      I_ITEMS: ${{ inputs.items }}
+      I_PHONE: ${{ inputs.phone }}
+      I_NOTE: ${{ inputs.note }}
+      I_ID: ${{ inputs.id }}
+    steps:
+      - name: Ajouter la commande
+        run: |
+          REF=$(curl -fsS -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" $API/projects | jq -r '[.[]|select(.name|ascii_downcase|startswith("vivant"))][0].id')
+          ID=${I_ID:-o$(date +%s%3N)}
+          O=$(jq -cn --arg id "$ID" --arg d "$I_DATE" --arg n "$I_NAME" --argjson it "$I_ITEMS" --arg p "$I_PHONE" --arg no "$I_NOTE" '{id:$id,date:$d,name:$n,items:$it,phone:$p,note:$no,done:false}')
+          echo "$O"
+          jq -n --arg o "$O" '{query:("select public.vivant_add_order(" + ("'"'"'" + ($o|gsub("'"'"'";"'"'"''"'"'")) + "'"'"'") + "::jsonb) as r")}' > q.json
+          R=$(curl -sS -X POST -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @q.json $API/projects/$REF/database/query)
+          echo "$R"; echo "$R" | jq -e '.[0].r.ok==true' > /dev/null

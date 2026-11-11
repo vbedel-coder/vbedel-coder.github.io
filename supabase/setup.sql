@@ -95,3 +95,18 @@ create or replace function public.releve_pro(p_token text) returns jsonb languag
 $$;
 revoke all on function public.releve_pro(text) from public;
 grant execute on function public.releve_pro(text) to anon, authenticated, service_role;
+
+-- ---- Commandes clients dictées à Claude (« Commande Vivant ») ----
+-- Ajoute une commande aux commandes de l'appli (rubrique orders) et la date comme modification la plus récente : l'appli la reprend en direct.
+-- Appelée seulement par le workflow GitHub « Commande » (accès administrateur), jamais depuis une page.
+create or replace function public.vivant_add_order(o jsonb) returns jsonb language plpgsql security definer set search_path=public as $$
+declare ms bigint:=(extract(epoch from clock_timestamp())*1000)::bigint;
+begin
+  if coalesce(o->>'id','')='' or coalesce(o->>'date','') !~ '^\d{4}-\d{2}-\d{2}$' or jsonb_typeof(o->'items')<>'object' then raise exception 'commande incomplete'; end if;
+  if exists(select 1 from state s, jsonb_array_elements(coalesce(s.data->'orders','[]'::jsonb)) e where s.id=vivant_owner() and e->>'id'=o->>'id') then return jsonb_build_object('ok',true,'deja',true); end if;
+  update state set data=data||jsonb_build_object('orders',coalesce(data->'orders','[]'::jsonb)||jsonb_build_array(o),'ts',coalesce(data->'ts','{}'::jsonb)||jsonb_build_object('orders',ms),'updatedAt',ms),updated_at=now()
+    where id=vivant_owner();
+  if not found then raise exception 'compte introuvable'; end if;
+  return jsonb_build_object('ok',true,'id',o->>'id');
+end $$;
+revoke all on function public.vivant_add_order(jsonb) from public, anon, authenticated;

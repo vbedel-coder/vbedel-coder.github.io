@@ -203,6 +203,10 @@ html{scroll-padding-top:var(--hh,12px)}details.card{scroll-margin-top:var(--hh,1
 .reco{display:inline-flex;align-items:baseline;gap:6px;margin:3px 0 2px;border:0;border-radius:10px;padding:3px 9px;font:inherit;font-size:14px;font-weight:700;background:color-mix(in srgb,var(--levain) 14%,transparent);color:var(--levain);cursor:pointer;max-width:100%}
 .reco.dn{background:color-mix(in srgb,var(--warn) 12%,transparent);color:var(--warn)}.reco i{font-style:normal;font-weight:500;font-size:12px;opacity:.85}
 .name .reco{display:flex;width:max-content}
+.ocmd{display:inline-flex;align-items:center;gap:5px;margin:3px 0 2px;border:0;border-radius:10px;padding:3px 9px;font:inherit;font-size:14px;font-weight:700;background:color-mix(in srgb,var(--cmd) 14%,transparent);color:var(--cmd);cursor:pointer;max-width:100%}
+.ocmd svg{width:14px;height:14px;flex:0 0 auto}.ocmd i{font-style:normal;font-weight:500;font-size:12px;opacity:.85;white-space:nowrap}.name .ocmd{display:flex;width:max-content}.ocmd.ok{background:var(--fill);color:var(--muted)}
+.chip.cmd{background:color-mix(in srgb,var(--cmd) 14%,transparent);color:var(--cmd)}.iconbtn.odone.on{background:var(--levain);color:#fff}.row.off.odrow .name>b{text-decoration:line-through}
+body{--cmd:#2F6FD6}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{--cmd:#6EA8FF}}:root[data-theme="dark"] body{--cmd:#6EA8FF}
 .head #week button{background:none;box-shadow:none;color:var(--muted);opacity:.45;font-size:22px;width:28px;height:28px}.head #week{touch-action:pan-y;user-select:none;-webkit-user-select:none;min-height:40px;cursor:grab}.head #week span{display:block}
 .head #week span{cursor:pointer}
 .cal{max-width:360px;padding:14px}.calh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.calh p{margin:0!important;font-size:17px}
@@ -956,7 +960,9 @@ function renderSales(){
     if(blocked(sday,id)){row.className="row off";row.innerHTML=`<div class="name"><b>${R[id].name}</b><small>pas le mardi</small></div>`;el.appendChild(row);return;}
     const rc=dateOf(sday)>=NEW0?reco(dateOf(sday),id):(()=>{const a=!(id in (sales[dateOf(sday)]||{}))&&AUTO_OK(id)?v-tv:0;return null;})();
     const adjTag=rc&&Math.abs(rc.q-v)>.001?`<button class="reco${rc.q<v?" dn":""}" data-reco="${id}" data-q="${rc.q}" aria-label="Appliquer la recommandation">${rc.q>v?"↑":"↓"} ${num(rc.q)}${rc.why?`<i>${rc.why}</i>`:""}</button>`:"";
-    row.innerHTML=`<div class="name"><b>${R[id].name}</b>${adjTag}<small>${SALE_UNIT[id]?"en kg"+`<span class="plq">${plq(v)}</span> · `:BATCH[id]?"en pièces · ":""}${when}<span class="rca">${caTxt(v)}</span></small></div>`;
+    const dOrd=orders.filter(o=>o.date===dateOf(sday)&&((o.items||{})[id]||0)>0),oq=dOrd.reduce((s,o)=>s+o.items[id],0),oqd=dOrd.filter(o=>o.done).reduce((s,o)=>s+o.items[id],0);
+    const cmdTag=oq?`<button class="ocmd${oqd>=oq?" ok":""}" data-ocmd="1" aria-label="Voir les commandes">${oqd>=oq?IC.check:CAL}+${num(oq)}${id==="focaccia"?" kg":""}${oqd&&oqd<oq?`<i>${num(oqd)} retiré${oqd>1?"s":""}</i>`:""}</button>`:"";
+    row.innerHTML=`<div class="name"><b>${R[id].name}</b>${adjTag}${cmdTag}<small>${SALE_UNIT[id]?"en kg"+`<span class="plq">${plq(v)}</span> · `:BATCH[id]?"en pièces · ":""}${when}<span class="rca">${caTxt(v)}</span></small></div>`;
     if(id==="canele"){row.classList.add("canl");const sg=document.createElement("div");sg.className="seg";
       sg.innerHTML=[0,6,12,18,24,30,36,42,48].map(n=>`<button class="${n===v?"on":""}" data-cn="${n}">${n}</button>`).join("");
       sg.onclick=e=>{const b=e.target.closest("button");if(!b)return;const dt=dateOf(sday);(sales[dt]=sales[dt]||{}).canele=+b.dataset.cn;save();renderSales();};
@@ -965,6 +971,7 @@ function renderSales(){
     el.appendChild(row);
   });
   el.querySelectorAll("[data-reco]").forEach(b=>b.onclick=e=>{e.stopPropagation();const dt=dateOf(sday);(sales[dt]=sales[dt]||{})[b.dataset.reco]=+b.dataset.q;save();renderSales();});
+  el.querySelectorAll("[data-ocmd]").forEach(b=>b.onclick=e=>{e.stopPropagation();editCmd=true;draft=null;editBilan=false;editBreads=false;renderSales();});
   renderSalesHint();
 }
 const BASKET=`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a2 2 0 1 0 4 0a2 2 0 0 0-4 0"/><path d="M5 8h14a2 2 0 0 1 1.98 2.3l-1.26 7.16a3 3 0 0 1-2.96 2.54h-9.52a3 3 0 0 1-2.96-2.54l-1.26-7.16a2 2 0 0 1 1.98-2.3z"/><path d="M17 10l-2-6"/><path d="M7 10l2-6"/></svg>`;
@@ -1029,10 +1036,11 @@ function renderCmd(el){const dt=dateOf(sday),list=orders.filter(o=>o.date===dt);
       orders=[...orders.filter(x=>x.id!==o.id),o];draft=null;save();renderSales();};
     if(!draft.name)setTimeout(()=>{const i=document.getElementById("dName");if(i)i.focus();},50);return;}
   if(!list.length)el.innerHTML=`<div class="row"><div class="name"><b>Aucune commande</b></div></div>`;
-  list.forEach(o=>{const row=document.createElement("div");row.className="row"+(o.done?" off":"");row.dataset.oid=o.id;
+  if(list.length){const nd=list.filter(o=>o.done).length;el.insertAdjacentHTML("beforeend",`<div class="row"><div class="name"><b>Retirées</b><div class="gauge" style="margin-top:6px"><i style="width:${nd/list.length*100}%;background:var(--levain)"></i></div></div><b class="cav">${nd} / ${list.length}</b></div>`);}
+  list.slice().sort((a,b)=>(a.done?1:0)-(b.done?1:0)).forEach(o=>{const row=document.createElement("div");row.className="row odrow"+(o.done?" off":"");row.dataset.oid=o.id;
     const {tel,note}=telOf(o);
     row.innerHTML=`<div class="name golink"><b>${o.name.replace(/</g,"&lt;")}</b>${tel?`<span class="tel">${PHONE}<span class="telnum">${fmtTel(tel)}</span></span>`:""}<div class="chips big">${itemsTxt(o.items)}${webChip(o)}</div>${note?`<small class="onote">${note.replace(/</g,"&lt;")}</small>`:""}</div>
-      <button class="iconbtn${o.done?" on":""}" data-done="${o.id}" aria-label="${o.done?"Pas encore retirée":"Retirée"}">${IC.check}</button><button class="iconbtn" data-edit="${o.id}" aria-label="Modifier">${IC.pen}</button>`;el.appendChild(row);});
+      <button class="iconbtn big odone${o.done?" on":""}" data-done="${o.id}" aria-label="${o.done?"Pas encore retirée":"Retirée"}">${IC.check}</button><button class="iconbtn" data-edit="${o.id}" aria-label="Modifier">${IC.pen}</button>`;el.appendChild(row);});
   el.querySelectorAll("[data-oid] .name").forEach(nm=>nm.onclick=()=>{const o=orders.find(x=>x.id===nm.parentNode.dataset.oid);if(o)showOrder(o);});
   el.querySelectorAll("[data-done]").forEach(b=>b.onclick=()=>{const o=orders.find(x=>x.id===b.dataset.done);o.done=!o.done;save();renderSales();});
   el.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{const o=orders.find(x=>x.id===b.dataset.edit);{const t=telOf(o);draft={...o,phone:t.tel,note:t.note,items:{...o.items}};}renderSales();});
@@ -1148,7 +1156,7 @@ function renderProd(){
     const o=pr[id],r=R[id];const row=document.createElement("div");row.className="row prod";
     if(editProd){row.dataset.k=id;row.innerHTML=`${HANDLE}<div class="name"><b>${r.name}</b></div>`;el.appendChild(row);return;}
     const fq=(v,d)=>id==="focaccia"?plq(v,dateOf(d)):num(v);
-    const from=o.from.map(([d,v,pv])=>`<span class="chip"><i>${d===pday?"Auj.":d+"."}</i>${fq(v,d)}</span>`+pv.map(([n,q])=>`<span class="chip pro">${n} ${fq(q,d)}</span>`).join("")).join("");
+    const from=o.from.map(([d,v,pv])=>`<span class="chip"><i>${d===pday?"Auj.":d+"."}</i>${fq(v,d)}</span>`+pv.map(([n,q])=>n==="Commandes"?`<span class="chip cmd">${CAL.replace('width="20" height="20"','width="13" height="13" style="vertical-align:-1px;margin-right:3px"')}${fq(q,d)}</span>`:`<span class="chip pro">${n} ${fq(q,d)}</span>`).join("")).join("");
     const unit=r.unit==="plaque"?" plaques":o.batch?(o.q>1?" fournées":" fournée"):"";
     if(o.batch){const b=o.batch;row.innerHTML=`<div class="name"><b>${r.name}</b><div class="chips">${from}${b.used?`<span class="chip m">−${b.used} veille</span>`:""}${b.left?`<span class="chip m">reste ${b.left}</span>`:""}</div></div><div class="qty">${num(o.q)}<small style="font-size:14px;color:var(--muted)">${unit}</small></div>`;el.appendChild(row);return;}
     // Focaccia : ajout par demi-plaque ; le total de plaques se met à jour tout de suite
