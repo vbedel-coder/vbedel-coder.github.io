@@ -39,6 +39,9 @@ tr.grp td:first-child{font-weight:400}
 .flours td small{color:var(--muted);display:block;font-size:14px}
 .note{color:var(--muted);font-size:14px;margin-top:28px}
 .row.n11 b{color:var(--levain)}
+.fcv{font-style:normal;color:var(--muted)}
+.row.debr{display:block}.debr textarea{width:100%;box-sizing:border-box;border:0;border-radius:12px;background:var(--fill2);color:var(--ink);font:inherit;font-size:17px;padding:10px 12px;resize:vertical}
+.debb{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}.debb .iconbtn.on{background:var(--levain-soft);color:var(--levain)}
 .foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:12px}
 .prod .qty{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;min-width:56px;text-align:right}
 .row .name small.for{color:var(--levain)}
@@ -759,6 +762,8 @@ const offDay=d=>{if(isClosed(d))return true;const m=sales[d];if(!m)return false;
 function baseSrc(date,id){let p=addDays(date,-7),n=0;while(n<8&&offDay(p)){p=addDays(p,-7);n++;}return p;}
 function baseQ(date,id){const k="b|"+date+"|"+id;if(k in adjMemo)return adjMemo[k];const src=baseSrc(date,id);
   adjMemo[k]={q:0,src};return adjMemo[k]={q:focConv(id,rawAt(src,id),src,date),src};}
+// Prorata du CA prévu : demande prévue du jour ÷ demande prévue (à l'époque) du jour copié ; remplace les règles fixes vacances / fin des vacances
+const fcK=(date,src)=>{const t=iso(new Date()),cut=date<t?date:t,a=fcDay(date,cut),b=fcDay(src,src<cut?src:cut);return a&&b&&b.p?a.p/b.p:null;};
 function reco(date,id,any){if(date<NEW0||blocked(wdOf(date),id)||isClosed(date)||(!any&&id in (sales[date]||{})))return null;
   const {q:b,src}=baseQ(date,id);let r=b;const why=[];
   if(id!=="focaccia"&&b){
@@ -768,6 +773,7 @@ function reco(date,id,any){if(date<NEW0||blocked(wdOf(date),id)||isClosed(date)|
   // 11 novembre : jamais de baisse (2026 réduit à tort) ; on part de la dernière semaine normale, +10 % sur les pains.
   if(date.slice(5)==="11-11"){let p=src,n=0;while(n<12&&(isHol(p)||offDay(p))){p=addDays(p,-7);n++;}const ref=n<12?focConv(id,rawAt(p,id),p,date):shopType(wdOf(date),id,date);
     const t=id==="focaccia"?ref:ref?Math.ceil(ref*1.1):0;if(t>r){r=t;why.push("11/11");}}
+  else if(ruleOn("fc")&&fcK(date,src)){const k=fcK(date,src);if(Math.abs(k-1)>=.05&&r){const t=id==="focaccia"?snapF(r*k,date):Math.round(r*k);if(Math.abs(t-r)>.001){r=t;why.push("CA "+pctS(k));}}}
   else if(hd&&!hs){if(id==="focaccia"){if(ruleOn("focHalf")&&r>focH(date)){r=focH(date);why.push("vacances");}}else if(r){r=Math.round(r*(1-holR()));why.push(ferie(date)||isPont(date)?"férié":"vacances");}}
   else if(!hd&&hs){let p=src,n=0;while(n<12&&(isHol(p)||offDay(p))){p=addDays(p,-7);n++;}const ref=n<12?focConv(id,rawAt(p,id),p,date):shopType(wdOf(date),id,date);if(Math.abs(ref-r)>.001){r=ref;why.push("fin des vacances");}}
   if(id!=="focaccia"&&b)r=Math.max(AU(id),r);if(id==="canele")r=Math.round(r/6)*6;
@@ -984,7 +990,41 @@ const BASKET=`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke
 const CLOCK=`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v5l3 3"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/></svg>`;
 const setLeft=(dt,id,e)=>{const m=left[dt]=left[dt]||{};if(!e||(!e.r&&e.h==null))delete m[id];else m[id]=e;if(!Object.keys(m).length)delete left[dt];};
 // Bilan de fin de journée : reste ou heure de rupture de chaque pain vendu ce jour-là
+// ---- Débrief dicté (micro du clavier iOS) : « reste 3 graines, rupture froment 17 h, pluie, brocante » → bilan rempli ----
+const unacc=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g," ");
+const DEB_AL={froment:["froment"],fss:["fss","froment seigle","seigle et sarrasin","seigle sarrasin","3 farines","trois farines"],seigle:["tourte","seigle"],riz:["riz","sans gluten"],
+  epeautre:["epeautre"],khorasan:["khorasan","kamut"],graine:["graine"],meteil:["meteil","noix"],chataigne:["chataigne"],rugbrod:["rugbrod","rugbrot","rugbro","nordique"],
+  blesAnciens:["bles anciens","ble ancien","bles ancien","anciens"],focaccia:["focaccia","fougasse"],mie:["mie"],brioche:["brioche"],brioPep:["pepite","brioche pepite"],canele:["canele"]};
+const NUMW={un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10,onze:11,douze:12,treize:13,quatorze:14,quinze:15,seize:16,vingt:20,trente:30,demi:.5,demie:.5};
+function debParse(text,dt){const out={left:{},w:"",e:0},T=unacc(text);
+  if(/\b(pluie|pleu|averse|orage|neige|mouille)/.test(T))out.w="pluie";else if(/\b(chaud|canicule|chaleur)/.test(T))out.w="chaud";
+  if(/\b(evenement|brocante|fete|marche|greve|manif|travaux|vide grenier|concert|braderie)/.test(T))out.e=1;
+  const ids=pIds().filter(id=>!blocked(wdOf(dt),id));
+  const al=[];ids.forEach(id=>{const n=unacc(R[id].name).replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();[n,...(DEB_AL[id]||[])].forEach(a=>al.push([a,id]));});
+  al.sort((a,b)=>b[0].length-a[0].length);
+  T.split(/[,;.\n]|\bpuis\b|\bet (?=(?:il |reste|rupture|plus|\d|une? |deux|trois|quatre|cinq|six|sept|huit|neuf|dix))/).forEach(c=>{let s=" "+c.replace(/[^a-z0-9: ]/g," ").replace(/\s+/g," ")+" ";
+    const rup=/\b(rupture|plus de|plus d|epuise|fini|parti|vendu tout|tout vendu)/.test(s);
+    const hm=s.match(/\b(\d{1,2})\s*(?:h|heures?|:)\s*(\d{1,2})?\b/)||(/\bmidi\b/.test(s)?[0,"12"]:null);
+    let h=hm?+hm[1]+(hm[2]?+hm[2]/60:0)+(/et demie/.test(s)?.5:0):null;if(hm)s=s.replace(hm[0]," ");
+    const hits=[];al.forEach(([a,id])=>{const re=new RegExp("\\b"+a.replace(/ /g,"\\s(?:et\\s|de\\s|aux?\\s)?")+"s?\\b");const m=s.match(re);if(m&&!hits.some(x=>x.id===id)){hits.push({id,i:m.index});s=s.slice(0,m.index)+" ".repeat(m[0].length)+s.slice(m.index+m[0].length);}});
+    const nums=[];s.replace(/\b(\d+(?:[.,]\d+)?|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze|treize|quatorze|quinze|seize|vingt|trente|demie?)\b/g,(m,x,i)=>{nums.push({v:NUMW[x]??+x.replace(",","."),i});return m;});
+    hits.sort((a,b)=>a.i-b.i).forEach(({id,i})=>{
+      if(rup){out.left[id]={h:h!=null&&h<24?h:adjH()-2};return;}
+      const nb=nums.filter(n=>!n.used).sort((a,b)=>Math.abs(a.i-i)-Math.abs(b.i-i))[0];if(!nb)return;nb.used=1;
+      let v=nb.v;if(id==="focaccia"&&/plaque/.test(c))v=v*focKg(dt);if(id==="canele"&&/fournee/.test(c))v*=48;
+      out.left[id]={r:Math.round(v*1000)/1000};});});
+  return out;}
 function renderBilan(el){const dt=dateOf(sday),bl=left[dt]||{};
+  {const db=bl._d||{},box=document.createElement("div");box.className="row debr";
+    box.innerHTML=`<textarea id="debT" rows="2" placeholder="🎙" aria-label="Débrief">${(db.t||"").replace(/</g,"&lt;")}</textarea><div class="debb">
+      <button class="iconbtn${db.w==="pluie"?" on":""}" data-dw="pluie" aria-label="Pluie">🌧</button><button class="iconbtn${db.w==="chaud"?" on":""}" data-dw="chaud" aria-label="Chaud">☀︎</button><button class="iconbtn${db.e?" on":""}" data-de="1" aria-label="Événement">★</button><button class="iconbtn" id="debOk" aria-label="Remplir le bilan">${IC.check}</button></div>`;
+    const setD=f=>{const m=left[dt]=left[dt]||{},o={...(m._d||{})};f(o);Object.keys(o).forEach(k=>{if(!o[k])delete o[k];});if(Object.keys(o).length)m._d=o;else delete m._d;if(!Object.keys(m).length)delete left[dt];save();renderSales();};
+    box.querySelectorAll("[data-dw]").forEach(b=>b.onclick=()=>setD(o=>{o.w=o.w===b.dataset.dw?"":b.dataset.dw;}));
+    box.querySelector("#debT").oninput=e=>{const m=left[dt]=left[dt]||{},v=e.target.value;m._d={...(m._d||{}),t:v};if(!v)delete m._d.t;if(!Object.keys(m._d).length)delete m._d;if(!Object.keys(m).length)delete left[dt];save();};
+    box.querySelector("[data-de]").onclick=()=>setD(o=>{o.e=o.e?0:1;});
+    box.querySelector("#debOk").onclick=()=>{const t=box.querySelector("#debT").value.trim(),x=debParse(t,dt);
+      Object.entries(x.left).forEach(([id,e])=>setLeft(dt,id,e));setD(o=>{o.t=t;if(x.w)o.w=x.w;if(x.e)o.e=1;});};
+    el.appendChild(box);}
   const ids=pIds().filter(id=>!blocked(sday,id)&&shop(sday,id)>0);
   if(!ids.length)el.innerHTML=`<div class="row"><div class="name"><b>Rien en boutique</b></div></div>`;
   ids.forEach(id=>{const e=bl[id]||{},v=shop(sday,id),foc=id==="focaccia";
@@ -1081,7 +1121,7 @@ function renderSalesHint(){
   const day=shopCA(sday),dayPro=proCA(sday),wk=SDAYS.reduce((s,d)=>s+shopCA(d)+proCA(d),0),tg=weekTarget(),pct=Math.min(100,wk/tg*100);
   const pmw=(Object.values(fixes()).reduce((a,b)=>a+b,0)+payM())/(1-matr())*(1+tva())*12/objM()/(4.33*12/12);
   document.getElementById("salesCA").innerHTML=`<div class="levains" style="margin-bottom:10px">
-    <div class="lv"><span>CA prévu</span><strong>${eur0(day+dayPro)}</strong>${rcTag(rcCA([sday]),day+dayPro)}</div>
+    <div class="lv"><span>CA prévu</span><strong>${eur0(day+dayPro)}</strong>${rcTag(rcCA([sday]),day+dayPro)}${(q=>q?`<em style="display:block">caisse ${Math.round(fcRange(q.p)[0])}–${eur0(fcRange(q.p)[1])}</em>`:"")(fcDay(dateOf(sday)))}</div>
     <div class="lv"><span>Semaine</span><strong>${eur0(wk)}</strong><em>objectif ${eur0(tg)} · ${Math.round(wk/tg*100)} %</em>${rcTag(rcCA(SDAYS),wk)}</div></div>
     <div class="gauge" style="margin-bottom:16px"><i style="width:${pct}%;background:${wk>=tg?"var(--levain)":wk>=pmw?"var(--flour)":"var(--warn)"}"></i><s style="left:${Math.min(100,pmw/tg*100)}%"></s></div>`;
 }
@@ -1276,6 +1316,7 @@ function rulesHTML(){const today=iso(new Date()),lim=addDays(today,365);
     <tr class="${off("j0")}"><td>Pains en direct : le lendemain<small class="d">samedi : par le jeudi</small></td><td class="q">${tog("j0")}</td></tr>
     <tr class="${off("j1")}"><td>Pousse retardée : 2 jours après<small class="d">mar → jeu, mer → ven, jeu → sam</small></td><td class="q">${tog("j1")}</td></tr>
     <tr class="${off("week")}"><td>Même jour, semaine suivante<small class="d">invendus et ruptures</small></td><td class="q">${tog("week")}</td></tr>
+    <tr class="${off("fc")}"><td>Au prorata du CA prévu<small class="d">tendance, vacances, fériés, météo</small></td><td class="q">${tog("fc")}</td></tr>
   </table></details>
   <details class="card" open><summary><b>Vacances scolaires et fériés</b><span>zone C</span></summary><table>
     <tr class="${off("hol")}"><td>Activer</td><td class="q">${tog("hol")}</td></tr>
@@ -1531,9 +1572,72 @@ function renderResults(){
 const caOf=dt=>ca[dt]??CA0[dt]??{};
 const caTot=e=>(e.cb||0)+(e.esp||0);
 const caFull=e=>caTot(e)+(e.x||0);
+// ---- CA prévisionnel (caisse carte + espèces, TTC) ----
+// Prévu = niveau récent (jours normaux, demi-vie 4 semaines) × indice du jour de semaine × vacances/férié × météo × saison N-1.
+// Tout est appris sur la caisse ; un jour de rupture compte pour ce qu'il aurait vendu ; un jour marqué « événement » n'apprend rien.
+// Vacances zone C 2026 passées (pour apprendre leur effet) ; les suivantes viennent de HOL.
+const HOL26=[["2026-02-21","2026-03-08","Hiver"],["2026-04-18","2026-05-03","Printemps"],["2026-07-04","2026-08-31","Été"]];
+const HOLX=[...HOL26,...HOL];
+const FC_DEF={Hiver:.81,Printemps:.74,"Été":.72,Toussaint:.8,"Noël":.8,f:.85};
+const HKM={};const holKey=d=>d in HKM?HKM[d]:(HKM[d]=holKey0(d));const holKey0=d=>{if(d.slice(5)==="11-11")return "";if(ferie(d)||isPont(d))return "f";const h=HOLX.find(([a,z])=>d>=a&&d<=z);return h?(/Ascension/.test(h[2])?"f":h[2]):"";};
+const debOf=d=>(left[d]||{})._d||null;
+// Météo (Open-Meteo, Paris 11e) : pluie en mm et max en °C, gardés sur l'appareil
+let meteo=store.get("v25-meteo")||{d:{},at:0,ar:0};
+const MET="latitude=48.8635&longitude=2.38&daily=precipitation_sum,temperature_2m_max&timezone=Europe%2FParis";
+const metPut=j=>{const t=(j&&j.daily)||{};(t.time||[]).forEach((d,i)=>{const p=t.precipitation_sum[i],x=t.temperature_2m_max[i];if(p!=null&&x!=null)meteo.d[d]=[p,x];});};
+async function metLoad(){const now=Date.now();if(now-meteo.at<3*3600e3)return;
+  try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?${MET}&past_days=92&forecast_days=14`);if(!r.ok)return;metPut(await r.json());meteo.at=now;
+    if(now-meteo.ar>7*864e5){const r2=await fetch(`https://archive-api.open-meteo.com/v1/archive?${MET}&start_date=2026-01-01&end_date=${addDays(iso(new Date()),-6)}`);if(r2.ok){metPut(await r2.json());meteo.ar=now;}}
+    store.set("v25-meteo",meteo);fcMemo2={};if(tab==="C"||tab==="V")render();}catch(e){}}
+// Pluie : dictée du débrief d'abord, sinon Open-Meteo (≥ 3 mm) ; chaleur ≥ 28 °C
+const wxOf=d=>{const b=debOf(d);if(b&&b.w)return b.w;const m=meteo.d[d];if(!m)return "";return m[0]>=3?"pluie":m[1]>=28?"chaud":"";};
+// CA d'un jour passé, rupture comprise : pain épuisé à h → ventes manquées ≈ vendu × (heure limite − h) ÷ (h − 8 h), au plus +50 %
+const fcObs=d=>fcM("o"+d,()=>fcObs0(d));
+const fcObs0=d=>{if(!wdOf(d)||isClosed(d))return null;const e=caOf(d),v=caTot(e);if(!(v>0))return null;
+  const bl=left[d]||{};let lost=0;Object.keys(bl).filter(id=>R[id]&&bl[id].h!=null).forEach(id=>{const h=bl[id].h,q=shopAt(d,id)*unitTTC(id);if(h<adjH())lost+=q*Math.min(.5,(adjH()-h)/Math.max(1,h-8));});
+  return v+lost;};
+let fcMemo2={};
+const fcM=(k,fn)=>k in fcMemo2?fcMemo2[k]:(fcMemo2[k]=fn());
+const fcDays=(a,z)=>{const o=[];for(let d=a;d<z;d=addDays(d,1))o.push(d);return o;};
+const isNorm=d=>!holKey(d)&&!(debOf(d)||{}).e&&d.slice(5)!=="11-11";
+// Indice du jour de semaine : moyenne du jour ÷ moyenne générale (jours normaux de l'année écoulée), ramené vers 1 s'il y a peu de jours
+const wdIdx=(cut)=>fcM("w"+cut,()=>{const s={},n={};let S=0,N=0;fcDays(addDays(cut,-365),cut).forEach(d=>{if(!isNorm(d))return;const v=fcObs(d);if(v==null)return;const w=wdOf(d);s[w]=(s[w]||0)+v;n[w]=(n[w]||0)+1;S+=v;N++;});
+  const o={};SDAYS.forEach(w=>{const r=n[w]&&N?(s[w]/n[w])/(S/N):1,k=(n[w]||0)/((n[w]||0)+10);o[w]=1+(r-1)*k;});return o;});
+// Niveau autour d'une date (jours normaux ramenés au jour moyen) : passé seul (prévision) ou ± 4 semaines (apprentissage)
+const fcLevel=(cut,back,fwd)=>fcM("l"+cut+back+"|"+fwd,()=>{const I=wdIdx(iso(new Date()));let s=0,w=0,n=0;
+  fcDays(addDays(cut,-back),addDays(cut,fwd)).forEach(d=>{if(!isNorm(d))return;const v=fcObs(d);if(v==null)return;const a=Math.abs((parse(cut)-parse(d))/864e5),k=Math.pow(.5,a/28);s+=k*v/I[wdOf(d)];w+=k;n++;});return n>=4?s/w:null;});
+// Effets appris : rapport entre le jour et le niveau des jours normaux autour (même indice de jour de semaine)
+const fcLearn=(cut)=>fcM("e"+cut,()=>{const I=wdIdx(cut),acc={};const add=(k,r)=>{(acc[k]=acc[k]||[]).push(r);};
+  fcDays(addDays(cut,-400),cut).forEach(d=>{const v=fcObs(d);if(v==null||(debOf(d)||{}).e)return;const L=fcLevel(d,28,29);if(!L)return;const r=v/(L*I[wdOf(d)]);
+    const h=holKey(d);if(h)add(h,r);else if(d.slice(5)!=="11-11"){const x=wxOf(d);add(x||"sec",r);}});
+  const mean=a=>a&&a.length?a.reduce((s,x)=>s+x,0)/a.length:null,o={},sec=mean(acc.sec)||1;
+  Object.keys(FC_DEF).forEach(k=>{const a=acc[k]||[],m=mean(a),def=FC_DEF[k];o[k]=m==null?def:(a.length*m+6*def)/(a.length+6);});
+  ["pluie","chaud"].forEach(k=>{const a=acc[k]||[],m=mean(a);o[k]=m==null?1:1+(m/sec-1)*a.length/(a.length+8);o["n"+k]=a.length;});
+  return o;});
+// Prévision d'un jour, avec seulement ce qui était connu avant (cut)
+function fcDay(d,cut){cut=cut||(d<iso(new Date())?d:iso(new Date()));return fcM("p"+d+"|"+cut,()=>{
+  if(!wdOf(d)||isClosed(d))return null;const L=fcLevel(cut,84,0);if(!L)return null;const I=wdIdx(cut),E=fcLearn(cut),f=[];let p=L*I[wdOf(d)];
+  // Tendance : 4 dernières semaines face aux 12
+  const L4=fcLevel(cut,28,0),L12=(()=>{let s=0,n=0;fcDays(addDays(cut,-84),cut).forEach(x=>{if(!isNorm(x))return;const v=fcObs(x);if(v==null)return;s+=v/I[wdOf(x)];n++;});return n>=8?s/n:null;})();
+  if(L4&&L12)f.push(["tendance",L4/L12]);
+  const h=holKey(d);if(h)f.push([h==="f"?(ferie(d)?ferieName(d):"pont"):h,E[h]??.85]);
+  if(d.slice(5)==="11-11")f.push(["11/11",1]);
+  if(!h){const x=wxOf(d);if(x&&E[x]!==1)f.push([x,E[x]]);}
+  // Saison N-1 : comment le niveau avait bougé l'an dernier entre la date de calcul et le jour visé
+  const a=fcLevel(addDays(cut,-364),28,29),b=fcLevel(addDays(d,-364),28,29);if(a&&b&&Math.abs(b/a-1)>.01)f.push(["N-1",1+(b/a-1)*.5]);
+  f.forEach(x=>{if(x[0]!=="tendance")p*=x[1];});
+  return {p,f:f.filter(x=>Math.abs(x[1]-1)>=.02)};});}
+// Précision : prévisions faites la veille sur les 40 derniers jours ouverts ; écart moyen et fourchette (≈ 2 jours sur 3 dedans)
+const fcAcc=()=>fcM("acc",()=>{const t=iso(new Date()),r=[];for(let d=addDays(t,-1),n=0;n<120&&r.length<40;d=addDays(d,-1),n++){const v=fcObs(d);if(v==null)continue;const q=fcDay(d,d);if(q)r.push([v,q.p]);}
+  if(r.length<5)return {mape:null,s:.2,n:r.length};const lg=r.map(([v,p])=>Math.log(v/p)),m=lg.reduce((a,b)=>a+b,0)/lg.length;
+  return {mape:r.reduce((s,[v,p])=>s+Math.abs(v-p)/v,0)/r.length,s:Math.sqrt(lg.reduce((s,x)=>s+(x-m)*(x-m),0)/lg.length),n:r.length};});
+const fcRange=p=>{const s=fcAcc().s;return [p*Math.exp(-s),p*Math.exp(s)];};
+const pctS=x=>(x>=1?"+":"−")+Math.round(Math.abs(x-1)*100)+" %";
+const FCIC={tendance:"↗",pluie:"🌧",chaud:"☀︎","N-1":"⟲"};
+const fcChips=q=>q&&q.f.length?`<div class="chips">${q.f.map(([k,v])=>`<span class="chip"><i>${FCIC[k]||""}${FCIC[k]?" ":""}${k==="f"?"férié":k}</i>${pctS(v)}</span>`).join("")}</div>`:"";
 const eur2=v=>(Math.round(v*100)/100).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}).replace(/ | /g," ")+" €";
 const caIn=v=>v==null?"":String(v).replace(".",",");
-function renderCA(){const el=document.getElementById("caView");const dt=dateOf(cday),e=caOf(dt);
+function renderCA(){const el=document.getElementById("caView");const dt=dateOf(cday),e=caOf(dt);const fq=fcDay(dt),fr=fq?fcRange(fq.p):null,fa=fcAcc();
   const wkDays=SDAYS.map(d=>[d,dateOf(d)]),wkTot=wkDays.reduce((s,[,x])=>s+caFull(caOf(x)),0),tg=weekTarget();
   const prev=SDAYS.reduce((s,d)=>s+shopCA(d)+proCA(d),0);
   const pct=Math.min(100,wkTot/tg*100);
@@ -1542,17 +1646,19 @@ function renderCA(){const el=document.getElementById("caView");const dt=dateOf(c
   const field=(k,lab,note)=>`<div class="carow"><label for="ca_${k}">${lab}${note||""}</label><div class="cain"><input id="ca_${k}" data-cak="${k}" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="${caIn(e[k])}"><span>€</span></div></div>`;
   const ecart=e.z!=null&&caTot(e)?caTot(e)-e.z:null;
   el.innerHTML=`<div class="levains" style="margin-bottom:10px">
-      <div class="lv"><span>${DAYNAMES[cday][0].toUpperCase()+DAYNAMES[cday].slice(1)} ${parse(dt).getDate()}</span><strong>${eur0(caFull(e))}</strong></div>
+      <div class="lv"><span>${DAYNAMES[cday][0].toUpperCase()+DAYNAMES[cday].slice(1)} ${parse(dt).getDate()}</span><strong>${caTot(e)||e.closed||!fq?eur0(caFull(e)):`<i class="fcv">≈ ${eur0(fq.p)}</i>`}</strong>${fq?`<em>${caTot(e)?`prévu ${eur0(fq.p)} · ${pctS(caTot(e)/fq.p)}`:`${eur0(fr[0])} – ${eur0(fr[1])}`}</em>`:""}</div>
       <div class="lv"><span>Semaine</span><strong>${eur0(wkTot)}</strong><em>prévu ${eur0(prev)}</em></div></div>
-    <div class="gauge" style="margin-bottom:16px"><i style="width:${pct}%;background:${wkTot>=tg?"var(--levain)":"var(--tint-fill)"}"></i></div>
+    <div class="gauge" style="margin-bottom:${fq&&fq.f.length?8:16}px"><i style="width:${pct}%;background:${wkTot>=tg?"var(--levain)":"var(--tint-fill)"}"></i></div>
+    ${fq&&fq.f.length?`<div style="margin-bottom:16px">${fcChips(fq)}</div>`:""}
     <div class="list caform"><div class="carow"><label for="ca_closed">Magasin fermé</label><label class="sw"><input type="checkbox" id="ca_closed" ${e.closed?"checked":""} aria-label="Magasin fermé"><i></i></label></div>${e.closed?"":field("cb","Carte")}${e.closed?"":field("esp","Espèces")}
       ${e.closed?"":`<div class="carow catot"><span>Total (espèces + CB)</span><b>${eur2(caTot(e))}</b></div>
       ${field("x","Autre caisse")}
       <div class="carow catot"><span>Total</span><b>${eur2(caFull(e))}</b></div>
       ${field("z","Ticket Z1",ecart!=null?`<small class="caz${Math.abs(ecart)>1?" cawarn":""}">écart ${ecart>0?"+":""}${eur2(ecart)}</small>`:"")}`}
       </div>
-    <h2>Semaine</h2><div class="list">${wkDays.map(([d,x])=>{const t=caFull(caOf(x));return `<div class="row cawk${d===cday?" on":""}${x===iso(new Date())?" tday":""}" data-cday="${d}"><div class="name"><b>${DAYNAMES[d][0].toUpperCase()+DAYNAMES[d].slice(1)} ${parse(x).getDate()}${x===iso(new Date())?`<em class="tdtag">aujourd'hui</em>`:""}</b></div><b class="cav">${caOf(x).closed?"fermé":t?eur0(t):"—"}</b></div>`;}).join("")}
-      <div class="row catot"><div class="name"><b>Total</b><small>objectif ${eur0(tg)} · ${Math.round(wkTot/tg*100)} %</small></div><b class="cav">${eur0(wkTot)}</b></div></div>
+    <h2>Semaine</h2><div class="list">${wkDays.map(([d,x])=>{const t=caFull(caOf(x));return `<div class="row cawk${d===cday?" on":""}${x===iso(new Date())?" tday":""}" data-cday="${d}"><div class="name"><b>${DAYNAMES[d][0].toUpperCase()+DAYNAMES[d].slice(1)} ${parse(x).getDate()}${x===iso(new Date())?`<em class="tdtag">aujourd'hui</em>`:""}</b></div><b class="cav">${caOf(x).closed?"fermé":t?eur0(t):(q=>q?`<i class="fcv">≈ ${eur0(q.p)}</i>`:"—")(fcDay(x))}</b></div>`;}).join("")}
+      <div class="row catot"><div class="name"><b>Total</b><small>objectif ${eur0(tg)} · ${Math.round(wkTot/tg*100)} %</small></div><b class="cav">${eur0(wkTot)}</b></div>
+      ${fa.mape!=null?`<div class="row"><div class="name"><b>≈ Prévision</b><small>${fa.n} jours · fourchette ±${Math.round(fa.s*100)} %${meteo.at?"":" · sans météo"}</small></div><b class="cav">±${Math.round(fa.mape*100)} %</b></div>`:""}</div>
     <h2>${mName[0].toUpperCase()+mName.slice(1)}</h2><div class="list"><div class="row catot"><div class="name"><b>Total du mois</b><small>objectif ${eur0(mTg)} · ${Math.round(mTot/mTg*100)} %</small></div><b class="cav">${eur0(mTot)}</b></div></div>`;
   el.querySelectorAll("input[data-cak]").forEach(i=>{i.onfocus=()=>i.select();i.onchange=()=>{const k=i.dataset.cak,raw=i.value.trim().replace(",",".").replace(/\s|€/g,"");
     const cur={...caOf(dt)};if(raw===""){delete cur[k];}else{const v=+raw;if(!isFinite(v)||v<0){i.value=caIn(cur[k]);return;}cur[k]=Math.round(v*100)/100;}
@@ -1634,7 +1740,7 @@ if(/[?&]stock\b/.test(location.search)){tab="P";stockMode=true;try{history.repla
 function renderStockMode(){const v=document.getElementById("viewP");v.classList.toggle("stockmode",stockMode);const b=document.getElementById("stockBtn");b.classList.toggle("on",stockMode);
   document.getElementById("prodOrderBtn").hidden=stockMode||document.getElementById("prodOrderBtn").hidden;document.getElementById("days").hidden=stockMode;document.getElementById("week").hidden=stockMode;
   if(stockMode)renderOrder();}
-function render(){adjMemo={};saveUI();store.set("v23-stockm",stockMode);renderHead();if(tab==="C")renderCA();else if(tab==="V")renderSales();else if(tab==="O")renderPro();else if(tab==="S")renderSettings();else if(tab==="R")renderProfit();else{renderProd();renderStockMode();}ordBadge();ordUpdate();}
+function render(){adjMemo={};fcMemo2={};saveUI();store.set("v23-stockm",stockMode);renderHead();if(tab==="C")renderCA();else if(tab==="V")renderSales();else if(tab==="O")renderPro();else if(tab==="S")renderSettings();else if(tab==="R")renderProfit();else{renderProd();renderStockMode();}ordBadge();ordUpdate();}
 document.getElementById("tabV").onclick=()=>{tab="V";save();render();};
 document.getElementById("tabO").onclick=()=>{tab="O";save();render();};
 const closeNew=()=>{document.getElementById("newc").hidden=true;};
@@ -1683,7 +1789,7 @@ document.getElementById("resetP").onclick=()=>{ask("Effacer les ajouts de ce jou
 document.getElementById("addBtn").onclick=()=>{const v=document.getElementById("extra").value;if(!v)return;const k=exKey(v);(extras[k]=extras[k]||{})[v]=v==="focaccia"?.5:1;save();render();};
 const exKey=id=>RULE[id]?dateOf(pday):pday;
 document.getElementById("tabS").onclick=()=>{tab="S";save();render();};document.getElementById("tabR").onclick=()=>{tab="R";save();render();};document.getElementById("tabC").onclick=()=>{tab="C";save();render();};document.getElementById("profit").addEventListener("change",onSettingsChange);document.getElementById("profit").addEventListener("click",onSettingsClick);document.getElementById("settings").addEventListener("change",onSettingsChange);document.getElementById("settings").addEventListener("click",onSettingsClick);document.getElementById("pesees").addEventListener("click",onPeseesClick);document.getElementById("levains").addEventListener("click",e=>{const b=e.target.closest("button[data-lvedit]");if(!b)return;e.preventDefault();editLv=editLv===b.dataset.lvedit?null:b.dataset.lvedit;renderResults();});document.getElementById("levains").addEventListener("change",onSettingsChange);document.getElementById("pesees").addEventListener("change",onSettingsChange);document.getElementById("stockBtn").onclick=()=>{stockMode=!stockMode;render();window.scrollTo(0,0);};document.getElementById("prodOrderBtn").onclick=()=>{editProd=!editProd;renderProd();};document.getElementById("orderBtn").onclick=()=>{editBreads=!editBreads;renderSales();};document.getElementById("bilanBtn").onclick=()=>{editBilan=!editBilan;renderSales();};document.getElementById("cmdBtn").onclick=()=>{editCmd=!editCmd;draft=null;renderSales();};
-render();setSync("local");initSync();initDownloads();
+render();setSync("local");initSync();initDownloads();metLoad();document.addEventListener("visibilitychange",()=>{if(!document.hidden)metLoad();});
 </script>
 <script>(function(){const h=document.getElementById("head");const f=()=>document.documentElement.style.setProperty("--hh",(h.offsetHeight+8)+"px");if(window.ResizeObserver)new ResizeObserver(f).observe(h);f();})();</script>
 </body>
