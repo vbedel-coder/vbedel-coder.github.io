@@ -802,8 +802,20 @@ const autoQ0=(date,id)=>{const b=shopType(wdOf(date),id);if(!b||!AUTO_OK(id))ret
 // ---- Vacances scolaires (zone C, Paris) et jours fériés : boutique −20 % (réglable), focaccia à ½ plaque, commandes pro inchangées ----
 // Période = du jour de fin des cours (samedi des départs inclus) à la veille de la reprise. Source : service-public.gouv.fr.
 // Ponts de l'Ascension : du jeudi au samedi. Été 2028 : fin août par défaut (reprise pas encore publiée).
-const HOL=[["2026-10-17","2026-11-01","Toussaint"],["2026-12-19","2027-01-03","Noël"],["2027-02-06","2027-02-21","Hiver"],["2027-04-03","2027-04-18","Printemps"],["2027-05-06","2027-05-09","Pont de l'Ascension"],["2027-07-03","2027-09-01","Été"],
+const HOL0=[["2026-10-17","2026-11-01","Toussaint"],["2026-12-19","2027-01-03","Noël"],["2027-02-06","2027-02-21","Hiver"],["2027-04-03","2027-04-18","Printemps"],["2027-05-06","2027-05-09","Pont de l'Ascension"],["2027-07-03","2027-09-01","Été"],
   ["2027-10-23","2027-11-07","Toussaint"],["2027-12-18","2028-01-02","Noël"],["2028-02-12","2028-02-27","Hiver"],["2028-04-15","2028-05-01","Printemps"],["2028-05-25","2028-05-28","Pont de l'Ascension"],["2028-07-04","2028-08-31","Été"]];
+// Calendrier officiel (data.education.gouv.fr, zone C, Paris) gardé sur l'appareil et relu chaque semaine ; dates en dur ci-dessus en secours
+const VAC_N=t=>/toussaint/i.test(t)?"Toussaint":/no[eë]l/i.test(t)?"Noël":/hiver/i.test(t)?"Hiver":/printemps/i.test(t)?"Printemps":/ascension/i.test(t)?"Pont de l'Ascension":/[ée]t[ée]/i.test(t)?"Été":t;
+let vacO=store.get("v26-vac")||{at:0,l:[]};
+const holMerge=()=>{const l=(vacO.l||[]).filter(x=>x[1]>=NEW0);if(!l.length)return HOL0;const last=l.reduce((m,x)=>x[1]>m?x[1]:m,"");return [...l,...HOL0.filter(x=>x[0]>last)];};
+let HOL=holMerge();
+async function vacLoad(){if(Date.now()-vacO.at<7*864e5)return;try{const y=new Date().getFullYear()-2;
+  const q=`zones="Zone C" and location="Paris" and start_date>="${y}-09-01"`;
+  const r=await fetch("https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-calendrier-scolaire/records?select=description,start_date,end_date&order_by=start_date&limit=100&where="+encodeURIComponent(q));if(!r.ok)return;
+  const m={};((await r.json()).results||[]).forEach(x=>{if(!x.start_date)return;const n=VAC_N(x.description||""),a=iso(new Date(x.start_date));let z=x.end_date?addDays(iso(new Date(x.end_date)),-1):"";
+    if(/^D[ée]but/i.test(x.description||""))z=a.slice(0,4)+"-08-31";if(!z||z<a)return;const k=n+a.slice(0,4);if(!m[k]||z>m[k][1])m[k]=[a,z,n];});
+  const l=Object.values(m).sort((a,b)=>a[0]<b[0]?-1:1);if(!l.length)return;vacO={at:Date.now(),l};store.set("v26-vac",vacO);HOL=holMerge();HOLX=[...vacO.l,...HOL26,...HOL];
+  Object.keys(HKM).forEach(k=>delete HKM[k]);adjMemo={};fcMemo2={};render();}catch(e){}}
 // Interrupteurs des règles (Réglages > Règles automatiques) : tout est activé par défaut
 const ruleOn=k=>((params.rules||{})[k])!==false;
 const adjP1=()=>params.adjP1??1, adjP2=()=>params.adjP2??2, adjH2=()=>params.adjH2??3;
@@ -1577,7 +1589,7 @@ const caFull=e=>caTot(e)+(e.x||0);
 // Tout est appris sur la caisse ; un jour de rupture compte pour ce qu'il aurait vendu ; un jour marqué « événement » n'apprend rien.
 // Vacances zone C 2026 passées (pour apprendre leur effet) ; les suivantes viennent de HOL.
 const HOL26=[["2026-02-21","2026-03-08","Hiver"],["2026-04-18","2026-05-03","Printemps"],["2026-07-04","2026-08-31","Été"]];
-const HOLX=[...HOL26,...HOL];
+let HOLX=[...(vacO.l||[]),...HOL26,...HOL];
 const FC_DEF={Hiver:.81,Printemps:.74,"Été":.72,Toussaint:.8,"Noël":.8,f:.85};
 const HKM={};const holKey=d=>d in HKM?HKM[d]:(HKM[d]=holKey0(d));const holKey0=d=>{if(d.slice(5)==="11-11")return "";if(ferie(d)||isPont(d))return "f";const h=HOLX.find(([a,z])=>d>=a&&d<=z);return h?(/Ascension/.test(h[2])?"f":h[2]):"";};
 const debOf=d=>(left[d]||{})._d||null;
@@ -1789,7 +1801,7 @@ document.getElementById("resetP").onclick=()=>{ask("Effacer les ajouts de ce jou
 document.getElementById("addBtn").onclick=()=>{const v=document.getElementById("extra").value;if(!v)return;const k=exKey(v);(extras[k]=extras[k]||{})[v]=v==="focaccia"?.5:1;save();render();};
 const exKey=id=>RULE[id]?dateOf(pday):pday;
 document.getElementById("tabS").onclick=()=>{tab="S";save();render();};document.getElementById("tabR").onclick=()=>{tab="R";save();render();};document.getElementById("tabC").onclick=()=>{tab="C";save();render();};document.getElementById("profit").addEventListener("change",onSettingsChange);document.getElementById("profit").addEventListener("click",onSettingsClick);document.getElementById("settings").addEventListener("change",onSettingsChange);document.getElementById("settings").addEventListener("click",onSettingsClick);document.getElementById("pesees").addEventListener("click",onPeseesClick);document.getElementById("levains").addEventListener("click",e=>{const b=e.target.closest("button[data-lvedit]");if(!b)return;e.preventDefault();editLv=editLv===b.dataset.lvedit?null:b.dataset.lvedit;renderResults();});document.getElementById("levains").addEventListener("change",onSettingsChange);document.getElementById("pesees").addEventListener("change",onSettingsChange);document.getElementById("stockBtn").onclick=()=>{stockMode=!stockMode;render();window.scrollTo(0,0);};document.getElementById("prodOrderBtn").onclick=()=>{editProd=!editProd;renderProd();};document.getElementById("orderBtn").onclick=()=>{editBreads=!editBreads;renderSales();};document.getElementById("bilanBtn").onclick=()=>{editBilan=!editBilan;renderSales();};document.getElementById("cmdBtn").onclick=()=>{editCmd=!editCmd;draft=null;renderSales();};
-render();setSync("local");initSync();initDownloads();metLoad();document.addEventListener("visibilitychange",()=>{if(!document.hidden)metLoad();});
+render();setSync("local");initSync();initDownloads();vacLoad();metLoad();document.addEventListener("visibilitychange",()=>{if(!document.hidden){metLoad();vacLoad();}});
 </script>
 <script>(function(){const h=document.getElementById("head");const f=()=>document.documentElement.style.setProperty("--hh",(h.offsetHeight+8)+"px");if(window.ResizeObserver)new ResizeObserver(f).observe(h);f();})();</script>
 </body>
