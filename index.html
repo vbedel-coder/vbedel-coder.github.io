@@ -384,9 +384,9 @@ function ask(title,value){return new Promise(res=>{const o=document.createElemen
   o.onclick=e=>{const b=e.target.closest("button");if(b)done(b.dataset.a==="ok");else if(e.target===o)done(false);};});}
 const R = {
   froment:{name:"Froment",unit:"pain",days:["Mar","Mer","Jeu","Ven","Sam"],items:[
-    {n:"Froment",q:.59,k:"farine",f:"Froment T80"},
-    {n:"Eau",q:.4602},{n:"Sel",q:.0118},
-    {n:"Levain de froment",q:.118,k:"levain",l:"Froment"}]},
+    {n:"Froment",q:.5961,k:"farine",f:"Froment T80"},
+    {n:"Eau",q:.453},{n:"Sel",q:.0119},
+    {n:"Levain de froment",q:.1192,k:"levain",l:"Froment"}]},
   epeautre:{name:"Petit épeautre",unit:"pain",days:["Mar","Mer","Jeu","Ven","Sam"],items:[
     {n:"Petit épeautre T130",q:.5,k:"farine",f:"Petit épeautre T130"},
     {n:"Eau",q:.325},{n:"Sel",q:.01},
