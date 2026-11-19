@@ -1530,7 +1530,8 @@ function renderResults(){
   active.forEach(id=>flat(itemsOf(id)).forEach(i=>{const t=i.q*pr[id].q;
     if(i.k==="levain")lv[i.l]=(lv[i.l]||0)+t;if(i.k==="farine")fl[i.f]=(fl[i.f]||0)+t;}));
   // Total des levains du jour, à côté du titre « Levains à préparer » ; le détail par levain (froment, seigle, petit épeautre…) suit, avec une ligne Total
-  const lvE=Object.entries(lv).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]),lvSum=lvE.reduce((s,e)=>s+e[1],0);
+  // Total = froment + seigle + petit épeautre : le levain de riz (sans gluten) est monté à part, il reste sur sa ligne mais hors total
+const lvAll=Object.entries(lv).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]),lvE=lvAll.filter(e=>e[0]!=="Riz"),lvSum=lvE.reduce((s,e)=>s+e[1],0);
   {const T=document.getElementById("lvTot");if(T)T.textContent=lvE.length?fmt(lvSum):"";}
   // Ligne Total (farine et eau de tous les levains) en tête de la liste, juste sous le titre
   const lvSumRow=lvE.length>1?`<div class="lvr lvsum"><div class="lvh"><b>Total</b><span>${fmt(lvSum)}</span></div><div class="lvs"><div><em>Farine</em><b>${fmt(lvE.reduce((s,[k,v])=>s+(LV[k]?v*lvF(k):0),0))}</b></div><div><em>Eau</em><b>${fmt(lvE.reduce((s,[k,v])=>s+(LV[k]?v*(1-lvF(k)):0),0))}</b></div></div></div>`:"";
