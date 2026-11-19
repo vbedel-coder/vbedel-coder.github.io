@@ -242,14 +242,14 @@ body{--cmd:#2F6FD6}@media (prefers-color-scheme:dark){:root:not([data-theme="lig
 </head>
 <body>
 <style id="vSplashCss">
-#vSplash{position:fixed;inset:0;z-index:2147483000;background:#000;display:flex;align-items:center;justify-content:center;transition:opacity .3s ease;-webkit-tap-highlight-color:transparent}
+#vSplash{position:fixed;inset:0;z-index:2147483000;background:#FFF;display:flex;align-items:center;justify-content:center;transition:opacity .3s ease;-webkit-tap-highlight-color:transparent}
 #vSplash.out{opacity:0}
 #vSplash svg{width:min(50vw,220px);height:auto;overflow:visible}
-#vSplash path{fill:none;stroke:#F5F5F7;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+#vSplash path{fill:none;stroke:#1D1D1F;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
 #vSplash .lf{stroke-width:1;animation:vsDraw .8s cubic-bezier(.6,0,.3,1) .05s forwards}
-#vSplash .gr{stroke-width:1.1;fill:#F5F5F7;fill-opacity:0;animation:vsDraw .3s cubic-bezier(.5,0,.3,1) both,vsFill .35s ease forwards}
+#vSplash .gr{stroke-width:1.1;fill:#1D1D1F;fill-opacity:0;animation:vsDraw .3s cubic-bezier(.5,0,.3,1) both,vsFill .35s ease forwards}
 @keyframes vsDraw{0%{stroke-dashoffset:1;stroke-opacity:0}1%{stroke-opacity:1}100%{stroke-dashoffset:0;stroke-opacity:1}}
-@keyframes vsFill{to{fill-opacity:.16}}
+@keyframes vsFill{to{fill-opacity:.1}}
 @media (prefers-reduced-motion:reduce){#vSplash{display:none}}
 </style>
 <div id="vSplash" aria-hidden="true"><svg viewBox="0 0 120 90">
