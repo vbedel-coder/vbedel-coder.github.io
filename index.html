@@ -241,6 +241,24 @@ body{--cmd:#2F6FD6}@media (prefers-color-scheme:dark){:root:not([data-theme="lig
 </style>
 </head>
 <body>
+<style id="vSplashCss">
+#vSplash{position:fixed;inset:0;z-index:2147483000;background:#FFF;display:flex;align-items:center;justify-content:center;transition:opacity .3s ease;-webkit-tap-highlight-color:transparent}
+#vSplash.out{opacity:0}
+#vSplash svg{width:min(50vw,220px);height:auto;overflow:visible}
+#vSplash path{fill:none;stroke:#1D1D1F;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+#vSplash .lf{stroke-width:1;animation:vsDraw .8s cubic-bezier(.6,0,.3,1) .05s forwards}
+#vSplash .gr{stroke-width:1.1;fill:#1D1D1F;fill-opacity:0;animation:vsDraw .3s cubic-bezier(.5,0,.3,1) both,vsFill .35s ease forwards}
+@keyframes vsDraw{0%{stroke-dashoffset:1;stroke-opacity:0}1%{stroke-opacity:1}100%{stroke-dashoffset:0;stroke-opacity:1}}
+@keyframes vsFill{to{fill-opacity:.1}}
+@media (prefers-reduced-motion:reduce){#vSplash{display:none}}
+</style>
+<div id="vSplash" aria-hidden="true"><svg viewBox="0 0 120 90">
+<path class="lf" pathLength="1" d="M60 76 H22 C14 76 10 70 11 63 C14 46 32 37 60 37 C88 37 106 46 109 63 C110 70 106 76 98 76 Z"/>
+<path class="gr" pathLength="1" style="animation-delay:0.60s,1.00s" d="M27 62 Q37 51 51 46 Q37 51 27 62 Z"><animate attributeName="d" begin="1.00s" dur=".35s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".3 0 .2 1" values="M27 62 Q37 51 51 46 Q37 51 27 62 Z;M27 62 Q34 45 51 46 Q43 57 27 62 Z"/></path>
+<path class="gr" pathLength="1" style="animation-delay:0.72s,1.10s" d="M48 62 Q58 51 72 46 Q58 51 48 62 Z"><animate attributeName="d" begin="1.10s" dur=".35s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".3 0 .2 1" values="M48 62 Q58 51 72 46 Q58 51 48 62 Z;M48 62 Q55 45 72 46 Q64 57 48 62 Z"/></path>
+<path class="gr" pathLength="1" style="animation-delay:0.84s,1.20s" d="M69 62 Q79 51 93 46 Q79 51 69 62 Z"><animate attributeName="d" begin="1.20s" dur=".35s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".3 0 .2 1" values="M69 62 Q79 51 93 46 Q79 51 69 62 Z;M69 62 Q76 45 93 46 Q85 57 69 62 Z"/></path>
+</svg></div>
+<script>(function(){var s=document.getElementById("vSplash");if(!s)return;var t;function end(){if(!s)return;var x=s;s=null;clearTimeout(t);x.classList.add("out");setTimeout(function(){x.remove()},320)}try{if(matchMedia("(prefers-reduced-motion: reduce)").matches){end();return}}catch(e){}s.addEventListener("pointerdown",end);t=setTimeout(end,1650)})();</script>
 <div class="wrap">
   <h1 id="title" hidden>Production</h1>
   <p class="sub" id="subtitle"></p>
