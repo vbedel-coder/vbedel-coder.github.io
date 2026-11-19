@@ -241,6 +241,40 @@ body{--cmd:#2F6FD6}@media (prefers-color-scheme:dark){:root:not([data-theme="lig
 </style>
 </head>
 <body>
+<style id="vSplashCss">
+#vSplash{position:fixed;inset:0;z-index:2147483000;background:#000;display:flex;align-items:center;justify-content:center;transition:opacity .25s ease;-webkit-tap-highlight-color:transparent}
+#vSplash.out{opacity:0}
+#vSplash svg{width:min(42vw,190px);height:auto;overflow:visible}
+#vSplash *{transform-box:fill-box}
+#vSplash .lv{transform:translateY(58px);animation:vsRise .8s cubic-bezier(.3,.7,.3,1) .1s forwards}
+#vSplash .dm{transform-origin:50% 100%;transform:scale(.2,0);animation:vsDome 1.35s ease-out .1s forwards}
+#vSplash .ld{transform-origin:50% 50%;animation:vsLid 1.35s ease-in-out .1s forwards}
+#vSplash .ey{transform-origin:50% 50%;transform:scaleY(0);animation:vsEye 1.35s linear .1s forwards}
+#vSplash .ey.r{animation-name:vsWink}
+#vSplash .sm{opacity:0;animation:vsSmile 1.35s linear .1s forwards}
+#vSplash .bb{opacity:0;animation:vsBub .9s ease-in forwards}
+@keyframes vsRise{to{transform:translateY(0)}}
+@keyframes vsDome{0%,50%{transform:scale(.2,0)}64%{transform:scale(1.06,1.12)}72%{transform:scale(.98,.95)}80%,88%{transform:scale(1,1)}93%{transform:scale(1.08,.86)}100%{transform:scale(1,1)}}
+@keyframes vsLid{0%,48%{transform:none}62%{transform:translate(4px,-40px) rotate(-200deg)}76%{transform:translate(-2px,-48px) rotate(-340deg)}88%{transform:translate(0,-14px) rotate(-358deg)}93%{transform:translate(0,-11px) rotate(-360deg) scale(1.04,.92)}100%{transform:translate(0,-13px) rotate(-366deg)}}
+@keyframes vsEye{0%,62%{transform:scaleY(0)}66%,100%{transform:scaleY(1)}}
+@keyframes vsWink{0%,62%{transform:scaleY(0)}66%,74%{transform:scaleY(1)}77%{transform:scaleY(.1)}81%,100%{transform:scaleY(1)}}
+@keyframes vsSmile{0%,68%{opacity:0}74%,100%{opacity:1}}
+@keyframes vsBub{0%{opacity:0;transform:translateY(0)}20%{opacity:.9}100%{opacity:0;transform:translateY(-62px)}}
+@media (prefers-reduced-motion:reduce){#vSplash{display:none}}
+</style>
+<div id="vSplash" aria-hidden="true"><svg viewBox="0 0 120 150">
+<defs><clipPath id="vsIn"><rect x="31" y="36" width="58" height="91" rx="14"/></clipPath></defs>
+<g class="dm"><path d="M31 46 V37 C31 13 89 13 89 37 V46 Z" fill="#E9D7B5"/><ellipse class="ey l" cx="52" cy="24" rx="2.4" ry="3.2" fill="#2B1D0E"/><ellipse class="ey r" cx="68" cy="24" rx="2.4" ry="3.2" fill="#2B1D0E"/><path class="sm" d="M55 29 Q60 33 65 29" fill="none" stroke="#2B1D0E" stroke-width="1.8" stroke-linecap="round"/></g>
+<g clip-path="url(#vsIn)">
+<g class="lv"><path d="M28 40 Q38 34 46 39 T64 38 T80 37 T94 39 V132 H28 Z" fill="#E9D7B5"/>
+<g fill="#CDB48A"><circle cx="40" cy="56" r="2.6"/><circle cx="72" cy="50" r="3.4"/><circle cx="56" cy="70" r="2"/><circle cx="80" cy="78" r="2.8"/><circle cx="44" cy="90" r="3.6"/><circle cx="64" cy="98" r="2.2"/><circle cx="76" cy="112" r="3"/><circle cx="48" cy="116" r="2.4"/><circle cx="60" cy="84" r="1.6"/></g></g>
+<g fill="#FFF7E6"><circle class="bb" cx="44" cy="122" r="2.2" style="animation-delay:.1s"/><circle class="bb" cx="70" cy="124" r="3" style="animation-delay:.25s"/><circle class="bb" cx="58" cy="120" r="1.6" style="animation-delay:.4s"/><circle class="bb" cx="78" cy="118" r="2" style="animation-delay:.55s"/><circle class="bb" cx="50" cy="124" r="2.6" style="animation-delay:.7s"/></g>
+</g>
+<rect x="29" y="34" width="62" height="95" rx="16" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2"/>
+<path d="M36 52 V108" stroke="rgba(255,255,255,.18)" stroke-width="3" stroke-linecap="round"/>
+<g class="ld"><rect x="30" y="20" width="60" height="12" rx="4" fill="#C8863F"/><rect x="30" y="20" width="60" height="4" rx="2" fill="#DDA061"/></g>
+</svg></div>
+<script>(function(){var s=document.getElementById("vSplash");if(!s)return;var t;function end(){if(!s)return;var x=s;s=null;clearTimeout(t);x.classList.add("out");setTimeout(function(){x.remove()},260)}try{if(matchMedia("(prefers-reduced-motion: reduce)").matches){end();return}}catch(e){}s.addEventListener("pointerdown",end);t=setTimeout(end,1550)})();</script>
 <div class="wrap">
   <h1 id="title" hidden>Production</h1>
   <p class="sub" id="subtitle"></p>
