@@ -1151,7 +1151,7 @@ function renderSalesHint(){
   const day=shopCA(sday),dayPro=proCA(sday),wk=SDAYS.reduce((s,d)=>s+shopCA(d)+proCA(d),0),tg=weekTarget(),pct=Math.min(100,wk/tg*100);
   const pmw=(Object.values(fixes()).reduce((a,b)=>a+b,0)+payM())/(1-matr())*(1+tva())*12/objM()/(4.33*12/12);
   document.getElementById("salesCA").innerHTML=`<div class="levains" style="margin-bottom:10px">
-    <div class="lv"><span>CA prévu</span><strong>${eur0(day+dayPro)}</strong>${rcTag(rcCA([sday]),day+dayPro)}${(q=>q?`<em style="display:block">caisse ≈ ${eur0(q.p)} · pains ${eur0(fcAim(q.p)-fcX())}${(g=>Math.abs(g)>=.05*fcAim(q.p)?` <b style="color:var(--${g>0?"flour":"warn"})">${g>0?"↓":"↑"} ${eur0(Math.abs(g))}</b>`:"")(day-(fcAim(q.p)-fcX()))}</em>`:"")(fcDay(dateOf(sday)))}</div>
+    <div class="lv"><span>CA prévu</span><strong>${eur0(day+dayPro)}</strong>${rcTag(rcCA([sday]),day+dayPro)}${(q=>q?`<em style="display:block">caisse ≈ ${eur0(q.p)} · viser ${eur0(fcAim(q.p))}${(g=>Math.abs(g)>=.05*fcAim(q.p)?` <b style="color:var(--${g>0?"flour":"warn"})">${g>0?"↓":"↑"} ${eur0(Math.abs(g))}</b>`:"")(day-fcAim(q.p))}</em>`:"")(fcDay(dateOf(sday)))}</div>
     <div class="lv"><span>Semaine</span><strong>${eur0(wk)}</strong><em>objectif ${eur0(tg)} · ${Math.round(wk/tg*100)} %</em>${rcTag(rcCA(SDAYS),wk)}</div></div>
     <div class="gauge" style="margin-bottom:16px"><i style="width:${pct}%;background:${wk>=tg?"var(--levain)":wk>=pmw?"var(--flour)":"var(--warn)"}"></i><s style="left:${Math.min(100,pmw/tg*100)}%"></s></div>`;
 }
@@ -1667,8 +1667,6 @@ const fcAcc=()=>fcM("acc",()=>{const t=iso(new Date()),r=[];for(let d=addDays(t,
 const fcRange=p=>{const s=fcAcc().s;return [p*Math.exp(-s),p*Math.exp(s)];};
 // À viser pour produire : couvre la demande 3 jours sur 4 (un invendu coûte ≈ 1/9 du prix, une vente manquée presque tout)
 const fcAim=p=>p*Math.exp(.67*fcAcc().s);
-// Autre caisse (hors pains) en moyenne sur 6 semaines : retirée de la cible de production
-const fcX=()=>fcM("x",()=>{let t=0,n=0;fcDays(addDays(iso(new Date()),-42),iso(new Date())).forEach(d=>{const e=caOf(d);if(caTot(e)>0&&!e.closed){t+=e.x||0;n++;}});return n?t/n:0;});
 const pctS=x=>(x>=1?"+":"−")+Math.round(Math.abs(x-1)*100)+" %";
 const FCIC={tendance:"↗",pluie:"🌧",chaud:"☀︎","N-1":"⟲"};
 const fcChips=q=>q&&q.f.length?`<div class="chips">${q.f.map(([k,v])=>`<span class="chip"><i>${FCIC[k]||""}${FCIC[k]?" ":""}${k==="f"?"férié":k}</i>${pctS(v)}</span>`).join("")}</div>`:"";
