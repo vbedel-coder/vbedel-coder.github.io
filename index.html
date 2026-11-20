@@ -1608,7 +1608,7 @@ const caFull=e=>caTot(e)+(e.x||0);
 // Tout est appris sur la caisse ; un jour de rupture compte pour ce qu'il aurait vendu ; un jour marqué « événement » n'apprend rien.
 // Vacances zone C 2026 passées (pour apprendre leur effet) ; les suivantes viennent de HOL.
 // Niveau de la prévision : 6 dernières semaines, demi-vie 7 jours (suit vite une hausse ou une baisse) ; sinon 12 semaines (retour de longues vacances)
-let FC_HL=7,FC_BACK=42,FC_WHL=90;
+let FC_HL=-1.5,FC_BACK=42,FC_WHL=90; // HL < 0 : poids par semaine entière (mar.–sam.), demi-vie en semaines : un report d'un jour sur l'autre se compense
 const HOL26=[["2026-02-21","2026-03-08","Hiver"],["2026-04-18","2026-05-03","Printemps"],["2026-07-04","2026-08-31","Été"]];
 let HOLX=[...(vacO.l||[]),...HOL26,...HOL];
 const FC_DEF={Hiver:.81,Printemps:.74,"Été":.72,Toussaint:.8,"Noël":.8,f:.85};
@@ -1638,7 +1638,7 @@ const wdIdx=(cut)=>fcM("w"+cut,()=>{const s={},n={},c={};let S=0,N=0;fcDays(addD
   const o={};SDAYS.forEach(w=>{const r=n[w]&&N?(s[w]/n[w])/(S/N):1,k=(c[w]||0)/((c[w]||0)+10);o[w]=1+(r-1)*k;});return o;});
 // Niveau autour d'une date (jours normaux ramenés au jour moyen) : passé seul (prévision) ou ± 4 semaines (apprentissage)
 const fcLevel=(cut,back,fwd,hl=28)=>fcM("l"+cut+back+"|"+fwd+"|"+hl,()=>{const I=wdIdx(iso(new Date()));let s=0,w=0,n=0;
-  fcDays(addDays(cut,-back),addDays(cut,fwd)).forEach(d=>{if(!isNorm(d))return;const v=fcObs(d);if(v==null)return;const a=Math.abs((parse(cut)-parse(d))/864e5),k=Math.pow(.5,a/hl);s+=k*v/I[wdOf(d)];w+=k;n++;});return n>=4?s/w:null;});
+  fcDays(addDays(cut,-back),addDays(cut,fwd)).forEach(d=>{if(!isNorm(d))return;const v=fcObs(d);if(v==null)return;const a=Math.abs((parse(cut)-parse(d))/864e5),k=hl<0?Math.pow(.5,Math.round((parse(tuesdayOf(parse(cut)))-parse(tuesdayOf(parse(d))))/6048e5)/-hl):Math.pow(.5,a/hl);s+=k*v/I[wdOf(d)];w+=k;n++;});return n>=4?s/w:null;});
 // Effets appris : rapport entre le jour et le niveau des jours normaux autour (même indice de jour de semaine)
 const fcLearn=(cut)=>fcM("e"+cut,()=>{const I=wdIdx(cut),acc={};const add=(k,r)=>{(acc[k]=acc[k]||[]).push(r);};
   fcDays(addDays(cut,-400),cut).forEach(d=>{const v=fcObs(d);if(v==null||(debOf(d)||{}).e)return;const L=fcLevel(d,28,29);if(!L)return;const r=v/(L*I[wdOf(d)]);
