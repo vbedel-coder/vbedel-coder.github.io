@@ -777,7 +777,10 @@ let fcMode=false,fcMemo={};
 const withFc=fn=>{if(fcMode)return fn();const sv=adjMemo;fcMode=true;adjMemo=fcMemo;try{return fn();}finally{fcMemo=adjMemo;adjMemo=sv;fcMode=false;}};
 const rawAt=(date,id)=>{const m=sales[date]||{};if(id in m)return m[id];if(date<NEW0)return autoQ(date,id);if(fcMode){const r=reco(date,id);if(r)return r.q;}return baseQ(date,id).q;};
 const offDay=d=>{if(isClosed(d))return true;const m=sales[d];if(!m)return false;const v=Object.values(m);return v.length>=3&&v.every(x=>!x);};
-function baseSrc(date,id){let p=addDays(date,-7),n=0;while(n<8&&offDay(p)){p=addDays(p,-7);n++;}return p;}
+// Jour exceptionnel : marqué ★ au bilan, ou lendemain d'un férié (clients décalés) ; la semaine suivante ne le recopie pas
+const FXM={};const ferX=d=>d in FXM?FXM[d]:(FXM[d]=ferie(d)||ferie(addDays(d,-1)));
+const isExc=d=>!!(((left[d]||{})._d||{}).e)||ferX(d);
+function baseSrc(date,id){let p=addDays(date,-7),n=0;while(n<8&&(offDay(p)||(isExc(p)&&p>=NEW0))){p=addDays(p,-7);n++;}return p;}
 function baseQ(date,id){const k="b|"+date+"|"+id;if(k in adjMemo)return adjMemo[k];const src=baseSrc(date,id);
   adjMemo[k]={q:0,src};return adjMemo[k]={q:focConv(id,rawAt(src,id),src,date),src};}
 // Prorata du CA prévu : demande prévue du jour ÷ demande prévue (à l'époque) du jour copié ; remplace les règles fixes vacances / fin des vacances
@@ -1632,7 +1635,7 @@ const fcObs0=d=>{if(!wdOf(d)||isClosed(d))return null;const e=caOf(d),v=caFull(e
 let fcMemo2={};
 const fcM=(k,fn)=>k in fcMemo2?fcMemo2[k]:(fcMemo2[k]=fn());
 const fcDays=(a,z)=>{const o=[];for(let d=a;d<z;d=addDays(d,1))o.push(d);return o;};
-const isNorm=d=>!holKey(d)&&!(debOf(d)||{}).e&&d.slice(5)!=="11-11";
+const isNorm=d=>!holKey(d)&&!isExc(d)&&d.slice(5)!=="11-11";
 // Indice du jour de semaine : moyenne du jour ÷ moyenne générale (jours normaux de l'année écoulée), ramené vers 1 s'il y a peu de jours
 const wdIdx=(cut)=>fcM("w"+cut,()=>{const s={},n={},c={};let S=0,N=0;fcDays(addDays(cut,-365),cut).forEach(d=>{if(!isNorm(d))return;const v=fcObs(d);if(v==null)return;const w=wdOf(d),k=Math.pow(.5,(parse(cut)-parse(d))/864e5/FC_WHL);s[w]=(s[w]||0)+k*v;n[w]=(n[w]||0)+k;c[w]=(c[w]||0)+1;S+=k*v;N+=k;});
   const o={};SDAYS.forEach(w=>{const r=n[w]&&N?(s[w]/n[w])/(S/N):1,k=(c[w]||0)/((c[w]||0)+10);o[w]=1+(r-1)*k;});return o;});
