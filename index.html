@@ -1348,7 +1348,7 @@ const fcPrevHTML=()=>`<div class="fcprev">${fcNext().map(d=>{const q=fcDay(d);re
 const fcSl=(k,lab,v,min,max,st,txt,mod)=>`<div class="fcs${mod?" mod":""}"><label for="fcs_${k}">${lab}<b id="fcv_${k}">${txt}</b></label><input id="fcs_${k}" type="range" data-fcs="${k}" min="${min}" max="${max}" step="${st}" value="${v}"></div>`;
 const fcF2=x=>x.toFixed(2).replace(".",",");
 function fcSetHTML(){const P=fcP(),t=iso(new Date()),I=wdIdx(t),E=fcLearn(t),D=P.d||{},V=P.v||{};
-  const lw=Math.round((P.lw??.5)*100),wk=P.wk??6,hl=P.hl??1.5,ch=Math.round((1-(P.ch??E.chaud??1))*100);
+  const lw=Math.round((P.lw??.5)*100),wk=P.wk??6,hl=P.hl??1.5,ch=Math.round((1-(P.ch??FC_HOT))*100);
   return `<div class="fcset" id="fcSet">${fcPrevHTML()}
     ${fcSl("lw","Même jour, semaine dernière",lw,0,100,10,lw+" %",P.lw!=null)}
     ${fcSl("wk","Semaines regardées",wk,2,12,1,wk+" sem.",P.wk!=null)}
@@ -1357,7 +1357,7 @@ function fcSetHTML(){const P=fcP(),t=iso(new Date()),I=wdIdx(t),E=fcLearn(t),D=P
     ${SDAYS.map(w=>{const v=D[w]??I[w];return fcSl("d_"+w,DAYNAMES[w][0].toUpperCase()+DAYNAMES[w].slice(1),Math.round(v*100),80,120,1,fcF2(v),D[w]!=null);}).join("")}
     <div class="fcg">Baisse</div>
     ${FCV.map(([k,n])=>{const f=V[k]??E[k]??.85,b=Math.round((1-f)*100);return fcSl("v_"+k,n,b,0,40,1,"−"+b+" %",V[k]!=null);}).join("")}
-    ${fcSl("ch","Chaleur ≥ 28 °C",ch,0,15,1,"−"+ch+" %",P.ch!=null)}
+    ${fcSl("ch","Canicule ≥ 35 °C",ch,0,40,1,"−"+ch+" %",P.ch!=null)}
     <button class="fcreset" data-fcr="1" id="fcReset"${params.fc?"":" hidden"}>Revenir au calcul auto</button></div>`;}
 function fcSetVal(t){const k=t.dataset.fcs,v=+t.value,fc={...(params.fc||{})};
   if(k==="lw")fc.lw=v/100;else if(k==="wk")fc.wk=v;else if(k==="hl")fc.hl=v;else if(k==="ch")fc.ch=1-v/100;
@@ -1660,8 +1660,9 @@ async function metLoad(){const now=Date.now();if(now-meteo.at<3*3600e3)return;
   try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?${MET}&past_days=92&forecast_days=14`);if(!r.ok)return;metPut(await r.json());meteo.at=now;
     if(now-meteo.ar>7*864e5){const r2=await fetch(`https://archive-api.open-meteo.com/v1/archive?${MET}&start_date=2026-01-01&end_date=${addDays(iso(new Date()),-6)}`);if(r2.ok){metPut(await r2.json());meteo.ar=now;}}
     store.set("v25-meteo",meteo);fcMemo2={};if(tab==="C"||tab==="V")render();}catch(e){}}
-// Pluie : dictée du débrief d'abord, sinon Open-Meteo (≥ 3 mm) ; chaleur ≥ 28 °C
-const wxOf=d=>{const b=debOf(d);if(b&&b.w)return b.w;const m=meteo.d[d];if(!m)return "";return m[0]>=3?"pluie":m[1]>=28?"chaud":"";};
+// Pluie : dictée du débrief d'abord, sinon Open-Meteo (≥ 3 mm) ; canicule ≥ 35 °C : −20 % (été 2026 : ≈ −27 % sur 7 jours ≥ 35 °C, ≈ −4 % entre 30 et 35 °C), réglable
+const FC_HOT=.8;
+const wxOf=d=>{const b=debOf(d);if(b&&b.w)return b.w;const m=meteo.d[d];if(!m)return "";return m[0]>=3?"pluie":m[1]>=35?"chaud":"";};
 // CA d'un jour passé, rupture comprise : pain épuisé à h → ventes manquées ≈ vendu × (heure limite − h) ÷ (h − 8 h), au plus +50 %
 const fcObs=d=>fcM("o"+d,()=>fcObs0(d));
 const fcObs0=d=>{if(!wdOf(d)||isClosed(d))return null;const e=caOf(d),v=caFull(e);if(!(caTot(e)>0))return null;
@@ -1693,7 +1694,7 @@ const fcLearn=(cut)=>fcM("e"+cut,()=>{const I=wdIdx(cut),acc={};const add=(k,r)=
   return o;});
 // Prévision d'un jour, avec seulement ce qui était connu avant (cut)
 function fcDay0(d,cut){return fcM("p"+d+"|"+cut,()=>{
-  if(!wdOf(d)||isClosed(d))return null;const P=fcP(),L=fcLevel(cut,(P.wk??6)*7,0,-(P.hl??1.5))||fcLevel(cut,84,0,28);if(!L)return null;const I=wdIdx(cut),E={...fcLearn(cut),...(P.v||{})},f=[];if(P.ch!=null)E.chaud=P.ch;let p=L*((P.d||{})[wdOf(d)]??I[wdOf(d)]);
+  if(!wdOf(d)||isClosed(d))return null;const P=fcP(),L=fcLevel(cut,(P.wk??6)*7,0,-(P.hl??1.5))||fcLevel(cut,84,0,28);if(!L)return null;const I=wdIdx(cut),E={...fcLearn(cut),...(P.v||{})},f=[];E.chaud=P.ch??FC_HOT;let p=L*((P.d||{})[wdOf(d)]??I[wdOf(d)]);
   // Tendance : 4 dernières semaines face aux 12
   const L4=fcLevel(cut,28,0),L12=(()=>{let s=0,n=0;fcDays(addDays(cut,-84),cut).forEach(x=>{if(!isNorm(x))return;const v=fcObs(x);if(v==null)return;s+=v/I[wdOf(x)];n++;});return n>=8?s/n:null;})();
   if(L4&&L12)f.push(["tendance",L4/L12]);
