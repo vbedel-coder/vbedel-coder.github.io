@@ -67,12 +67,34 @@ td small.d,td.d{display:block;color:var(--muted);font-size:13px;font-weight:400}
 .go{color:var(--levain);font-weight:700;margin-left:2px}
 details.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:10px;scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px)}
 details.card.flash{animation:flash 1.2s ease}
+.fcpage{position:fixed;inset:0;z-index:45;background:var(--bg);display:flex;flex-direction:column}
+.fchead{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 8px) max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--surface)}
+.fchead b{text-align:center;font-size:17px}
+.fcbody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 32px) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px}
+#fcTop,#fcDet{display:flex;flex-direction:column;gap:12px}
+.fccard{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.fccard .fcset{padding:0}
+.fcdays{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.fcdays button{border:0;border-radius:12px;background:var(--surface);box-shadow:var(--shadow);color:var(--ink);font:inherit;padding:8px 2px;display:flex;flex-direction:column;align-items:center;font-variant-numeric:tabular-nums}
+.fcdays button small{color:var(--muted);font-size:12px}.fcdays button b{font-size:15px}
+.fcdays button.on{background:var(--tint-fill);color:#fff}.fcdays button.on small{color:rgba(255,255,255,.85)}
+.fcterms{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-variant-numeric:tabular-nums}.fcterms>span{color:var(--muted)}
+.fct{display:flex;flex-direction:column;align-items:center;background:var(--tint-soft);border-radius:12px;padding:6px 9px;min-width:56px}
+.fct b{font-size:16px}.fct small{color:var(--muted);font-size:11px}.fct.res{background:var(--tint-fill);color:#fff}.fct.res small{color:rgba(255,255,255,.85)}
+.fckpis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.fckpis div{background:var(--surface);box-shadow:var(--shadow);border-radius:12px;padding:8px;display:flex;flex-direction:column}
+.fckpis small,.fckpis em{color:var(--muted);font-size:11px;font-style:normal}.fckpis b{font-size:17px;font-variant-numeric:tabular-nums}
+.fctbl{overflow-x:auto}.fctbl table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+.fctbl td,.fctbl th{padding:5px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}.fctbl td:first-child,.fctbl th:first-child{text-align:left}
+.fctbl th{color:var(--muted);font-weight:500}.fctot td{font-weight:700}.fcneg{color:var(--warn)}.fcpos{color:var(--levain)}
+.fcchart{overflow-x:auto}.fcchart svg{display:block;min-width:560px;width:100%;height:auto}
+.fcleg{display:flex;gap:14px;font-size:12px;color:var(--muted)}.fcleg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .fcset{padding:4px 16px 14px;display:flex;flex-direction:column;gap:10px}
 .fcprev{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;text-align:center;font-variant-numeric:tabular-nums;position:sticky;top:env(safe-area-inset-top,0px);background:var(--surface);padding:6px 0;z-index:1}
 .fcprev div{background:var(--fill2);border-radius:10px;padding:6px 2px}.fcprev small{display:block;color:var(--muted);font-size:12px}.fcprev b{font-size:15px}
 .fcs label{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:15px}
 .fcnb{display:inline-flex;align-items:center;gap:3px;color:var(--muted);white-space:nowrap}
-.fcnum{width:4.2em;text-align:right;font:inherit;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--fill2);border:1px solid var(--line);border-radius:8px;padding:4px 6px}
+.fcnum{flex:none;width:4.2em!important;text-align:right;font:inherit;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--fill2);border:1px solid var(--line);border-radius:8px;padding:4px 6px}
 .fcs.mod .fcnum{color:var(--tint);border-color:var(--tint)}.fcs input{width:100%;accent-color:var(--tint);margin:4px 0 0}
 .fcg{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.04em;margin-top:6px}
 .fcreset{align-self:flex-start;border:0;background:var(--fill);color:var(--tint);border-radius:10px;padding:8px 12px;font:inherit;font-size:15px}
@@ -1348,27 +1370,77 @@ const fcAccTxt=()=>{const a=fcAcc();return a.mape==null?"":"±"+Math.round(a.map
 const fcNext=()=>{const o=[];for(let d=addDays(iso(new Date()),1),n=0;o.length<5&&n<21;d=addDays(d,1),n++)if(wdOf(d)&&!isClosed(d))o.push(d);return o;};
 const fcPrevHTML=()=>`<div class="fcprev">${fcNext().map(d=>{const q=fcDay(d);return `<div><small>${DAYNAMES[wdOf(d)].slice(0,3)} ${parse(d).getDate()}</small><b>${q?eur0(q.p):"—"}</b></div>`;}).join("")}</div>`;
 const fcNum=(k,v)=>k.startsWith("d_")?fcF2(v/100):String(v).replace(".",",");
-const fcU=k=>k==="lw"?["","%"]:k==="wk"||k==="hl"?["","sem."]:k.startsWith("d_")?["×",""]:["−","%"];
+const fcU=k=>k==="lw"?["","%"]:k==="wk"||k==="hl"||k==="win"||k==="shr"?["","sem."]:k==="whl"?["","j"]:k.startsWith("d_")?["×",""]:["−","%"];
 const fcSl=(k,lab,v,min,max,st,txt,mod)=>`<div class="fcs${mod?" mod":""}"><label for="fcn_${k}">${lab}<span class="fcnb">${fcU(k)[0]}<input id="fcn_${k}" class="fcnum" type="text" inputmode="decimal" autocomplete="off" data-fcn="${k}" value="${fcNum(k,v)}">${fcU(k)[1]}</span></label><input id="fcs_${k}" type="range" data-fcs="${k}" min="${min}" max="${max}" step="${st}" value="${v}"></div>`;
 const fcF2=x=>x.toFixed(2).replace(".",",");
 function fcSetHTML(){const P=fcP(),t=iso(new Date()),I=wdIdx(t),E=fcLearn(t),D=P.d||{},V=P.v||{};
   const lw=Math.round((P.lw??.5)*100),wk=P.wk??6,hl=P.hl??1.5,ch=Math.round((1-(P.ch??FC_HOT))*100);
-  return `<div class="fcset" id="fcSet">${fcPrevHTML()}
+  return `<div class="fcset" id="fcSet"><div class="fcg">Semaine dernière</div>
     ${fcSl("lw","Même jour, semaine dernière",lw,0,100,10,lw+" %",P.lw!=null)}
+    ${fcSl("win","Chercher ce jour jusqu'à",P.win??3,1,4,1,"",P.win!=null)}
+    <div class="fcg">Niveau</div>
     ${fcSl("wk","Semaines regardées",wk,2,12,1,wk+" sem.",P.wk!=null)}
     ${fcSl("hl","Poids divisé par 2 tous les",hl,.5,4,.5,String(hl).replace(".",",")+" sem.",P.hl!=null)}
     <div class="fcg">Poids du jour</div>
+    ${fcSl("whl","Mémoire des semaines (moitié tous les)",P.whl??FC_WHL,14,180,7,"",P.whl!=null)}
+    ${fcSl("shr","Prudence (ramène vers 1)",P.shr??FC_WK,0,10,1,"",P.shr!=null)}
     ${SDAYS.map(w=>{const v=D[w]??I[w];return fcSl("d_"+w,DAYNAMES[w][0].toUpperCase()+DAYNAMES[w].slice(1),Math.round(v*100),80,120,1,fcF2(v),D[w]!=null);}).join("")}
     <div class="fcg">Baisse</div>
     ${FCV.map(([k,n])=>{const f=V[k]??E[k]??.85,b=Math.round((1-f)*100);return fcSl("v_"+k,n,b,0,40,1,"−"+b+" %",V[k]!=null);}).join("")}
     ${fcSl("ch","Canicule ≥ 35 °C",ch,0,40,1,"−"+ch+" %",P.ch!=null)}
     <button class="fcreset" data-fcr="1" id="fcReset"${params.fc?"":" hidden"}>Revenir au calcul auto</button></div>`;}
 function fcSetVal(t){const k=t.dataset.fcs,v=+t.value,fc={...(params.fc||{})};
-  if(k==="lw")fc.lw=v/100;else if(k==="wk")fc.wk=v;else if(k==="hl")fc.hl=v;else if(k==="ch")fc.ch=1-v/100;
+  if(k==="lw")fc.lw=v/100;else if(k==="wk"||k==="hl"||k==="win"||k==="whl"||k==="shr")fc[k]=v;else if(k==="ch")fc.ch=1-v/100;
   else if(k.startsWith("d_"))fc.d={...(fc.d||{}),[k.slice(2)]:v/100};else if(k.startsWith("v_"))fc.v={...(fc.v||{}),[k.slice(2)]:1-v/100};
   params.fc=fc;fcMemo2={};
   const lb=document.getElementById("fcn_"+k);if(lb&&document.activeElement!==lb)lb.value=fcNum(k,v);
-  t.parentNode.classList.add("mod");const pv=document.querySelector("#fcSet .fcprev");if(pv)pv.outerHTML=fcPrevHTML();const a=document.getElementById("fcAccS");if(a)a.textContent=fcAccTxt();const r=document.getElementById("fcReset");if(r)r.hidden=false;}
+  t.parentNode.classList.add("mod");const pv=document.getElementById("fcPrevC");if(pv)pv.innerHTML=fcPrevHTML();fcPageSoon();const a=document.getElementById("fcAccS");if(a)a.textContent=fcAccTxt();const r=document.getElementById("fcReset");if(r)r.hidden=false;}
+// ---- Simulateur (page plein écran depuis Réglages › Prévision) : même calcul, mêmes réglages ----
+let fcOpen=false,fcSel=null,fcT=0;
+const fcSoft=["Hiver","Printemps","Été","Toussaint","Noël"];
+const fcLbl=k=>k==="f"?"férié":k==="chaud"?"canicule":k;
+const fcDl=d=>DAYNAMES[wdOf(d)].slice(0,3)+" "+parse(d).getDate();
+const fcBT=from=>{const t=iso(new Date()),r=[];for(let d=from;d<t;d=addDays(d,1)){const v=fcObs(d);if(v==null)continue;const q=fcDay(d,d);if(q)r.push({d,v,p:q.p,n:isNorm(d)});}return r;};
+const fcMape=a=>a.length?a.reduce((s,r)=>s+Math.abs(r.v-r.p)/r.v,0)/a.length:0,fcBias=a=>a.length?a.reduce((s,r)=>s+r.p-r.v,0)/a.length:0;
+const fcPc=x=>(x>=0?"+":"−")+Math.abs(Math.round(x*100))+" %";
+function fcTopHTML(){const nx=fcNext();if(!nx.includes(fcSel))fcSel=nx[0];const t=iso(new Date()),d=fcSel;
+  let h=`<div class="fcdays">${nx.map(x=>{const q=fcDay(x);return `<button class="${x===d?"on":""}" data-fcday="${x}"><small>${fcDl(x)}</small><b>${q?eur0(q.p):"—"}</b></button>`;}).join("")}</div>`;
+  const q0=d&&fcDay0(d,t),c=d&&fcCorr(wdOf(d),t),q=d&&fcDay(d);
+  if(q0&&q){const tm=[[eur0(q0.L).replace(" €",""),"niveau"],[fcF2(q0.W),DAYNAMES[wdOf(d)]],...q0.f.filter(x=>x[0]!=="tendance").map(x=>[fcF2(x[1]),fcLbl(x[0])]),[fcF2(c.k),"sem. dernière"]];
+    h+=`<div class="fcterms">${tm.map(([v,l])=>`<div class="fct"><b>${v}</b><small>${l}</small></div>`).join('<span>×</span>')}<span>=</span><div class="fct res"><b>${eur0(q.p)}</b><small>prévu</small></div></div>`;}
+  const all=fcBT("2026-06-01"),l40=all.slice(-40),sep=all.filter(r=>r.d>="2026-09-01"),m1=all.filter(r=>r.d>=t.slice(0,8)+"01");
+  h+=`<div class="fckpis">${[["40 derniers jours",l40],["Depuis septembre",sep],["Ce mois-ci",m1]].map(([l,a])=>`<div><small>${l}</small><b>±${(fcMape(a)*100).toFixed(1).replace(".",",")} %</b><em>biais ${fcBias(a)>=0?"+":"−"}${Math.abs(Math.round(fcBias(a)))} €/j</em></div>`).join("")}</div>`;
+  return h;}
+function fcChart(rows){const W=640,H=200,pl=38,pr=8,pt=10,pb=24;if(rows.length<2)return "";const vs=rows.flatMap(r=>[r.v,r.p]),lo=Math.floor(Math.min(...vs)/100)*100,hi=Math.ceil(Math.max(...vs)/100)*100||lo+100;
+  const x=i=>pl+(W-pl-pr)*i/(rows.length-1),y=v=>pt+(H-pt-pb)*(1-(v-lo)/(hi-lo));let g="";
+  for(let v=lo;v<=hi;v+=100)g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${v}</text>`;
+  rows.forEach((r,i)=>{if(wdOf(r.d)==="Mar")g+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle" font-size="11" fill="var(--muted)">${parse(r.d).getDate()}/${parse(r.d).getMonth()+1}</text>`;});
+  const pth=k=>rows.map((r,i)=>(i?"L":"M")+x(i).toFixed(1)+" "+y(r[k]).toFixed(1)).join(" ");
+  g+=`<path d="${pth("p")}" fill="none" stroke="var(--tint)" stroke-width="2"/><path d="${pth("v")}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
+  rows.forEach((r,i)=>{g+=`<circle cx="${x(i)}" cy="${y(r.v)}" r="3" fill="var(--ink)"/>`;});
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Caisse réelle et prévision">${g}</svg>`;}
+function fcDetHTML(){const t=iso(new Date()),P=fcP(),nx=fcNext(),I=wdIdx(t),all=fcBT("2026-06-01"),sep=all.filter(r=>r.d>="2026-09-01"),from8=addDays(tuesdayOf(parse(t)),-49),r8=all.filter(r=>r.d>=from8);
+  const tb=(hd,rows)=>`<div class="fctbl"><table><tr>${hd.map(x=>`<th>${x}</th>`).join("")}</tr>${rows.join("")}</table></div>`;
+  let h=`<div class="fccard"><b>Semaine prochaine, facteur par facteur</b>${tb(["Jour","Niveau","× jour","× autres","× sem. dern.","Prévu"],nx.map(d=>{const q0=fcDay0(d,t),c=fcCorr(wdOf(d),t),q=fcDay(d);if(!q0||!q)return "";const o=q0.f.filter(x=>x[0]!=="tendance").reduce((a,x)=>a*x[1],1);return `<tr><td>${fcDl(d)}</td><td>${eur0(q0.L)}</td><td>${fcF2(q0.W)}</td><td>${fcF2(o)}</td><td>${fcF2(c.k)}</td><td><b>${eur0(q.p)}</b></td></tr>`;}))}</div>`;
+  h+=`<div class="fccard"><b>Réel et prévu, 8 dernières semaines</b><div class="fcleg"><span><i style="background:var(--ink)"></i>caisse</span><span><i style="background:var(--tint)"></i>prévu la veille</span></div><div class="fcchart">${fcChart(r8)}</div></div>`;
+  h+=`<div class="fccard"><b>Écart par jour depuis septembre</b>${tb(["Jour","Jours","Écart","Biais","Ce mois réel","Ce mois prévu"],SDAYS.map(w=>{const a=sep.filter(r=>wdOf(r.d)===w&&r.n),b=a.filter(r=>r.d>=t.slice(0,8)+"01");if(!a.length)return "";const bi=fcBias(a);return `<tr><td>${DAYNAMES[w]}</td><td>${a.length}</td><td>±${Math.round(fcMape(a)*100)} %</td><td class="${Math.abs(bi)<10?"":bi>0?"fcneg":"fcpos"}">${bi>=0?"+":"−"}${Math.abs(Math.round(bi))} €</td><td>${b.map(r=>Math.round(r.v)).join(", ")||"—"}</td><td>${b.map(r=>Math.round(r.p)).join(", ")||"—"}</td></tr>`;}))}<small class="d">Biais : prévu − réel. Positif = je prévois trop.</small></div>`;
+  // niveau
+  const back=(P.wk??6)*7,hl=P.hl??1.5,Iw=wdIdx(t),wk={};let S=0,Wt=0;
+  fcDays(addDays(t,-back),t).forEach(d=>{if(!isNorm(d))return;const v=fcObs(d);if(v==null)return;const g=Math.round((parse(tuesdayOf(parse(t)))-parse(tuesdayOf(parse(d))))/6048e5),k=Math.pow(.5,g/hl),tu=tuesdayOf(parse(d));(wk[tu]=wk[tu]||{k,s:0,n:0});wk[tu].s+=v/Iw[wdOf(d)];wk[tu].n++;S+=k*v/Iw[wdOf(d)];Wt+=k;});
+  const ws=Object.keys(wk).sort().reverse(),sw=ws.reduce((a,w)=>a+wk[w].k*wk[w].n,0);
+  h+=`<div class="fccard"><b>Détail du niveau · ${Wt?eur0(S/Wt):"—"}</b><small class="d">Jour moyen = caisse ÷ poids du jour ; jours normaux seulement.</small>${tb(["Semaine du","Jours","Jour moyen","Poids","Part"],ws.map(w=>{const x=wk[w];return `<tr><td>${dshort(w)}</td><td>${x.n}</td><td>${eur0(x.s/x.n)}</td><td>${fcF2(x.k)}</td><td>${Math.round(x.k*x.n/sw*100)} %</td></tr>`;}))}</div>`;
+  // poids du jour
+  const wr=[];for(let w=tuesdayOf(parse(t)),g=0;g<52&&wr.length<10;w=addDays(w,-7),g++){const ds=[0,1,2,3,4].map(i=>addDays(w,i)).filter(d=>d<t&&isNorm(d)).map(d=>[d,fcObs(d)]).filter(x=>x[1]!=null);if(ds.length<3)continue;const m=ds.reduce((a,x)=>a+x[1],0)/ds.length,o={};ds.forEach(([d,v])=>o[wdOf(d)]=v/m);wr.push([w,o,Math.pow(.5,(parse(t)-parse(w))/864e5/(P.whl??FC_WHL))]);}
+  h+=`<div class="fccard"><b>Détail du poids du jour</b><small class="d">Chaque jour ÷ moyenne de sa semaine.</small>${tb(["Semaine",...SDAYS,"Poids"],[...wr.map(([w,o,k])=>`<tr><td>${dshort(w)}</td>${SDAYS.map(x=>`<td>${o[x]!=null?fcF2(o[x]):"—"}</td>`).join("")}<td>${fcF2(k)}</td></tr>`),`<tr class="fctot"><td>Calcul</td>${SDAYS.map(x=>`<td>${fcF2((P.d||{})[x]??I[x])}</td>`).join("")}<td></td></tr>`])}</div>`;
+  // semaine dernière
+  h+=`<div class="fccard"><b>Détail « semaine dernière »</b>${tb(["Pour","Jour repris","Réel","Prévu alors","Écart","Facteur"],nx.map(d=>{const c=fcCorr(wdOf(d),t);return c.x?`<tr><td>${fcDl(d)}</td><td>${fcDl(c.x)}</td><td>${eur0(c.v)}</td><td>${eur0(c.q)}</td><td>${fcPc(c.v/c.q-1)}</td><td><b>${fcF2(c.k)}</b></td></tr>`:`<tr><td>${fcDl(d)}</td><td colspan="5">aucun jour normal</td></tr>`;}))}</div>`;
+  // jour par jour
+  h+=`<div class="fccard"><b>Jour par jour, 8 dernières semaines</b>${tb(["Jour","Réel","Prévu","Écart",""],r8.slice().reverse().map(r=>`<tr><td>${fcDl(r.d)}/${parse(r.d).getMonth()+1}</td><td>${eur0(r.v)}</td><td>${eur0(r.p)}</td><td class="${Math.abs(r.p/r.v-1)<.05?"":r.p>r.v?"fcneg":"fcpos"}">${fcPc(r.p/r.v-1)}</td><td class="d">${r.n?"":holKey(r.d)?fcLbl(holKey(r.d)):"hors norme"}</td></tr>`))}</div>`;
+  // canicule
+  h+=`<div class="fccard"><b>Canicules de l'été 2026</b><small class="d">Jour moyen pendant l'épisode comparé aux jours sous 28 °C dans les 14 jours autour.</small>${tb(["Épisode","Max","Pendant","Autour","Effet"],[["26-30 mai","32,8","460","480","−4"],["17-27 juin","40,8","411","480","−14"],["7-11 juil.","35,3","355","374","−5"],["15-16 juil.","33,3","378","374","+1"],["28-29 juil.","38,2","281","352","−20"]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]} °C</td><td>${r[2]} €</td><td>${r[3]} €</td><td>${r[4]} %</td></tr>`))}<small class="d">30 à 35 °C : −4 % (17 jours) · 35 °C et plus : −27 % (7 jours) · retenu −20 % dès 35 °C.</small></div>`;
+  return h;}
+const fcPageHTML=()=>`<div class="fcpage" id="fcPage" role="dialog" aria-label="Simulateur de prévision"><div class="fchead"><button class="iconbtn" data-fcclose="1" aria-label="Fermer">✕</button><b>Prévision</b><span></span></div><div class="fcbody"><div id="fcTop">${fcTopHTML()}</div><div class="fccard">${fcSetHTML()}</div><div id="fcDet">${fcDetHTML()}</div></div></div>`;
+function fcPageSoon(){if(!fcOpen)return;clearTimeout(fcT);fcT=setTimeout(()=>{fcMemo2={};const a=document.getElementById("fcTop"),b=document.getElementById("fcDet");if(a)a.innerHTML=fcTopHTML();if(b)b.innerHTML=fcDetHTML();},150);}
 function rulesHTML(){const today=iso(new Date()),lim=addDays(today,365);
   const per=HOL.filter(([a,z])=>z>=today&&a<=lim).map(([a,z,n])=>`<tr class="${ruleOn("hol")?"":"offr"}"><td>${n}</td><td class="q d">${dshort(ruleOn("depSat")||wdOf(a)!=="Sam"?a:addDays(a,1))} → ${dshort(z)}</td></tr>`).join("");
   const fer=[];for(let d=today;d<=lim;d=addDays(d,1))if(ferie(d)&&(WD[parse(d).getDay()]||pontDays(d).length))fer.push(d);
@@ -1388,7 +1460,7 @@ function rulesHTML(){const today=iso(new Date()),lim=addDays(today,365);
     <tr class="${off("week")}"><td>Même jour, semaine suivante<small class="d">invendus et ruptures</small></td><td class="q">${tog("week")}</td></tr>
     <tr class="${off("fc")}"><td>Au prorata du CA prévu<small class="d">tendance, vacances, fériés, météo</small></td><td class="q">${tog("fc")}</td></tr>
   </table></details>
-  <details class="card" open><summary><b>Prévision</b><span id="fcAccS">${fcAccTxt()}</span></summary>${fcSetHTML()}</details>
+  <details class="card" open><summary><b>Prévision</b><span id="fcAccS">${fcAccTxt()}</span></summary><div class="fcset"><div id="fcPrevC">${fcPrevHTML()}</div><button class="fcreset" data-fcopen="1">Ouvrir le simulateur</button></div></details>${fcOpen?fcPageHTML():""}
   <details class="card" open><summary><b>Vacances scolaires et fériés</b><span>zone C</span></summary><table>
     <tr class="${off("hol")}"><td>Activer</td><td class="q">${tog("hol")}</td></tr>
     <tr><td>Baisse de la boutique</td><td class="q">${pin("holR","","",holR(),100,"%")}</td></tr>
@@ -1454,7 +1526,10 @@ function onSettingsChange(e){const t=e.target;
   const v=+String(t.value).replace(",",".").replace(/\s/g,"");if(!isFinite(v)||v<0){renderSettings();return;}
   let val=v/(+t.dataset.scale);if(t.dataset.kind==="rq"&&R[t.dataset.a]&&R[t.dataset.a].target&&!(R[t.dataset.a].items.find(i=>ikey(i)===t.dataset.b)||{}).keep)val=val/scaleOf(t.dataset.a);
   setP(t.dataset.kind,t.dataset.a,t.dataset.b,val);save();tab==="R"?renderProfit():tab==="P"?renderResults():renderSettings();}
-function onSettingsClick(e){if(e.target.closest("button[data-fcr]")){delete params.fc;fcMemo2={};save();renderSettings();return;}const cl=e.target.closest("button[data-cclink]");if(cl){try{navigator.clipboard.writeText(cl.dataset.cclink).then(()=>{cl.classList.add("on");setTimeout(()=>cl.classList.remove("on"),1200);});}catch(x){}return;}
+function onSettingsClick(e){if(e.target.closest("button[data-fcr]")){delete params.fc;fcMemo2={};save();renderSettings();return;}
+  if(e.target.closest("button[data-fcopen]")){fcOpen=true;document.body.style.overflow="hidden";renderSettings();return;}
+  if(e.target.closest("button[data-fcclose]")){fcOpen=false;document.body.style.overflow="";renderSettings();return;}
+  const fd=e.target.closest("button[data-fcday]");if(fd){fcSel=fd.dataset.fcday;const a=document.getElementById("fcTop");if(a)a.innerHTML=fcTopHTML();return;}const cl=e.target.closest("button[data-cclink]");if(cl){try{navigator.clipboard.writeText(cl.dataset.cclink).then(()=>{cl.classList.add("on");setTimeout(()=>cl.classList.remove("on"),1200);});}catch(x){}return;}
   const bk=e.target.closest("button[data-bk]");if(bk){if(bk.dataset.bk==="out")exportAll();else importAll();return;}
   const b=e.target.closest("button[data-reset]");if(!b)return;e.preventDefault();const k=b.dataset.reset,a=b.dataset.a;ask(k==="act"?"Remettre les encaissements Qonto d'origine ?":"Revenir aux valeurs d'origine ?").then(ok=>{if(!ok)return;
   if(k==="lv")delete params.lv;else if(k==="misc"){delete params.w;delete params.focKg;delete params.batch;delete params.obj;delete params.objM;delete params.loss;delete params.ordW;delete params.bag;delete params.bagF;}else if(k==="sale"){delete params.sale;delete params.tva;}else if(k==="price")delete params.price;else if(k==="act")delete params.act;else if(k==="adj"){delete params.adjM;delete params.adjT;delete params.adjH;delete params.holR;delete params.adjP1;delete params.adjP2;delete params.adjH2;delete params.rules;}else if(k==="fix"){delete params.fix;delete params.pay;delete params.matr;}
@@ -1676,7 +1751,8 @@ const fcObs0=d=>{if(!wdOf(d)||isClosed(d))return null;const e=caOf(d),v=caFull(e
   return v+lost;};
 let fcMemo2={};
 // Réglages de la prévision (Réglages › Prévision) : lw semaine dernière, wk semaines, hl demi-vie, d poids des jours, v vacances, ch chaleur
-const fcP=()=>params.fc||{};
+// Réglages choisis par Vincent dans le simulateur le 21/11/2026, posés une seule fois (fcMig)
+const fcP=()=>{if(!params.fcMig){params.fcMig=1;const o=params.fc||{};params.fc={lw:.8,hl:2,...o,d:{Mar:1.06,...(o.d||{})},v:{Hiver:.8,...(o.v||{})}};setTimeout(()=>{try{save();}catch(e){}},0);}return params.fc||{};};
 const fcM=(k,fn)=>k in fcMemo2?fcMemo2[k]:(fcMemo2[k]=fn());
 const fcDays=(a,z)=>{const o=[];for(let d=a;d<z;d=addDays(d,1))o.push(d);return o;};
 const isNorm=d=>!holKey(d)&&!isExc(d)&&d.slice(5)!=="11-11";
@@ -1684,9 +1760,9 @@ const isNorm=d=>!holKey(d)&&!isExc(d)&&d.slice(5)!=="11-11";
 // Indice du jour de semaine : chaque jour rapporté à la moyenne de SA semaine (mar.–sam., 4 jours ouverts au moins, vacances comprises), récent d'abord
 const wdIdx=(cut)=>fcM("w"+cut,()=>{const s={},n={},c={};const t0=parse(cut);
   for(let w=tuesdayOf(parse(cut)),g=0;g<52;w=addDays(w,-7),g++){const ds=[0,1,2,3,4].map(i=>addDays(w,i)).filter(d=>d<cut&&isNorm(d)).map(d=>[d,fcObs(d)]).filter(x=>x[1]!=null);
-    if(ds.length<3)continue;const m=ds.reduce((a,x)=>a+x[1],0)/ds.length,k=Math.pow(.5,(t0-parse(w))/864e5/FC_WHL);
+    if(ds.length<3)continue;const m=ds.reduce((a,x)=>a+x[1],0)/ds.length,k=Math.pow(.5,(t0-parse(w))/864e5/(fcP().whl??FC_WHL));
     ds.forEach(([d,v])=>{const wd=wdOf(d);s[wd]=(s[wd]||0)+k*v/m;n[wd]=(n[wd]||0)+k;c[wd]=(c[wd]||0)+1;});}
-  const o={};SDAYS.forEach(w=>{const r=n[w]?s[w]/n[w]:1,k=(c[w]||0)/((c[w]||0)+FC_WK);o[w]=1+(r-1)*k;});return o;});
+  const o={};SDAYS.forEach(w=>{const r=n[w]?s[w]/n[w]:1,k=(c[w]||0)/((c[w]||0)+(fcP().shr??FC_WK));o[w]=1+(r-1)*k;});return o;});
 // Niveau autour d'une date (jours normaux ramenés au jour moyen) : passé seul (prévision) ou ± 4 semaines (apprentissage)
 const fcLevel=(cut,back,fwd,hl=28)=>fcM("l"+cut+back+"|"+fwd+"|"+hl,()=>{const I=wdIdx(iso(new Date()));let s=0,w=0,n=0;
   fcDays(addDays(cut,-back),addDays(cut,fwd)).forEach(d=>{if(!isNorm(d))return;const v=fcObs(d);if(v==null)return;const a=Math.abs((parse(cut)-parse(d))/864e5),k=hl<0?Math.pow(.5,Math.round((parse(tuesdayOf(parse(cut)))-parse(tuesdayOf(parse(d))))/6048e5)/-hl):Math.pow(.5,a/hl);s+=k*v/I[wdOf(d)];w+=k;n++;});return n>=4?s/w:null;});
@@ -1700,7 +1776,7 @@ const fcLearn=(cut)=>fcM("e"+cut,()=>{const I=wdIdx(cut),acc={};const add=(k,r)=
   return o;});
 // Prévision d'un jour, avec seulement ce qui était connu avant (cut)
 function fcDay0(d,cut){return fcM("p"+d+"|"+cut,()=>{
-  if(!wdOf(d)||isClosed(d))return null;const P=fcP(),L=fcLevel(cut,(P.wk??6)*7,0,-(P.hl??1.5))||fcLevel(cut,84,0,28);if(!L)return null;const I=wdIdx(cut),E={...fcLearn(cut),...(P.v||{})},f=[];E.chaud=P.ch??FC_HOT;let p=L*((P.d||{})[wdOf(d)]??I[wdOf(d)]);
+  if(!wdOf(d)||isClosed(d))return null;const P=fcP(),L=fcLevel(cut,(P.wk??6)*7,0,-(P.hl??1.5))||fcLevel(cut,84,0,28);if(!L)return null;const I=wdIdx(cut),E={...fcLearn(cut),...(P.v||{})},f=[];E.chaud=P.ch??FC_HOT;const W=(P.d||{})[wdOf(d)]??I[wdOf(d)];let p=L*W;
   // Tendance : 4 dernières semaines face aux 12
   const L4=fcLevel(cut,28,0),L12=(()=>{let s=0,n=0;fcDays(addDays(cut,-84),cut).forEach(x=>{if(!isNorm(x))return;const v=fcObs(x);if(v==null)return;s+=v/I[wdOf(x)];n++;});return n>=8?s/n:null;})();
   if(L4&&L12)f.push(["tendance",L4/L12]);
@@ -1710,11 +1786,11 @@ function fcDay0(d,cut){return fcM("p"+d+"|"+cut,()=>{
   // Saison N-1 : comment le niveau avait bougé l'an dernier entre la date de calcul et le jour visé
   const a=fcLevel(addDays(cut,-364),28,29),b=fcLevel(addDays(d,-364),28,29);if(a&&b&&Math.abs(b/a-1)>.01)f.push(["N-1",1+(b/a-1)*.5]);
   f.forEach(x=>{if(x[0]!=="tendance")p*=x[1];});
-  return {p,f};});}
+  return {p,f,L,W};});}
 // Semaine dernière : écart réel/prévu du même jour (le plus récent jour normal, 3 semaines au plus), pris à moitié par défaut (réglable)
-const fcCorr=(w,cut)=>fcM("k"+w+cut,()=>{for(let x=addDays(cut,-1);x>=addDays(cut,-21);x=addDays(x,-1)){if(wdOf(x)!==w||!isNorm(x))continue;const v=fcObs(x),q=fcDay0(x,x);if(v!=null&&q)return Math.pow(v/q.p,fcP().lw??.5);}return 1;});
+const fcCorr=(w,cut)=>fcM("k"+w+cut,()=>{for(let x=addDays(cut,-1);x>=addDays(cut,-7*(fcP().win??3));x=addDays(x,-1)){if(wdOf(x)!==w||!isNorm(x))continue;const v=fcObs(x),q=fcDay0(x,x);if(v!=null&&q)return {k:Math.pow(v/q.p,fcP().lw??.5),x,v,q:q.p};}return {k:1};});
 function fcDay(d,cut){cut=cut||(d<iso(new Date())?d:iso(new Date()));return fcM("q"+d+"|"+cut,()=>{const q=fcDay0(d,cut);if(!q)return null;
-  const k=fcCorr(wdOf(d),cut),f=[...q.f];if(k!==1)f.push([DAYNAMES[wdOf(d)],k]);return {p:q.p*k,f:f.filter(x=>Math.abs(x[1]-1)>=.02)};});}
+  const k=fcCorr(wdOf(d),cut).k,f=[...q.f];if(k!==1)f.push([DAYNAMES[wdOf(d)],k]);return {p:q.p*k,f:f.filter(x=>Math.abs(x[1]-1)>=.02)};});}
 // Précision : prévisions faites la veille sur les 40 derniers jours ouverts ; écart moyen et fourchette (≈ 2 jours sur 3 dedans)
 const fcAcc=()=>fcM("acc",()=>{const t=iso(new Date()),r=[];for(let d=addDays(t,-1),n=0;n<120&&r.length<40;d=addDays(d,-1),n++){const v=fcObs(d);if(v==null)continue;const q=fcDay(d,d);if(q)r.push([v,q.p]);}
   if(r.length<5)return {mape:null,s:.2,n:r.length};const lg=r.map(([v,p])=>Math.log(v/p)),m=lg.reduce((a,b)=>a+b,0)/lg.length;
