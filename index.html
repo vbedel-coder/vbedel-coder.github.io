@@ -1672,8 +1672,8 @@ const fcAcc=()=>fcM("acc",()=>{const t=iso(new Date()),r=[];for(let d=addDays(t,
   if(r.length<5)return {mape:null,s:.2,n:r.length};const lg=r.map(([v,p])=>Math.log(v/p)),m=lg.reduce((a,b)=>a+b,0)/lg.length;
   return {mape:r.reduce((s,[v,p])=>s+Math.abs(v-p)/v,0)/r.length,s:Math.sqrt(lg.reduce((s,x)=>s+(x-m)*(x-m),0)/lg.length),n:r.length};});
 const fcRange=p=>{const s=fcAcc().s;return [p*Math.exp(-s),p*Math.exp(s)];};
-// À viser pour produire : couvre la demande 3 jours sur 4 (un invendu coûte ≈ 1/9 du prix, une vente manquée presque tout)
-const fcAim=p=>p*Math.exp(.67*fcAcc().s);
+// À viser pour produire : couvre la demande 2 jours sur 3 (≈ +5 %, choisi par Vincent le 21/11) (un invendu coûte ≈ 1/9 du prix, une vente manquée presque tout)
+const fcAim=p=>p*Math.exp(.43*fcAcc().s);
 const pctS=x=>(x>=1?"+":"−")+Math.round(Math.abs(x-1)*100)+" %";
 const FCIC={tendance:"↗",pluie:"🌧",chaud:"☀︎","N-1":"⟲"};
 const fcChips=q=>q&&q.f.length?`<div class="chips">${q.f.map(([k,v])=>`<span class="chip"><i>${FCIC[k]||""}${FCIC[k]?" ":""}${k==="f"?"férié":k}</i>${pctS(v)}</span>`).join("")}</div>`:"";
