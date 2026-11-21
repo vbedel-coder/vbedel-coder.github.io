@@ -1611,7 +1611,7 @@ const caFull=e=>caTot(e)+(e.x||0);
 // Tout est appris sur la caisse ; un jour de rupture compte pour ce qu'il aurait vendu ; un jour marqué « événement » n'apprend rien.
 // Vacances zone C 2026 passées (pour apprendre leur effet) ; les suivantes viennent de HOL.
 // Niveau de la prévision : 6 dernières semaines, demi-vie 7 jours (suit vite une hausse ou une baisse) ; sinon 12 semaines (retour de longues vacances)
-let FC_HL=-1.5,FC_BACK=42,FC_WHL=90; // HL < 0 : poids par semaine entière (mar.–sam.), demi-vie en semaines : un report d'un jour sur l'autre se compense
+let FC_HL=-1.5,FC_BACK=42,FC_WHL=60,FC_WK=3; // HL < 0 : poids par semaine entière (mar.–sam.), demi-vie en semaines : un report d'un jour sur l'autre se compense
 const HOL26=[["2026-02-21","2026-03-08","Hiver"],["2026-04-18","2026-05-03","Printemps"],["2026-07-04","2026-08-31","Été"]];
 let HOLX=[...(vacO.l||[]),...HOL26,...HOL];
 const FC_DEF={Hiver:.81,Printemps:.74,"Été":.72,Toussaint:.8,"Noël":.8,f:.85};
@@ -1637,8 +1637,12 @@ const fcM=(k,fn)=>k in fcMemo2?fcMemo2[k]:(fcMemo2[k]=fn());
 const fcDays=(a,z)=>{const o=[];for(let d=a;d<z;d=addDays(d,1))o.push(d);return o;};
 const isNorm=d=>!holKey(d)&&!isExc(d)&&d.slice(5)!=="11-11";
 // Indice du jour de semaine : moyenne du jour ÷ moyenne générale (jours normaux de l'année écoulée), ramené vers 1 s'il y a peu de jours
-const wdIdx=(cut)=>fcM("w"+cut,()=>{const s={},n={},c={};let S=0,N=0;fcDays(addDays(cut,-365),cut).forEach(d=>{if(!isNorm(d))return;const v=fcObs(d);if(v==null)return;const w=wdOf(d),k=Math.pow(.5,(parse(cut)-parse(d))/864e5/FC_WHL);s[w]=(s[w]||0)+k*v;n[w]=(n[w]||0)+k;c[w]=(c[w]||0)+1;S+=k*v;N+=k;});
-  const o={};SDAYS.forEach(w=>{const r=n[w]&&N?(s[w]/n[w])/(S/N):1,k=(c[w]||0)/((c[w]||0)+10);o[w]=1+(r-1)*k;});return o;});
+// Indice du jour de semaine : chaque jour rapporté à la moyenne de SA semaine (mar.–sam., 4 jours ouverts au moins, vacances comprises), récent d'abord
+const wdIdx=(cut)=>fcM("w"+cut,()=>{const s={},n={},c={};const t0=parse(cut);
+  for(let w=tuesdayOf(parse(cut)),g=0;g<52;w=addDays(w,-7),g++){const ds=[0,1,2,3,4].map(i=>addDays(w,i)).filter(d=>d<cut&&isNorm(d)).map(d=>[d,fcObs(d)]).filter(x=>x[1]!=null);
+    if(ds.length<3)continue;const m=ds.reduce((a,x)=>a+x[1],0)/ds.length,k=Math.pow(.5,(t0-parse(w))/864e5/FC_WHL);
+    ds.forEach(([d,v])=>{const wd=wdOf(d);s[wd]=(s[wd]||0)+k*v/m;n[wd]=(n[wd]||0)+k;c[wd]=(c[wd]||0)+1;});}
+  const o={};SDAYS.forEach(w=>{const r=n[w]?s[w]/n[w]:1,k=(c[w]||0)/((c[w]||0)+FC_WK);o[w]=1+(r-1)*k;});return o;});
 // Niveau autour d'une date (jours normaux ramenés au jour moyen) : passé seul (prévision) ou ± 4 semaines (apprentissage)
 const fcLevel=(cut,back,fwd,hl=28)=>fcM("l"+cut+back+"|"+fwd+"|"+hl,()=>{const I=wdIdx(iso(new Date()));let s=0,w=0,n=0;
   fcDays(addDays(cut,-back),addDays(cut,fwd)).forEach(d=>{if(!isNorm(d))return;const v=fcObs(d);if(v==null)return;const a=Math.abs((parse(cut)-parse(d))/864e5),k=hl<0?Math.pow(.5,Math.round((parse(tuesdayOf(parse(cut)))-parse(tuesdayOf(parse(d))))/6048e5)/-hl):Math.pow(.5,a/hl);s+=k*v/I[wdOf(d)];w+=k;n++;});return n>=4?s/w:null;});
