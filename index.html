@@ -1154,7 +1154,7 @@ function renderSalesHint(){
   const day=shopCA(sday),dayPro=proCA(sday),wk=SDAYS.reduce((s,d)=>s+shopCA(d)+proCA(d),0),tg=weekTarget(),pct=Math.min(100,wk/tg*100);
   const pmw=(Object.values(fixes()).reduce((a,b)=>a+b,0)+payM())/(1-matr())*(1+tva())*12/objM()/(4.33*12/12);
   document.getElementById("salesCA").innerHTML=`<div class="levains" style="margin-bottom:10px">
-    <div class="lv"><span>CA prévu</span><strong>${(q=>eur0(q?q.p:day+dayPro))(fcDay(dateOf(sday)))}</strong></div>
+    <div class="lv"><span>CA prévu</span><strong>${eur0(day+dayPro)}</strong>${rcTag(rcCA([sday]),day+dayPro)}${(q=>q?`<em style="display:block">≈ ${eur0(q.p)}</em>`:"")(fcDay(dateOf(sday)))}</div>
     <div class="lv"><span>Semaine</span><strong>${eur0(wk)}</strong><em>objectif ${eur0(tg)} · ${Math.round(wk/tg*100)} %</em>${rcTag(rcCA(SDAYS),wk)}</div></div>
     <div class="gauge" style="margin-bottom:16px"><i style="width:${pct}%;background:${wk>=tg?"var(--levain)":wk>=pmw?"var(--flour)":"var(--warn)"}"></i><s style="left:${Math.min(100,pmw/tg*100)}%"></s></div>`;
 }
