@@ -459,12 +459,11 @@ const R = {
     {n:"Levain de froment",q:.302,k:"levain",l:"Froment"},
     {n:"Huile d'olive",q:.0604},{n:"Huile colza (plaque)",q:.0151},{n:"Levure",q:.00151},{n:"Olives",q:.1,keep:true}]},
   graine:{name:"Graine",unit:"pain",days:["Mer","Jeu","Ven","Sam"],items:[
-    // 07/11/2026 : mélange à 4,85 €/kg, topping inchangé, trempage −42 % pour garder le coef. ×9,6, pâton inchangé
-    {n:"Farine de froment",q:.525,k:"farine",f:"Froment T80"},
-    {n:"Eau",q:.394},{n:"Sel",q:.0132},
-    {n:"Levain de froment",q:.1313,k:"levain",l:"Froment"},
+    {n:"Farine de froment",q:.49,k:"farine",f:"Froment T80"},
+    {n:"Eau",q:.3675},{n:"Sel",q:.0123},
+    {n:"Levain de froment",q:.1225,k:"levain",l:"Froment"},
     {n:"Graines topping",q:.0367},
-    {g:"Trempage des graines",prep:"trempage",q:0.1}]},
+    {g:"Trempage des graines",prep:"trempage",q:0.1715}]},
   meteil:{name:"Méteil aux noix",unit:"pain",target:1.175,days:["Mer"],items:[
     {n:"Froment T80",q:.385,k:"farine",f:"Froment T80"},
     {n:"Seigle T130",q:.165,k:"farine",f:"Seigle T130"},
@@ -537,7 +536,7 @@ const R = {
 
 // Préparations partagées : composition en fraction du poids total (modifiable dans Réglages)
 const PREPS={
-  trempage:{name:"Trempage des graines",items:[["Mélange de graines",.5],["Eau",.5]]}, // mélange tout prêt (sac de 25 kg) depuis le 07/11/2026
+  trempage:{name:"Trempage des graines",items:[["Flocons d'avoine",.15],["Courge",.05],["Lin brun",.125],["Sarrasin décortiqué",.05],["Tournesol",.125],["Eau",.5]]},
   tangzhong:{name:"Tangzhong",items:[["Froment T65",.22,{k:"farine",f:"Froment T65"}],["Lait demi-écrémé",.78]]},
   bouillieSarrasin:{name:"Bouillie de sarrasin",items:[["Farine de sarrasin",.37,{k:"farine",f:"Sarrasin T130"}],["Eau",.63]]},
   bouillieChataigne:{name:"Bouillie de châtaigne",items:[["Farine de châtaigne",.4,{k:"farine",f:"Châtaigne"}],["Eau",.6]]},
@@ -547,7 +546,7 @@ const PREPS={
 };
 // Prix des ingrédients (€/kg HT ; farines, sel et tournesol = facture Moulin Decollogne du 09/06/2026 (Antan 1,75 €/kg confirmé par Vincent) ; levure, lait, beurre, cassonade, œufs (≈60 g pièce), huile d'olive = facture Gusto du 30/06/2026 ; le reste = onglet Ingrédients ; null = à renseigner)
 const PRICE0={"Froment T80":1.08,"Froment T80 ancien":1.75,"Froment T65":1.08,"Petit épeautre T130":3.33,"Seigle T130":0.98,"Sarrasin T130":2.98,"Khorasan T80":2.68,"Riz":2.99,"Châtaigne":11.17,
-  "Sel":1.28,"Sucre de canne blond":2.98,"Sucre semoule":1.65,"Lin brun":3.06,"Tournesol":2.83,"Flocons d'avoine":2.06,"Sarrasin décortiqué":5.68,"Courge":11.37,"Mélange de graines":4.85,"Noix":13.09,
+  "Sel":1.28,"Sucre de canne blond":2.98,"Sucre semoule":1.65,"Lin brun":3.06,"Tournesol":2.83,"Flocons d'avoine":2.06,"Sarrasin décortiqué":5.68,"Courge":11.37,"Noix":13.09,
   "Beurre":8.59,"Huile d'olive":7.73,"Huile de colza":null,"Lait demi-écrémé":0.95,"Œuf":6.2,"Levure":9.88,"Vanille en poudre":185,"Rhum":10,"Psyllium":null,"Grains de seigle":null,"Fruits & graines":null,"Olives":null,"Pépites de chocolat":20};
 const PRICE_ALIAS={"Œufs":"Œuf","Sucre":"Sucre semoule","Lait":"Lait demi-écrémé","Huile colza (plaque)":"Huile de colza"};
 const LVFLOUR={"Froment":"Froment T80","Seigle":"Seigle T130","Petit épeautre":"Petit épeautre T130","Riz":"Riz"};
