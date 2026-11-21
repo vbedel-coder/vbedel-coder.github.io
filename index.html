@@ -70,8 +70,10 @@ details.card.flash{animation:flash 1.2s ease}
 .fcset{padding:4px 16px 14px;display:flex;flex-direction:column;gap:10px}
 .fcprev{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;text-align:center;font-variant-numeric:tabular-nums;position:sticky;top:env(safe-area-inset-top,0px);background:var(--surface);padding:6px 0;z-index:1}
 .fcprev div{background:var(--fill2);border-radius:10px;padding:6px 2px}.fcprev small{display:block;color:var(--muted);font-size:12px}.fcprev b{font-size:15px}
-.fcs label{display:flex;justify-content:space-between;gap:8px;font-size:15px}.fcs label b{font-variant-numeric:tabular-nums;font-weight:600}
-.fcs.mod label b{color:var(--tint)}.fcs input{width:100%;accent-color:var(--tint);margin:4px 0 0}
+.fcs label{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:15px}
+.fcnb{display:inline-flex;align-items:center;gap:3px;color:var(--muted);white-space:nowrap}
+.fcnum{width:4.2em;text-align:right;font:inherit;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--fill2);border:1px solid var(--line);border-radius:8px;padding:4px 6px}
+.fcs.mod .fcnum{color:var(--tint);border-color:var(--tint)}.fcs input{width:100%;accent-color:var(--tint);margin:4px 0 0}
 .fcg{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.04em;margin-top:6px}
 .fcreset{align-self:flex-start;border:0;background:var(--fill);color:var(--tint);border-radius:10px;padding:8px 12px;font:inherit;font-size:15px}
 
@@ -1345,7 +1347,9 @@ const FCV=[["Hiver","Hiver"],["Printemps","Printemps"],["Été","Été"],["Touss
 const fcAccTxt=()=>{const a=fcAcc();return a.mape==null?"":"±"+Math.round(a.mape*100)+" %";};
 const fcNext=()=>{const o=[];for(let d=addDays(iso(new Date()),1),n=0;o.length<5&&n<21;d=addDays(d,1),n++)if(wdOf(d)&&!isClosed(d))o.push(d);return o;};
 const fcPrevHTML=()=>`<div class="fcprev">${fcNext().map(d=>{const q=fcDay(d);return `<div><small>${DAYNAMES[wdOf(d)].slice(0,3)} ${parse(d).getDate()}</small><b>${q?eur0(q.p):"—"}</b></div>`;}).join("")}</div>`;
-const fcSl=(k,lab,v,min,max,st,txt,mod)=>`<div class="fcs${mod?" mod":""}"><label for="fcs_${k}">${lab}<b id="fcv_${k}">${txt}</b></label><input id="fcs_${k}" type="range" data-fcs="${k}" min="${min}" max="${max}" step="${st}" value="${v}"></div>`;
+const fcNum=(k,v)=>k.startsWith("d_")?fcF2(v/100):String(v).replace(".",",");
+const fcU=k=>k==="lw"?["","%"]:k==="wk"||k==="hl"?["","sem."]:k.startsWith("d_")?["×",""]:["−","%"];
+const fcSl=(k,lab,v,min,max,st,txt,mod)=>`<div class="fcs${mod?" mod":""}"><label for="fcn_${k}">${lab}<span class="fcnb">${fcU(k)[0]}<input id="fcn_${k}" class="fcnum" type="text" inputmode="decimal" autocomplete="off" data-fcn="${k}" value="${fcNum(k,v)}">${fcU(k)[1]}</span></label><input id="fcs_${k}" type="range" data-fcs="${k}" min="${min}" max="${max}" step="${st}" value="${v}"></div>`;
 const fcF2=x=>x.toFixed(2).replace(".",",");
 function fcSetHTML(){const P=fcP(),t=iso(new Date()),I=wdIdx(t),E=fcLearn(t),D=P.d||{},V=P.v||{};
   const lw=Math.round((P.lw??.5)*100),wk=P.wk??6,hl=P.hl??1.5,ch=Math.round((1-(P.ch??FC_HOT))*100);
@@ -1363,7 +1367,7 @@ function fcSetVal(t){const k=t.dataset.fcs,v=+t.value,fc={...(params.fc||{})};
   if(k==="lw")fc.lw=v/100;else if(k==="wk")fc.wk=v;else if(k==="hl")fc.hl=v;else if(k==="ch")fc.ch=1-v/100;
   else if(k.startsWith("d_"))fc.d={...(fc.d||{}),[k.slice(2)]:v/100};else if(k.startsWith("v_"))fc.v={...(fc.v||{}),[k.slice(2)]:1-v/100};
   params.fc=fc;fcMemo2={};
-  const lb=document.getElementById("fcv_"+k);if(lb)lb.textContent=k==="lw"?v+" %":k==="wk"?v+" sem.":k==="hl"?String(v).replace(".",",")+" sem.":k.startsWith("d_")?fcF2(v/100):"−"+v+" %";
+  const lb=document.getElementById("fcn_"+k);if(lb&&document.activeElement!==lb)lb.value=fcNum(k,v);
   t.parentNode.classList.add("mod");const pv=document.querySelector("#fcSet .fcprev");if(pv)pv.outerHTML=fcPrevHTML();const a=document.getElementById("fcAccS");if(a)a.textContent=fcAccTxt();const r=document.getElementById("fcReset");if(r)r.hidden=false;}
 function rulesHTML(){const today=iso(new Date()),lim=addDays(today,365);
   const per=HOL.filter(([a,z])=>z>=today&&a<=lim).map(([a,z,n])=>`<tr class="${ruleOn("hol")?"":"offr"}"><td>${n}</td><td class="q d">${dshort(ruleOn("depSat")||wdOf(a)!=="Sam"?a:addDays(a,1))} → ${dshort(z)}</td></tr>`).join("");
@@ -1439,6 +1443,8 @@ function renderSettings(){
   el.innerHTML=h;el.querySelectorAll("details").forEach((d,i)=>{if(open[i]!==undefined)d.open=open[i];});
 }
 function onSettingsChange(e){const t=e.target;
+  if(t.dataset&&t.dataset.fcn){const k=t.dataset.fcn,sl=document.getElementById("fcs_"+k);let u=parseFloat(String(t.value).replace(",",".").replace(/[^0-9.]/g,""));
+    if(!sl||!isFinite(u)){if(sl)t.value=fcNum(k,+sl.value);return;}if(k.startsWith("d_"))u=Math.round(u*100);u=Math.min(+sl.max,Math.max(+sl.min,u));sl.value=u;t.value=fcNum(k,u);fcSetVal(sl);save();return;}
   if(t.dataset&&t.dataset.fcs){fcSetVal(t);save();return;}
   if(t.dataset&&(t.dataset.cc||t.dataset.ccp)){const cc={...ccP(),off:{...(ccP().off||{})}};
     if(t.dataset.ccp){if(t.checked)delete cc.off[t.dataset.ccp];else cc.off[t.dataset.ccp]=1;}
@@ -1870,7 +1876,7 @@ document.getElementById("tabP").onclick=()=>{tab="P";save();render();};
 document.getElementById("resetP").onclick=()=>{ask("Effacer les ajouts de ce jour ?").then(ok=>{if(!ok)return;extras[pday]={};delete extras[dateOf(pday)];save();render();});};
 document.getElementById("addBtn").onclick=()=>{const v=document.getElementById("extra").value;if(!v)return;const k=exKey(v);(extras[k]=extras[k]||{})[v]=v==="focaccia"?.5:1;save();render();};
 const exKey=id=>RULE[id]?dateOf(pday):pday;
-document.getElementById("tabS").onclick=()=>{tab="S";save();render();};document.getElementById("tabR").onclick=()=>{tab="R";save();render();};document.getElementById("tabC").onclick=()=>{tab="C";save();render();};document.getElementById("profit").addEventListener("change",onSettingsChange);document.getElementById("profit").addEventListener("click",onSettingsClick);document.getElementById("settings").addEventListener("change",onSettingsChange);document.getElementById("settings").addEventListener("input",e=>{if(e.target.dataset&&e.target.dataset.fcs)fcSetVal(e.target);});document.getElementById("settings").addEventListener("click",onSettingsClick);document.getElementById("pesees").addEventListener("click",onPeseesClick);document.getElementById("levains").addEventListener("click",e=>{const b=e.target.closest("button[data-lvedit]");if(!b)return;e.preventDefault();editLv=editLv===b.dataset.lvedit?null:b.dataset.lvedit;renderResults();});document.getElementById("levains").addEventListener("change",onSettingsChange);document.getElementById("pesees").addEventListener("change",onSettingsChange);document.getElementById("stockBtn").onclick=()=>{stockMode=!stockMode;render();window.scrollTo(0,0);};document.getElementById("prodOrderBtn").onclick=()=>{editProd=!editProd;renderProd();};document.getElementById("orderBtn").onclick=()=>{editBreads=!editBreads;renderSales();};document.getElementById("bilanBtn").onclick=()=>{editBilan=!editBilan;renderSales();};document.getElementById("cmdBtn").onclick=()=>{editCmd=!editCmd;draft=null;renderSales();};
+document.getElementById("tabS").onclick=()=>{tab="S";save();render();};document.getElementById("tabR").onclick=()=>{tab="R";save();render();};document.getElementById("tabC").onclick=()=>{tab="C";save();render();};document.getElementById("profit").addEventListener("change",onSettingsChange);document.getElementById("profit").addEventListener("click",onSettingsClick);document.getElementById("settings").addEventListener("change",onSettingsChange);document.getElementById("settings").addEventListener("input",e=>{if(e.target.dataset&&e.target.dataset.fcs)fcSetVal(e.target);});document.getElementById("settings").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.fcn)e.target.blur();});document.getElementById("settings").addEventListener("click",onSettingsClick);document.getElementById("pesees").addEventListener("click",onPeseesClick);document.getElementById("levains").addEventListener("click",e=>{const b=e.target.closest("button[data-lvedit]");if(!b)return;e.preventDefault();editLv=editLv===b.dataset.lvedit?null:b.dataset.lvedit;renderResults();});document.getElementById("levains").addEventListener("change",onSettingsChange);document.getElementById("pesees").addEventListener("change",onSettingsChange);document.getElementById("stockBtn").onclick=()=>{stockMode=!stockMode;render();window.scrollTo(0,0);};document.getElementById("prodOrderBtn").onclick=()=>{editProd=!editProd;renderProd();};document.getElementById("orderBtn").onclick=()=>{editBreads=!editBreads;renderSales();};document.getElementById("bilanBtn").onclick=()=>{editBilan=!editBilan;renderSales();};document.getElementById("cmdBtn").onclick=()=>{editCmd=!editCmd;draft=null;renderSales();};
 render();setSync("local");initSync();initDownloads();vacLoad();metLoad();document.addEventListener("visibilitychange",()=>{if(!document.hidden){metLoad();vacLoad();}});
 </script>
 <script>(function(){const h=document.getElementById("head");const f=()=>document.documentElement.style.setProperty("--hh",(h.offsetHeight+8)+"px");if(window.ResizeObserver)new ResizeObserver(f).observe(h);f();})();</script>
