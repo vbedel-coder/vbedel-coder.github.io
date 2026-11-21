@@ -817,16 +817,21 @@ function baseQ(date,id){const k="b|"+date+"|"+id;if(k in adjMemo)return adjMemo[
   adjMemo[k]={q:0,src};return adjMemo[k]={q:focConv(id,rawAt(src,id),src,date),src};}
 // Prorata du CA prévu : demande prévue du jour ÷ demande prévue (à l'époque) du jour copié ; remplace les règles fixes vacances / fin des vacances
 const fcK=(date,src)=>{const t=iso(new Date()),cut=date<t?date:t,a=fcDay(date,cut),b=fcDay(src,src<cut?src:cut);return a&&b&&b.p?a.p/b.p:null;};
-function reco(date,id,any){if(date<NEW0||blocked(wdOf(date),id)||isClosed(date)||(!any&&id in (sales[date]||{})))return null;
-  const {q:b,src}=baseQ(date,id);let r=b;const why=[];
+// Base d'un pain avant le calage sur la prévision : jour copié, puis invendus et ruptures
+function recoPre(date,id){const {q:b,src}=baseQ(date,id);let r=b;const why=[];
   if(id!=="focaccia"&&b){
     if(ruleOn("week")&&(left[src]||{})[id]&&!blocked(wdOf(src),id)){const d=dayDelta(src,id);if(d){r+=d;why.push(d>0?"rupture":"invendus");}}
     const sh=shortS(date,id);if(sh){r+=sh;why.push(sh>0?"rupture":"invendus");}}
+  return {b,src,r,why};}
+// Calage : la production conseillée (boutique) vaut le CA prévu du jour
+const fcKP=date=>fcM("K"+date,()=>{const q=fcDay(date);if(!q)return null;let v=0;pIds().forEach(id=>{if(blocked(wdOf(date),id))return;const x=recoPre(date,id);v+=x.r*unitTTC(id);});return v>0?q.p/v:null;});
+function reco(date,id,any){if(date<NEW0||blocked(wdOf(date),id)||isClosed(date)||(!any&&id in (sales[date]||{})))return null;
+  let {b,src,r,why}=recoPre(date,id);
   const hd=isHol(date),hs=isHol(src);
   // 11 novembre : jamais de baisse (2026 réduit à tort) ; on part de la dernière semaine normale, +10 % sur les pains.
   if(date.slice(5)==="11-11"){let p=src,n=0;while(n<12&&(isHol(p)||offDay(p))){p=addDays(p,-7);n++;}const ref=n<12?focConv(id,rawAt(p,id),p,date):shopType(wdOf(date),id,date);
     const t=id==="focaccia"?ref:ref?Math.ceil(ref*1.1):0;if(t>r){r=t;why.push("11/11");}}
-  else if(ruleOn("fc")&&fcK(date,src)){const k=fcK(date,src);if(Math.abs(k-1)>=.05&&r){const t=id==="focaccia"?snapF(r*k,date):Math.round(r*k);if(Math.abs(t-r)>.001){r=t;why.push("CA "+pctS(k));}}}
+  else if(ruleOn("fc")&&fcKP(date)){const k=fcKP(date);if(Math.abs(k-1)>=.01&&r){const t=id==="focaccia"?snapF(r*k,date):Math.round(r*k);if(Math.abs(t-r)>.001){r=t;why.push("prévu "+pctS(k));}}}
   else if(hd&&!hs){if(id==="focaccia"){if(ruleOn("focHalf")&&r>focH(date)){r=focH(date);why.push("vacances");}}else if(r){r=Math.round(r*(1-holR()));why.push(ferie(date)||isPont(date)?"férié":"vacances");}}
   else if(!hd&&hs){let p=src,n=0;while(n<12&&(isHol(p)||offDay(p))){p=addDays(p,-7);n++;}const ref=n<12?focConv(id,rawAt(p,id),p,date):shopType(wdOf(date),id,date);if(Math.abs(ref-r)>.001){r=ref;why.push("fin des vacances");}}
   if(id!=="focaccia"&&b)r=Math.max(AU(id),r);if(id==="canele")r=Math.round(r/6)*6;
@@ -1036,7 +1041,8 @@ function renderSales(){
     const plq=x=>{const k=focKg(dateOf(sday));return id==="focaccia"?` (${num(x/k)} plaque${x/k>1?"s":""})`:"";};
     if(blocked(sday,id)){row.className="row off";row.innerHTML=`<div class="name"><b>${R[id].name}</b><small>pas le mardi</small></div>`;el.appendChild(row);return;}
     const rc=dateOf(sday)>=NEW0?reco(dateOf(sday),id):(()=>{const a=!(id in (sales[dateOf(sday)]||{}))&&AUTO_OK(id)?v-tv:0;return null;})();
-    const adjTag=rc&&Math.abs(rc.q-v)>.001?`<button class="reco${rc.q<v?" dn":""}" data-reco="${id}" data-q="${rc.q}" aria-label="Appliquer la recommandation">${rc.q>v?"↑":"↓"} ${num(rc.q)}${rc.why?`<i>${rc.why}</i>`:""}</button>`:"";
+    // Pastilles de reco retirées (21/11/2026, Vincent : un seul chiffre, la prévision ≈ sous le CA prévu)
+    const adjTag=false&&rc&&Math.abs(rc.q-v)>.001?`<button class="reco${rc.q<v?" dn":""}" data-reco="${id}" data-q="${rc.q}" aria-label="Appliquer la recommandation">${rc.q>v?"↑":"↓"} ${num(rc.q)}${rc.why?`<i>${rc.why}</i>`:""}</button>`:"";
     const dOrd=orders.filter(o=>o.date===dateOf(sday)&&((o.items||{})[id]||0)>0),oq=dOrd.reduce((s,o)=>s+o.items[id],0),oqd=dOrd.filter(o=>o.done).reduce((s,o)=>s+o.items[id],0);
     const cmdTag=oq?`<button class="ocmd${oqd>=oq?" ok":""}" data-ocmd="1" aria-label="Voir les commandes">${oqd>=oq?IC.check:CAL}+${num(oq)}${id==="focaccia"?" kg":""}${oqd&&oqd<oq?`<i>${num(oqd)} retiré${oqd>1?"s":""}</i>`:""}</button>`:"";
     row.innerHTML=`<div class="name"><b>${R[id].name}</b>${adjTag}${cmdTag}<small>${SALE_UNIT[id]?"en kg"+`<span class="plq">${plq(v)}</span> · `:BATCH[id]?"en pièces · ":""}${when}<span class="rca">${caTxt(v)}</span></small></div>`;
