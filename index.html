@@ -1154,7 +1154,7 @@ function renderSalesHint(){
   const day=shopCA(sday),dayPro=proCA(sday),wk=SDAYS.reduce((s,d)=>s+shopCA(d)+proCA(d),0),tg=weekTarget(),pct=Math.min(100,wk/tg*100);
   const pmw=(Object.values(fixes()).reduce((a,b)=>a+b,0)+payM())/(1-matr())*(1+tva())*12/objM()/(4.33*12/12);
   document.getElementById("salesCA").innerHTML=`<div class="levains" style="margin-bottom:10px">
-    <div class="lv"><span>CA prévu</span><strong>${eur0(day+dayPro)}</strong>${rcTag(rcCA([sday]),day+dayPro)}${(q=>q?`<em style="display:block">viser ${eur0(fcAim(q.p))}${(g=>Math.abs(g)>=.05*fcAim(q.p)?` <b style="color:var(--${g>0?"flour":"warn"})">${g>0?"↓":"↑"} ${eur0(Math.abs(g))}</b>`:"")(day-fcAim(q.p))}</em>`:"")(fcDay(dateOf(sday)))}</div>
+    <div class="lv"><span>CA prévu</span><strong>${(q=>eur0(q?q.p:day+dayPro))(fcDay(dateOf(sday)))}</strong></div>
     <div class="lv"><span>Semaine</span><strong>${eur0(wk)}</strong><em>objectif ${eur0(tg)} · ${Math.round(wk/tg*100)} %</em>${rcTag(rcCA(SDAYS),wk)}</div></div>
     <div class="gauge" style="margin-bottom:16px"><i style="width:${pct}%;background:${wk>=tg?"var(--levain)":wk>=pmw?"var(--flour)":"var(--warn)"}"></i><s style="left:${Math.min(100,pmw/tg*100)}%"></s></div>`;
 }
@@ -1672,8 +1672,6 @@ const fcAcc=()=>fcM("acc",()=>{const t=iso(new Date()),r=[];for(let d=addDays(t,
   if(r.length<5)return {mape:null,s:.2,n:r.length};const lg=r.map(([v,p])=>Math.log(v/p)),m=lg.reduce((a,b)=>a+b,0)/lg.length;
   return {mape:r.reduce((s,[v,p])=>s+Math.abs(v-p)/v,0)/r.length,s:Math.sqrt(lg.reduce((s,x)=>s+(x-m)*(x-m),0)/lg.length),n:r.length};});
 const fcRange=p=>{const s=fcAcc().s;return [p*Math.exp(-s),p*Math.exp(s)];};
-// À viser pour produire : couvre la demande 2 jours sur 3 (≈ +5 %, choisi par Vincent le 21/11) (un invendu coûte ≈ 1/9 du prix, une vente manquée presque tout)
-const fcAim=p=>p*Math.exp(.43*fcAcc().s);
 const pctS=x=>(x>=1?"+":"−")+Math.round(Math.abs(x-1)*100)+" %";
 const FCIC={tendance:"↗",pluie:"🌧",chaud:"☀︎","N-1":"⟲"};
 const fcChips=q=>q&&q.f.length?`<div class="chips">${q.f.map(([k,v])=>`<span class="chip"><i>${FCIC[k]||""}${FCIC[k]?" ":""}${k==="f"?"férié":k}</i>${pctS(v)}</span>`).join("")}</div>`:"";
@@ -1688,7 +1686,7 @@ function renderCA(){const el=document.getElementById("caView");const dt=dateOf(c
   const field=(k,lab,note)=>`<div class="carow"><label for="ca_${k}">${lab}${note||""}</label><div class="cain"><input id="ca_${k}" data-cak="${k}" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="${caIn(e[k])}"><span>€</span></div></div>`;
   const ecart=e.z!=null&&caTot(e)?caTot(e)-e.z:null;
   el.innerHTML=`<div class="levains" style="margin-bottom:10px">
-      <div class="lv"><span>${DAYNAMES[cday][0].toUpperCase()+DAYNAMES[cday].slice(1)} ${parse(dt).getDate()}</span><strong>${caTot(e)||e.closed||!fq?eur0(caFull(e)):`<i class="fcv">≈ ${eur0(fq.p)}</i>`}</strong>${fq?`<em>${caTot(e)?`prévu ${eur0(fq.p)} · ${pctS(caTot(e)/fq.p)}`:`viser ${eur0(fcAim(fq.p))}`}</em>`:""}</div>
+      <div class="lv"><span>${DAYNAMES[cday][0].toUpperCase()+DAYNAMES[cday].slice(1)} ${parse(dt).getDate()}</span><strong>${caTot(e)||e.closed||!fq?eur0(caFull(e)):`<i class="fcv">≈ ${eur0(fq.p)}</i>`}</strong>${fq?`<em>${caTot(e)?`prévu ${eur0(fq.p)} · ${pctS(caTot(e)/fq.p)}`:""}</em>`:""}</div>
       <div class="lv"><span>Semaine</span><strong>${eur0(wkTot)}</strong><em>prévu ${eur0(prev)}</em></div></div>
     <div class="gauge" style="margin-bottom:${fq&&fq.f.length?8:16}px"><i style="width:${pct}%;background:${wkTot>=tg?"var(--levain)":"var(--tint-fill)"}"></i></div>
     ${fq&&fq.f.length?`<div style="margin-bottom:16px">${fcChips(fq)}</div>`:""}
