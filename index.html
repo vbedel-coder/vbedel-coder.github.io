@@ -1686,7 +1686,7 @@ function renderCA(){const el=document.getElementById("caView");const dt=dateOf(c
   const field=(k,lab,note)=>`<div class="carow"><label for="ca_${k}">${lab}${note||""}</label><div class="cain"><input id="ca_${k}" data-cak="${k}" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="${caIn(e[k])}"><span>€</span></div></div>`;
   const ecart=e.z!=null&&caTot(e)?caTot(e)-e.z:null;
   el.innerHTML=`<div class="levains" style="margin-bottom:10px">
-      <div class="lv"><span>${DAYNAMES[cday][0].toUpperCase()+DAYNAMES[cday].slice(1)} ${parse(dt).getDate()}</span><strong>${caTot(e)||e.closed||!fq?eur0(caFull(e)):`<i class="fcv">≈ ${eur0(fq.p)}</i>`}</strong>${fq?`<em>${caTot(e)?`prévu ${eur0(fq.p)} · ${pctS(caTot(e)/fq.p)}`:""}</em>`:""}</div>
+      <div class="lv"><span>${DAYNAMES[cday][0].toUpperCase()+DAYNAMES[cday].slice(1)} ${parse(dt).getDate()}</span><strong>${caTot(e)||e.closed?eur0(caFull(e)):eur0(shopCA(cday)+proCA(cday))}</strong>${fq?`<em>≈ ${eur0(fq.p)}${caTot(e)?` · ${pctS(caTot(e)/fq.p)}`:""}</em>`:""}</div>
       <div class="lv"><span>Semaine</span><strong>${eur0(wkTot)}</strong><em>prévu ${eur0(prev)}</em></div></div>
     <div class="gauge" style="margin-bottom:${fq&&fq.f.length?8:16}px"><i style="width:${pct}%;background:${wkTot>=tg?"var(--levain)":"var(--tint-fill)"}"></i></div>
     ${fq&&fq.f.length?`<div style="margin-bottom:16px">${fcChips(fq)}</div>`:""}
@@ -1696,7 +1696,7 @@ function renderCA(){const el=document.getElementById("caView");const dt=dateOf(c
       <div class="carow catot"><span>Total</span><b>${eur2(caFull(e))}</b></div>
       ${field("z","Ticket Z1",ecart!=null?`<small class="caz${Math.abs(ecart)>1?" cawarn":""}">écart ${ecart>0?"+":""}${eur2(ecart)}</small>`:"")}`}
       </div>
-    <h2>Semaine</h2><div class="list">${wkDays.map(([d,x])=>{const t=caFull(caOf(x));return `<div class="row cawk${d===cday?" on":""}${x===iso(new Date())?" tday":""}" data-cday="${d}"><div class="name"><b>${DAYNAMES[d][0].toUpperCase()+DAYNAMES[d].slice(1)} ${parse(x).getDate()}${x===iso(new Date())?`<em class="tdtag">aujourd'hui</em>`:""}</b></div><b class="cav">${caOf(x).closed?"fermé":t?eur0(t):(q=>q?`<i class="fcv">≈ ${eur0(q.p)}</i>`:"—")(fcDay(x))}</b></div>`;}).join("")}
+    <h2>Semaine</h2><div class="list">${wkDays.map(([d,x])=>{const t=caFull(caOf(x));return `<div class="row cawk${d===cday?" on":""}${x===iso(new Date())?" tday":""}" data-cday="${d}"><div class="name"><b>${DAYNAMES[d][0].toUpperCase()+DAYNAMES[d].slice(1)} ${parse(x).getDate()}${x===iso(new Date())?`<em class="tdtag">aujourd'hui</em>`:""}</b></div><b class="cav">${caOf(x).closed?"fermé":t?eur0(t):(v=>v?`<i class="fcv">${eur0(v)}</i>`:"—")(shopCA(d)+proCA(d))}</b></div>`;}).join("")}
       <div class="row catot"><div class="name"><b>Total</b><small>objectif ${eur0(tg)} · ${Math.round(wkTot/tg*100)} %</small></div><b class="cav">${eur0(wkTot)}</b></div>
       ${fa.mape!=null?`<div class="row"><div class="name"><b>≈ Prévision</b><small>${fa.n} jours · écart moyen sur la caisse${meteo.at?"":" · sans météo"}</small></div><b class="cav">±${Math.round(fa.mape*100)} %</b></div>`:""}</div>
     <h2>${mName[0].toUpperCase()+mName.slice(1)}</h2><div class="list"><div class="row catot"><div class="name"><b>Total du mois</b><small>objectif ${eur0(mTg)} · ${Math.round(mTot/mTg*100)} %</small></div><b class="cav">${eur0(mTot)}</b></div></div>`;
