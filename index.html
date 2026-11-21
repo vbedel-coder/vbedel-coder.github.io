@@ -1187,7 +1187,8 @@ function renderSalesHint(){
       if(d2>=NEW0){h2+=box(`${cap(w2)} ${parse(d2).getDate()} · conseil`,rcl(d2,ids2));return;}
       noShort=true;adjMemo={};const before=ids2.map(id=>shopAt(d2,id));noShort=false;adjMemo={};
       h2+=box(`${cap(w2)} ${parse(d2).getDate()}`,ids2.map((id,i)=>[id,before[i],shopAt(d2,id)]).filter(x=>Math.abs(x[2]-x[1])>.001));});
-    document.getElementById("salesHint").innerHTML=h2+box(`${cap(sday)} ${parse(nx).getDate()}${nx>=NEW0?" · conseil":""}`,ch);
+    // Conseils pain par pain retirés (21/11/2026) : Vincent ne connaît pas ses ventes par produit
+    void h2;void ch;
     return;}
   const day=shopCA(sday),dayPro=proCA(sday),wk=SDAYS.reduce((s,d)=>s+shopCA(d)+proCA(d),0),tg=weekTarget(),pct=Math.min(100,wk/tg*100);
   const pmw=(Object.values(fixes()).reduce((a,b)=>a+b,0)+payM())/(1-matr())*(1+tva())*12/objM()/(4.33*12/12);
