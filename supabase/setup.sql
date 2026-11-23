@@ -120,3 +120,22 @@ begin
   return jsonb_build_object('ok',true,'id',o->>'id');
 end $$;
 revoke all on function public.vivant_add_order(jsonb) from public, anon, authenticated;
+
+-- ---- Accès de la comptable au CA jour par jour (page compta.html, lien privé) ----
+-- Un seul lien à la fois, créé, renouvelé ou coupé par Vincent depuis Réglages ; personne d'autre ne lit ni n'écrit cette table.
+create table if not exists public.compta(id int primary key default 1 check (id=1), token text not null, created_at timestamptz not null default now());
+alter table public.compta enable row level security;
+drop policy if exists own on public.compta;
+create policy own on public.compta for all to authenticated using (auth.uid()=public.vivant_owner()) with check (auth.uid()=public.vivant_owner());
+
+-- Lecture seule pour le lien : seulement carte, espèces et jours fermés de la caisse (ni l'autre caisse, ni le Z, ni rien d'autre de l'appli)
+create or replace function public.ca_compta(p_token text) returns jsonb language sql stable security definer set search_path=public as $$
+  select case when length(coalesce(p_token,''))>=32 and exists(select 1 from public.compta c where c.id=1 and c.token=p_token) then
+    (select jsonb_build_object('updated_at',s.updated_at,'tva',coalesce(s.data->'params'->'tva','0.055'::jsonb),
+      'ca',coalesce((select jsonb_object_agg(k,jsonb_strip_nulls(jsonb_build_object('cb',v->'cb','esp',v->'esp','closed',v->'closed')))
+        from jsonb_each(coalesce(s.data->'ca','{}'::jsonb)) e(k,v) where jsonb_typeof(v)='object' and k ~ '^\d{4}-\d{2}-\d{2}$'),'{}'::jsonb))
+     from public.state s where s.id=public.vivant_owner())
+  else null end
+$$;
+revoke all on function public.ca_compta(text) from public;
+grant execute on function public.ca_compta(text) to anon, authenticated;
