@@ -139,3 +139,19 @@ create or replace function public.ca_compta(p_token text) returns jsonb language
 $$;
 revoke all on function public.ca_compta(text) from public;
 grant execute on function public.ca_compta(text) to anon, authenticated;
+
+-- ---- Passage unique de l'historique de caisse (janv.-oct. 2026) du code public vers la base privée (24/11/2026) ----
+-- N'ajoute que les jours absents de la caisse de l'appli ; même jeton que lecture_vivant. Supprimée juste après usage.
+create or replace function public.vivant_merge_ca(p_token text, p_add jsonb) returns jsonb language plpgsql security definer set search_path=public as $$
+declare ms bigint:=(extract(epoch from clock_timestamp())*1000)::bigint; cur jsonb; n int;
+begin
+  if encode(sha256(convert_to(coalesce(p_token,''),'UTF8')),'hex')<>'931f95d7eb20415837b1133feab767c496eff1ac3cfb852eb908eba7a79e4edb' then raise exception 'jeton'; end if;
+  if jsonb_typeof(p_add)<>'object' then raise exception 'format'; end if;
+  select coalesce(data->'ca','{}'::jsonb) into cur from state where id=vivant_owner() for update;
+  if cur is null then raise exception 'compte introuvable'; end if;
+  select count(*) into n from jsonb_object_keys(p_add) k where not cur ? k;
+  update state set data=data||jsonb_build_object('ca',p_add||cur,'ts',coalesce(data->'ts','{}'::jsonb)||jsonb_build_object('ca',ms),'updatedAt',ms),updated_at=now() where id=vivant_owner();
+  return jsonb_build_object('ok',true,'ajoutes',n);
+end $$;
+revoke all on function public.vivant_merge_ca(text,jsonb) from public;
+grant execute on function public.vivant_merge_ca(text,jsonb) to anon;
