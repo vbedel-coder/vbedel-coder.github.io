@@ -46,7 +46,6 @@ tfoot td{font-weight:700;border-top:1px solid var(--line);background:var(--fill)
 <body>
 <div class="wrap" id="app"></div>
 <script src="config.js"></script>
-<script src="ca0.js"></script>
 <script>
 (()=>{
 const app=document.getElementById("app");addEventListener("hashchange",()=>location.reload());
@@ -95,7 +94,7 @@ fetch(C.SB_URL+"/rest/v1/rpc/ca_compta",{method:"POST",headers:{"apikey":C.SB_KE
   .then(r=>r.ok?r.json():null).then(j=>{
     if(!j||!j.ca){fail();return;}
     TVA=+j.tva||0.055;UPD=j.updated_at;
-    const A=window.VIVANT_CA0||{};CA={};Object.keys(A).forEach(k=>{CA[k]=A[k];});Object.keys(j.ca).forEach(k=>{CA[k]=j.ca[k];});
+    CA=j.ca;
     const today=new Date(),tm=today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0");
     const ks=Object.keys(CA).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
     const first=(ks[0]||tm).slice(0,7);let [y,mm]=first.split("-").map(Number);months=[];
